@@ -18,7 +18,7 @@ object Dependencies {
     lazy val JakartaWsRs       = "2.1.4"
     lazy val Kafka             = "2.1.0"
     lazy val KafkaCommons      = "0.0.3"
-    lazy val KafkaFlightStream = "0.0.2-SNAPSHOT"
+    lazy val KafkaFlightStream = "0.0.6-SNAPSHOT"
     lazy val LogbackClassic    = "1.2.3"
     lazy val PureConfig        = "0.10.2"
     lazy val ScalaLogging      = "3.9.2"

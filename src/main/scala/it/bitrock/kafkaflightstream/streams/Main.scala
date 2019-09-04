@@ -3,7 +3,7 @@ package it.bitrock.kafkaflightstream.streams
 import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
-import it.bitrock.kafkaflightstream.model.{AirlineRaw, AirportRaw, CityRaw, FlightRaw, FlightReceived}
+import it.bitrock.kafkaflightstream.model.{AirlineRaw, AirportRaw, CityRaw, FlightEnrichedEvent, FlightRaw, FlightWithAirline, FlightWithAllAirportInfo, FlightWithDepartureAirportInfo}
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.AvroSerdes
 import org.apache.kafka.streams.KafkaStreams
@@ -25,7 +25,11 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[AirportRaw],
     avroSerdes.serdeFrom[AirlineRaw],
     avroSerdes.serdeFrom[CityRaw],
-    avroSerdes.serdeFrom[FlightReceived]
+    avroSerdes.serdeFrom[FlightWithDepartureAirportInfo],
+    avroSerdes.serdeFrom[FlightWithAllAirportInfo],
+    avroSerdes.serdeFrom[FlightWithAirline],
+    //missing airplane
+    avroSerdes.serdeFrom[FlightEnrichedEvent]
   )
 
   val topology = Streams.buildTopology(config, kafkaStreamsOptions)
