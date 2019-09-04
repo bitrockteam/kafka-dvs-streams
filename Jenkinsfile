@@ -96,7 +96,7 @@ pipeline {
                         sh "docker push ${DOCKER_REPOSITORY}/${GITHUB_REPO}:${tagAfter}"
                         sh "docker tag ${DOCKER_REPOSITORY}/${GITHUB_REPO}:${tagAfter} ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
                         sh "docker push ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
-                        sh "printf '[{\"name\":\"kafka-geostream-streams\",\"imageUri\":\"%s\"}]' \$(git describe --tags --abbrev=0 | sed 's/^v//') > imagedefinitions.json"
+                        sh "printf '[{\"name\":\"kafka-flightstream-streams\",\"imageUri\":\"%s\"}]' \$(git describe --tags --abbrev=0 | sed 's/^v//') > imagedefinitions.json"
                     }
                 }
             }
@@ -111,7 +111,7 @@ pipeline {
                 }
             }
             steps {
-		build job: 'kafka-geostream-cd/master', wait: false
+		build job: 'kafka-flightstream-cd/master', wait: false
 	    }
  	}
         stage("Building feature/develop") {
