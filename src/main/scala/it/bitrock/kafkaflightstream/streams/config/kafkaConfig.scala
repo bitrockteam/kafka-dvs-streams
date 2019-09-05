@@ -16,6 +16,7 @@ final case class TopologyConfig(
     airportRawTopic: String,
     airlineRawTopic: String,
     cityRawTopic: String,
+    airplaneRawTopic: String,
     flightReceivedTopic: String,
     aggregationTimeWindowSize: FiniteDuration,
     commitInterval: FiniteDuration,

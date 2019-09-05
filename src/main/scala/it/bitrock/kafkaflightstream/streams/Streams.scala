@@ -21,46 +21,50 @@ object Streams {
   final val AllRecordsKey: String   = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): Topology = {
-    implicit val KeySerde: Serde[String]            = kafkaStreamsOptions.keySerde
-    implicit val flightRawSerde: Serde[FlightRaw]   = kafkaStreamsOptions.flightRawSerde
-    implicit val airportRawSerde: Serde[AirportRaw] = kafkaStreamsOptions.airportRawSerde
-    implicit val airlineRawSerde: Serde[AirlineRaw] = kafkaStreamsOptions.airlineRawSerde
-    //missing airplane
-
+    implicit val KeySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+    implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+    implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+    implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+    implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
     //not used
     implicit val cityRawSerde: Serde[CityRaw] = kafkaStreamsOptions.cityRawSerde
 
-    //output topic
-    implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
+    //for join trasformation
     implicit val flightWithDepartureAirportInfoSerde: Serde[FlightWithDepartureAirportInfo] =
       kafkaStreamsOptions.flightWithDepartureAirportInfo
     implicit val flightWithAllAirportSerde: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
     implicit val flightWithAirlineSerde: Serde[FlightWithAirline]           = kafkaStreamsOptions.flightWithAirline
-    //missing airplan and city
+
+    //output topic
+    implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
 
     def buildFlightReceived(
         fligthtRawStream: KStream[String, FlightRaw],
-        airportRawStreams: GlobalKTable[String, AirportRaw],
-        airlineRawStreams: GlobalKTable[String, AirlineRaw]
+        airportRawTable: GlobalKTable[String, AirportRaw],
+        airlineRawTable: GlobalKTable[String, AirlineRaw],
+        airplaneRawTable: GlobalKTable[String, AirplaneRaw]
     ): Unit = {
 
-      val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawStreams)
+      val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawTable)
 
-      val flight_Airport_Airline: KStream[String, FlightWithAirline] = flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawStreams)
+      val flightAirportAirline: KStream[String, FlightWithAirline] =
+        flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
-      // ultima join su AirplaneInfo e crea un  FlightEnrichedEvent definitivo
-      flight_Airport_Airline.to(config.kafka.topology.flightReceivedTopic)
+      val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] =
+        flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
+
+      flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
     }
 
     val streamsBuilder   = new StreamsBuilder
     val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.flightRawTopic)
-    val airportRawStream = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
-    val airlineRawStream = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
-    //missing Airplane
+    val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
+    val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
+    val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
     //not used
     // val cityRawStream  = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic)
 
-    buildFlightReceived(flightRawStream, airportRawStream, airlineRawStream)
+    buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
 
     streamsBuilder.build
   }
@@ -94,6 +98,7 @@ object Streams {
             AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country), //departure
             flight.arrival.iataCode,                                                                                 //Arrival
             flight.airline.iataCode,
+            flight.aircraft.regNumber,
             flight.status
           )
       )
@@ -106,17 +111,18 @@ object Streams {
             flightReceivedOnlyDeparture.airportDeparture,
             AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country),
             flightReceivedOnlyDeparture.airlineCode,
+            flightReceivedOnlyDeparture.airplaneRegNumber,
             flightReceivedOnlyDeparture.status
           )
       )
   }
 
   def flightWithAirportToAirlineEnrichment(
-      FlightWithAllAirportStream: KStream[String, FlightWithAllAirportInfo],
+      flightWithAllAirportStream: KStream[String, FlightWithAllAirportInfo],
       airlineRawTable: GlobalKTable[String, AirlineRaw]
   ): KStream[String, FlightWithAirline] = {
 
-    FlightWithAllAirportStream
+    flightWithAllAirportStream
       .join(airlineRawTable)(
         (_, value) => value.airlineCode,
         (flightAndAirport, airline) =>
@@ -126,7 +132,28 @@ object Streams {
             flightAndAirport.airportDeparture,
             flightAndAirport.airportArrival,
             AirlineInfo(airline.nameAirline, airline.sizeAirline),
+            flightAndAirport.airplaneRegNumber,
             flightAndAirport.status
+          )
+      )
+  }
+
+  def flightWithAirportAndAirlineToAirplaneEnrichment(
+      flightWithAirline: KStream[String, FlightWithAirline],
+      airplaneRawTable: GlobalKTable[String, AirplaneRaw]
+  ): KStream[String, FlightEnrichedEvent] = {
+    flightWithAirline
+      .leftJoin(airplaneRawTable)(
+        (_, value) => value.airplaneRegNumber,
+        (flightAndAirline, airplaneTable) =>
+          FlightEnrichedEvent(
+            flightAndAirline.geography,
+            flightAndAirline.speed,
+            flightAndAirline.airportDeparture,
+            flightAndAirline.airportArrival,
+            flightAndAirline.airline,
+            Option(airplaneTable).map(airplaneTable => AirplaneInfo(airplaneTable.productionLine, airplaneTable.modelCode)),
+            flightAndAirline.status
           )
       )
   }
