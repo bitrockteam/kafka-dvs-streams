@@ -45,14 +45,16 @@ object Streams {
         airplaneRawTable: GlobalKTable[String, AirplaneRaw]
     ): Unit = {
 
+      println("flightJoinAirport ->")
       val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawTable)
 
-      val flightAirportAirline: KStream[String, FlightWithAirline] =
-        flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
+      println("flightAirportAirline ->")
+      val flightAirportAirline: KStream[String, FlightWithAirline] = flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
-      val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] =
-        flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
+      println("flightAirportAirlineAirplane ->")
+      val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] = flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
+      println("sto scrivendo su topic -> ")
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
     }
 
