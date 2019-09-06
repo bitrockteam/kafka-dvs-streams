@@ -6,7 +6,7 @@ trait Events {
 
   val AirportEvent1 = AirportRaw(
     "1",
-    "ZUrigo",
+    "Zurigo",
     "ZRH",
     "1234535",
     "13244345",
@@ -92,4 +92,17 @@ trait Events {
     ),
     "en-route"
   )
+
+  val ExpectedFlightEnrichedEvent: FlightEnrichedEvent = FlightEnrichedEvent(
+    GeographyInfo(49.2655, -1.9623, 9753.6, 282.76),
+    805.14,
+    AirportInfo("ZRH", "Zurigo", "Swiss", "CH"),                               //departure
+    AirportInfo("ORD", "Chicago O'hare International", "United States", "US"), //arrival
+    AirlineInfo("SWISS", "67"),
+    Some(AirplaneInfo("Airbus A330/A340", "4B187A")),
+    "en-route"
+  )
+
+  val ExpectedFlightEnrichedEventWithoutAirplaneinfo: FlightEnrichedEvent = ExpectedFlightEnrichedEvent.copy(airplane = None)
+
 }

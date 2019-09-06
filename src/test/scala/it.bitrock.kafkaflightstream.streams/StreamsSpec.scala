@@ -1,8 +1,8 @@
 package it.bitrock.kafkaflightstream.streams
 
 import it.bitrock.kafkaflightstream.model._
-import it.bitrock.kafkageostream.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
+import it.bitrock.kafkageostream.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.kafkageostream.testcommons.{FixtureLoanerAnyResult, Suite}
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import net.manub.embeddedkafka.schemaregistry.{EmbeddedKafkaConfig, serdeFrom}
@@ -25,7 +25,7 @@ object StreamsSpec {
 
 }
 
-class StreamsSpec extends Suite  with WordSpecLike with EmbeddedKafkaStreams with OptionValues with Events {
+class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with OptionValues with Events {
 
   import StreamsSpec._
 
@@ -34,14 +34,11 @@ class StreamsSpec extends Suite  with WordSpecLike with EmbeddedKafkaStreams wit
     // test's timeout (5 secs) to ensure we observe the expected processing results.
     StreamsConfig.COMMIT_INTERVAL_MS_CONFIG -> 3.seconds.toMillis.toString
   )
-  final val ConsumerPollTimeout: FiniteDuration = 10.seconds
-
-  //scrivere 1 messaggio nel vari topic
-  //e controllare che il messaggio letto e joinato sia quello atteso
+  final val ConsumerPollTimeout: FiniteDuration = 15.seconds
 
   "Streams" should {
 
-    "" in ResourceLoaner.withFixture {
+    "check if all Join runs" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
@@ -71,56 +68,95 @@ class StreamsSpec extends Suite  with WordSpecLike with EmbeddedKafkaStreams wit
             eventAirport1.codeIataAirport -> eventAirport1,
             eventAirport2.codeIataAirport -> eventAirport2
           )
-          val airlineMessage = List(eventAirline.codeIcaoAirline -> eventAirline)
-          val airplaneMessage = List(eventAirplane.numberRegistration.replace("-","") -> eventAirplane)
+          val airlineMessage  = List(eventAirline.codeIcaoAirline                      -> eventAirline)
+          val airplaneMessage = List(eventAirplane.numberRegistration.replace("-", "") -> eventAirplane)
 
-          //publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessage)
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessage)
           publishToKafka(appConfig.kafka.topology.airportRawTopic, airportMessages)
-          //publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
-          //publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
 
-         val messagesMap = consumeNumberKeyedMessagesFromTopics[String, AirportRaw](
-           Set(appConfig.kafka.topology.airportRawTopic),
-           2,
-           // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
-           timeout = ConsumerPollTimeout
-         )
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightEnrichedEvent](
+            Set(appConfig.kafka.topology.flightReceivedTopic),
+            1,
+            // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
+            timeout = ConsumerPollTimeout
+          )
 
-          messagesMap(appConfig.kafka.topology.airportRawTopic).take(2)
+          messagesMap(appConfig.kafka.topology.flightReceivedTopic).take(1)
         }
 
-        println(receivedRecords)
-       /* val expectedEvent1 = RSVPReceived(
-          DefaultEventName,
-          DefaultEventLat,
-          DefaultEventLon,
-          DefaultEventTime,
-          MeetupEvent(DefaultEventUrl),
-          MeetupUser(DefaultMemberName),
-          MeetupGroup(DefaultGroupName, DefaultEventCity, DefaultEventCountry),
-          RSVPResponse.YES
-        )
-        val expectedEvent2 = RSVPReceived(
-          DefaultEvent2Name,
-          DefaultEvent2Lat,
-          DefaultEvent2Lon,
-          DefaultEvent2Time,
-          MeetupEvent(DefaultEvent2Url),
-          MeetupUser(DefaultMember2Name),
-          MeetupGroup(DefaultGroup2Name, DefaultEvent2City, DefaultEvent2Country),
-          RSVPResponse.NO
-        )
+        val expectedEvent1: FlightEnrichedEvent = ExpectedFlightEnrichedEvent
 
         val expectedResult = List(
-          (DefaultEventKey, expectedEvent1),
-          (DefaultEvent2Key, expectedEvent2)
+          (FlightEvent.flight.icaoNumber, expectedEvent1)
         )
 
-        receivedRecords should contain theSameElementsInOrderAs expectedResult
-*/
+        receivedRecords should contain theSameElementsAs expectedResult
+
       }
 
     }
+
+    "check if Airplane Join not runs and return an AirplaneInfo None" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]    = kafkaStreamsOptions.flightRawSerde
+
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val cityRawSerde: Serde[CityRaw]         = kafkaStreamsOptions.cityRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+
+        implicit val flightWithDepartureAirportInfo: Serde[FlightWithDepartureAirportInfo] =
+          kafkaStreamsOptions.flightWithDepartureAirportInfo
+        implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
+        implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
+
+        implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+          val eventFlight   = FlightEvent
+          val eventAirport1 = AirportEvent1
+          val eventAirport2 = AirportEvent2
+          val eventAirline  = AirlineEvent
+          val eventAirplane = AirplaneEvent.copy(numberRegistration = "falso")
+
+          val flightMessage = List(eventFlight.flight.icaoNumber -> eventFlight)
+          val airportMessages = List(
+            eventAirport1.codeIataAirport -> eventAirport1,
+            eventAirport2.codeIataAirport -> eventAirport2
+          )
+          val airlineMessage  = List(eventAirline.codeIcaoAirline                      -> eventAirline)
+          val airplaneMessage = List(eventAirplane.numberRegistration.replace("-", "") -> eventAirplane)
+
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessage)
+          publishToKafka(appConfig.kafka.topology.airportRawTopic, airportMessages)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
+
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightEnrichedEvent](
+            Set(appConfig.kafka.topology.flightReceivedTopic),
+            1,
+            // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
+            timeout = ConsumerPollTimeout
+          )
+
+          messagesMap(appConfig.kafka.topology.flightReceivedTopic).take(1)
+        }
+        println(receivedRecords)
+        val expectedEvent1: FlightEnrichedEvent = ExpectedFlightEnrichedEventWithoutAirplaneinfo
+
+        val expectedResult = List(
+          (FlightEvent.flight.icaoNumber, expectedEvent1)
+        )
+
+        receivedRecords should contain theSameElementsAs expectedResult
+
+      }
+    }
+
   }
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] {

@@ -51,6 +51,10 @@ object Streams {
       println("flightAirportAirline ->")
       val flightAirportAirline: KStream[String, FlightWithAirline] = flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
+      flightJoinAirport.foreach((key, value) =>
+        println("key ->" + key + "  value -> "+value)
+      )
+
       println("flightAirportAirlineAirplane ->")
       val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] = flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
@@ -99,7 +103,7 @@ object Streams {
             flight.speed.horizontal,
             AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country), //departure
             flight.arrival.iataCode,                                                                                 //Arrival
-            flight.airline.iataCode,
+            flight.airline.icaoCode,
             flight.aircraft.regNumber,
             flight.status
           )
