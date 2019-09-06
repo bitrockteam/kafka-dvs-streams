@@ -20,9 +20,54 @@ object Streams {
   final val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
   final val AllRecordsKey: String   = "all"
 
-  private final val europeanCountries = Set("AL", "AD", "AT", "BE", "BY", "BA", "BG", "CY", "HR", "DK", "EE", "FI",
-    "FR", "DE", "GR", "IE", "IS", "IT", "XK", "LV", "LI", "LT", "LU", "MK", "MT", "MD", "MC", "ME", "NO", "NL", "PL",
-    "PT", "GB", "CZ", "RO", "RU", "SM", "RS", "SK", "SI", "ES", "SE", "CH", "UA", "HU", "VA")
+  private final val europeanCountries = Set(
+    "AL",
+    "AD",
+    "AT",
+    "BE",
+    "BY",
+    "BA",
+    "BG",
+    "CY",
+    "HR",
+    "DK",
+    "EE",
+    "FI",
+    "FR",
+    "DE",
+    "GR",
+    "IE",
+    "IS",
+    "IT",
+    "XK",
+    "LV",
+    "LI",
+    "LT",
+    "LU",
+    "MK",
+    "MT",
+    "MD",
+    "MC",
+    "ME",
+    "NO",
+    "NL",
+    "PL",
+    "PT",
+    "GB",
+    "CZ",
+    "RO",
+    "RU",
+    "SM",
+    "RS",
+    "SK",
+    "SI",
+    "ES",
+    "SE",
+    "CH",
+    "UA",
+    "HU",
+    "VA"
+  )
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): Topology = {
     implicit val KeySerde: Serde[String]              = kafkaStreamsOptions.keySerde
@@ -50,9 +95,11 @@ object Streams {
 
       val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawTable)
 
-      val flightAirportAirline: KStream[String, FlightWithAirline] = flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
+      val flightAirportAirline: KStream[String, FlightWithAirline] =
+        flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
-      val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] = flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
+      val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] =
+        flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
     }
@@ -114,10 +161,12 @@ object Streams {
             flightReceivedOnlyDeparture.airplaneRegNumber,
             flightReceivedOnlyDeparture.status
           )
-      ).filter((_, value) =>
-      europeanCountries.contains(value.airportDeparture.codeIso2Country) &&
-        europeanCountries.contains(value.airportArrival.codeIso2Country)
-    )
+      )
+      .filter(
+        (_, value) =>
+          europeanCountries.contains(value.airportDeparture.codeIso2Country) &&
+            europeanCountries.contains(value.airportArrival.codeIso2Country)
+      )
   }
 
   def flightWithAirportToAirlineEnrichment(
