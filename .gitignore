@@ -106,5 +106,3 @@ project/plugins/project/
 ### Begin custom section ###
 .sbt/
 ### End custom section ###
-
-src/test

@@ -20,14 +20,62 @@ object Streams {
   final val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
   final val AllRecordsKey: String   = "all"
 
+  private final val europeanCountries = Set(
+    "AL",
+    "AD",
+    "AT",
+    "BE",
+    "BY",
+    "BA",
+    "BG",
+    "CY",
+    "HR",
+    "DK",
+    "EE",
+    "FI",
+    "FR",
+    "DE",
+    "GR",
+    "IE",
+    "IS",
+    "IT",
+    "XK",
+    "LV",
+    "LI",
+    "LT",
+    "LU",
+    "MK",
+    "MT",
+    "MD",
+    "MC",
+    "ME",
+    "NO",
+    "NL",
+    "PL",
+    "PT",
+    "GB",
+    "CZ",
+    "RO",
+    "RU",
+    "SM",
+    "RS",
+    "SK",
+    "SI",
+    "ES",
+    "SE",
+    "CH",
+    "UA",
+    "HU",
+    "VA"
+  )
+
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): Topology = {
     implicit val KeySerde: Serde[String]              = kafkaStreamsOptions.keySerde
     implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
     implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
     implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
     implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
-    //not used
-    implicit val cityRawSerde: Serde[CityRaw] = kafkaStreamsOptions.cityRawSerde
+//    implicit val cityRawSerde: Serde[CityRaw] = kafkaStreamsOptions.cityRawSerde
 
     //for join trasformation
     implicit val flightWithDepartureAirportInfoSerde: Serde[FlightWithDepartureAirportInfo] =
@@ -61,7 +109,6 @@ object Streams {
     val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
     val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
     val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
-    //not used
     // val cityRawStream  = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic)
 
     buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
@@ -95,15 +142,15 @@ object Streams {
           FlightWithDepartureAirportInfo(
             GeographyInfo(flight.geography.latitude, flight.geography.longitude, flight.geography.altitude, flight.geography.direction),
             flight.speed.horizontal,
-            AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country), //departure
-            flight.arrival.iataCode,                                                                                 //Arrival
-            flight.airline.iataCode,
+            AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country),
+            flight.arrival.iataCode,
+            flight.airline.icaoCode,
             flight.aircraft.regNumber,
             flight.status
           )
       )
       .join(airportRawTable)(
-        (_, value2) => value2.codeAirportArrival, //iatacode arrivo
+        (_, value2) => value2.codeAirportArrival,
         (flightReceivedOnlyDeparture, airport) =>
           FlightWithAllAirportInfo(
             flightReceivedOnlyDeparture.geography,
@@ -114,6 +161,11 @@ object Streams {
             flightReceivedOnlyDeparture.airplaneRegNumber,
             flightReceivedOnlyDeparture.status
           )
+      )
+      .filter(
+        (_, value) =>
+          europeanCountries.contains(value.airportDeparture.codeIso2Country) &&
+            europeanCountries.contains(value.airportArrival.codeIso2Country)
       )
   }
 
