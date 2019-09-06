@@ -18,7 +18,7 @@ RUN sbt compile && \
 
 # end of build stage
 
-FROM openjdk:8-jre-alpine
+FROM openjdk:8
 
 WORKDIR /app
 
