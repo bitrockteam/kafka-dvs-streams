@@ -20,7 +20,7 @@ object Streams {
   final val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
   final val AllRecordsKey: String   = "all"
 
-  private final val europeanCountries = List("AL", "AD", "AT", "BE", "BY", "BA", "BG", "CY", "HR", "DK", "EE", "FI",
+  private final val europeanCountries = Set("AL", "AD", "AT", "BE", "BY", "BA", "BG", "CY", "HR", "DK", "EE", "FI",
     "FR", "DE", "GR", "IE", "IS", "IT", "XK", "LV", "LI", "LT", "LU", "MK", "MT", "MD", "MC", "ME", "NO", "NL", "PL",
     "PT", "GB", "CZ", "RO", "RU", "SM", "RS", "SK", "SI", "ES", "SE", "CH", "UA", "HU", "VA")
 
