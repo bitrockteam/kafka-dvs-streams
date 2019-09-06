@@ -52,10 +52,6 @@ object Streams {
 
       val flightAirportAirline: KStream[String, FlightWithAirline] = flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
-//      flightJoinAirport.foreach((key, value) =>
-//        println("key ->" + key + "  value -> "+value)
-//      )
-
       val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] = flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
