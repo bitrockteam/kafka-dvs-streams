@@ -4,7 +4,7 @@ import it.bitrock.kafkaflightstream.model._
 
 trait Events {
 
-  val AirportEvent1 = AirportRaw(
+  val EuropeanAirport1 = AirportRaw(
     "1",
     "Zurigo",
     "ZRH",
@@ -15,7 +15,18 @@ trait Events {
     "CH"
   )
 
-  val AirportEvent2 = AirportRaw(
+  val EuropeanAirport2 = AirportRaw(
+    "5231",
+    "Milano Malpensa",
+    "MXP",
+    "45.627403",
+    "8.71237",
+    "Italy",
+    "IT",
+    "MIL"
+  )
+
+  val ForeignAirport1 = AirportRaw(
     "2",
     "Chicago O'hare International",
     "ORD",
@@ -52,7 +63,48 @@ trait Events {
     "active"
   )
 
-  val FlightEvent: FlightRaw = FlightRaw(
+  val EuropeanFlightEvent: FlightRaw = FlightRaw(
+    Geography(
+      49.2655,
+      -1.9623,
+      9753.6,
+      282.76
+    ),
+    Speed(
+      805.14,
+      0
+    ),
+    CommonCode(
+      "ZRH",
+      "LSZH"
+    ),
+    CommonCode(
+      "MXP",
+      "LIMC"
+    ),
+    Aircraft(
+      "HBJHA",
+      "A333",
+      "",
+      "A333"
+    ),
+    CommonCode(
+      "LX",
+      "SWR"
+    ),
+    Flight(
+      "LX6U",
+      "SWR6U",
+      "6U"
+    ),
+    System(
+      "1567415880",
+      "3061"
+    ),
+    "en-route"
+  )
+
+  val ForeignFlightEvent: FlightRaw = FlightRaw(
     Geography(
       49.2655,
       -1.9623,
@@ -93,16 +145,16 @@ trait Events {
     "en-route"
   )
 
-  val ExpectedFlightEnrichedEvent: FlightEnrichedEvent = FlightEnrichedEvent(
+  val ExpectedEuropeanFlightEnrichedEvent: FlightEnrichedEvent = FlightEnrichedEvent(
     GeographyInfo(49.2655, -1.9623, 9753.6, 282.76),
     805.14,
-    AirportInfo("ZRH", "Zurigo", "Swiss", "CH"),                               //departure
-    AirportInfo("ORD", "Chicago O'hare International", "United States", "US"), //arrival
+    AirportInfo("ZRH", "Zurigo", "Swiss", "CH"),
+    AirportInfo("MXP", "Milano Malpensa", "Italy", "IT"),
     AirlineInfo("SWISS", "67"),
     Some(AirplaneInfo("Airbus A330/A340", "4B187A")),
     "en-route"
   )
 
-  val ExpectedFlightEnrichedEventWithoutAirplaneinfo: FlightEnrichedEvent = ExpectedFlightEnrichedEvent.copy(airplane = None)
+  val ExpectedFlightEnrichedEventWithoutAirplaneinfo: FlightEnrichedEvent = ExpectedEuropeanFlightEnrichedEvent.copy(airplane = None)
 
 }
