@@ -231,7 +231,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[FlightWithDepartureAirportInfo],
         serdeFrom[FlightWithAllAirportInfo],
         serdeFrom[FlightWithAirline],
-        serdeFrom[FlightEnrichedEvent]
+        serdeFrom[FlightEnrichedEvent],
+        Serdes.Long,
+        serdeFrom[TopAirportList],
+        serdeFrom[Airport]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 
