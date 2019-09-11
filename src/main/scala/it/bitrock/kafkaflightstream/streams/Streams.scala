@@ -94,7 +94,7 @@ object Streams {
         airportRawTable: GlobalKTable[String, AirportRaw],
         airlineRawTable: GlobalKTable[String, AirlineRaw],
         airplaneRawTable: GlobalKTable[String, AirplaneRaw]
-    ): Unit = {
+    ): KStream[String, FlightEnrichedEvent] = {
 
       val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawTable)
 
@@ -105,13 +105,14 @@ object Streams {
         flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
+      flightAirportAirlineAirplane
     }
 
     val topAirportAggregator = new TopAirportAggregator(config.topElementsAmount)
 
     def buildTop5Arrival(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
 
-      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(config.kafka.topology.flightReceivedTopic)
+      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-arrival")
       implicit val groupedTable: Grouped[String, Airport]           = Grouped.`with`(s"${config.kafka.topology.topArrivalAirportTopic}-table")
       implicit val materialized: Materialized[String, Long, ByteArrayWindowStore] =
         Materialized.as(s"${config.kafka.topology.topArrivalAirportTopic}-count")
@@ -129,7 +130,7 @@ object Streams {
     }
     def buildTop5Departure(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
 
-      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(config.kafka.topology.flightReceivedTopic)
+      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-departure")
       implicit val groupedTable: Grouped[String, Airport]           = Grouped.`with`(s"${config.kafka.topology.topDepartureAirportTopic}-table")
       implicit val materialized: Materialized[String, Long, ByteArrayWindowStore] =
         Materialized.as(s"${config.kafka.topology.topDepartureAirportTopic}-count")
@@ -153,9 +154,7 @@ object Streams {
     val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
     //val cityRawStream  = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic)
 
-    buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
-
-    val flightReceivedStream = streamsBuilder.stream[String, FlightEnrichedEvent](config.kafka.topology.flightReceivedTopic)
+    val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
     buildTop5Arrival(flightReceivedStream)
     buildTop5Departure(flightReceivedStream)
 
