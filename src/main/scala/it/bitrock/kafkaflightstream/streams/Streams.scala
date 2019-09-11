@@ -86,7 +86,8 @@ object Streams {
     //output topic
     implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
     implicit val topAggregationKeySerde: Serde[Long]                  = kafkaStreamsOptions.topAggregationKeySerde
-    implicit val topAirportListSerde: Serde[TopAirportList]           = kafkaStreamsOptions.topAirportListEventSerde
+    implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList]           = kafkaStreamsOptions.topArrivalAirportListEventSerde
+    implicit val topDepartureAirportListSerde: Serde[TopDepartureAirportList]           = kafkaStreamsOptions.topDepartureAirportListEventSerde
     implicit val topAirportSerde: Serde[Airport]                      = kafkaStreamsOptions.topAirportEventSerde
 
     def buildFlightReceived(
@@ -108,15 +109,15 @@ object Streams {
       flightAirportAirlineAirplane
     }
 
-    val topAirportAggregator = new TopAirportAggregator(config.topElementsAmount)
 
     def buildTop5Arrival(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+      val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
 
       implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-arrival")
       implicit val groupedTable: Grouped[String, Airport]           = Grouped.`with`(s"${config.kafka.topology.topArrivalAirportTopic}-table")
       implicit val materialized: Materialized[String, Long, ByteArrayWindowStore] =
         Materialized.as(s"${config.kafka.topology.topArrivalAirportTopic}-count")
-      implicit val materializedTable: Materialized[String, TopAirportList, ByteArrayKeyValueStore] =
+      implicit val materializedTable: Materialized[String, TopArrivalAirportList, ByteArrayKeyValueStore] =
         Materialized.as(s"${config.kafka.topology.topArrivalAirportTopic}-table")
 
       flightEnriched
@@ -124,17 +125,18 @@ object Streams {
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
-        .aggregate(topAirportAggregator.initializer)(topAirportAggregator.adder, topAirportAggregator.subtractor)
+        .aggregate(topArrivalAirportAggregator.initializer)(topArrivalAirportAggregator.adder, topArrivalAirportAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topArrivalAirportTopic)
     }
     def buildTop5Departure(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+      val topDepartureAirportAggregator = new TopDepartureAirportAggregator(config.topElementsAmount)
 
       implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-departure")
       implicit val groupedTable: Grouped[String, Airport]           = Grouped.`with`(s"${config.kafka.topology.topDepartureAirportTopic}-table")
       implicit val materialized: Materialized[String, Long, ByteArrayWindowStore] =
         Materialized.as(s"${config.kafka.topology.topDepartureAirportTopic}-count")
-      implicit val materializedTable: Materialized[String, TopAirportList, ByteArrayKeyValueStore] =
+      implicit val materializedTable: Materialized[String, TopDepartureAirportList, ByteArrayKeyValueStore] =
         Materialized.as(s"${config.kafka.topology.topDepartureAirportTopic}-table")
 
       flightEnriched
@@ -142,7 +144,7 @@ object Streams {
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
-        .aggregate(topAirportAggregator.initializer)(topAirportAggregator.adder, topAirportAggregator.subtractor)
+        .aggregate(topDepartureAirportAggregator.initializer)(topDepartureAirportAggregator.adder, topDepartureAirportAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topDepartureAirportTopic)
     }

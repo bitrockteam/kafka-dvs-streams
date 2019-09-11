@@ -1,6 +1,6 @@
 package it.bitrock.kafkaflightstream.streams
 
-import it.bitrock.kafkaflightstream.model.{Airport, TopAirportList}
+import it.bitrock.kafkaflightstream.model.{Airport, TopArrivalAirportList, TopDepartureAirportList}
 
 import scala.collection.SortedSet
 
@@ -34,18 +34,35 @@ trait TopElementsAggregator[A, E, K] {
 
 }
 
-final class TopAirportAggregator(override val topAmount: Int) extends TopElementsAggregator[TopAirportList, Airport, String] {
+final class TopArrivalAirportAggregator(override val topAmount: Int) extends TopElementsAggregator[TopArrivalAirportList, Airport, String] {
 
   override lazy val element2OrderingTypes: Airport => (Long, String) =
   // Note: Long comparison is reversed!
     x => (-x.eventCount, x.airportCode)
 
-  override def initializer: TopAirportList = TopAirportList()
+  override def initializer: TopArrivalAirportList = TopArrivalAirportList()
 
-  override def removeElementFromTopList(agg: TopAirportList, element: Airport): List[Airport] =
+  override def removeElementFromTopList(agg: TopArrivalAirportList, element: Airport): List[Airport] =
     agg.elements.filterNot(_.airportCode == element.airportCode).toList
 
-  override def updateTopList(agg: TopAirportList, newTopList: List[Airport]): TopAirportList =
+  override def updateTopList(agg: TopArrivalAirportList, newTopList: List[Airport]): TopArrivalAirportList =
+    agg.copy(elements = newTopList)
+
+}
+
+
+final class TopDepartureAirportAggregator(override val topAmount: Int) extends TopElementsAggregator[TopDepartureAirportList, Airport, String] {
+
+  override lazy val element2OrderingTypes: Airport => (Long, String) =
+  // Note: Long comparison is reversed!
+    x => (-x.eventCount, x.airportCode)
+
+  override def initializer: TopDepartureAirportList = TopDepartureAirportList()
+
+  override def removeElementFromTopList(agg: TopDepartureAirportList, element: Airport): List[Airport] =
+    agg.elements.filterNot(_.airportCode == element.airportCode).toList
+
+  override def updateTopList(agg: TopDepartureAirportList, newTopList: List[Airport]): TopDepartureAirportList =
     agg.copy(elements = newTopList)
 
 }
