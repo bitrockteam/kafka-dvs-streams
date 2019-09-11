@@ -37,7 +37,7 @@ trait TopElementsAggregator[A, E, K] {
 final class TopArrivalAirportAggregator(override val topAmount: Int) extends TopElementsAggregator[TopArrivalAirportList, Airport, String] {
 
   override lazy val element2OrderingTypes: Airport => (Long, String) =
-  // Note: Long comparison is reversed!
+    // Note: Long comparison is reversed!
     x => (-x.eventCount, x.airportCode)
 
   override def initializer: TopArrivalAirportList = TopArrivalAirportList()
