@@ -151,7 +151,6 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).take(1)
         }
-        println(receivedRecords)
         val expectedEvent1: FlightEnrichedEvent = ExpectedFlightEnrichedEventWithoutAirplaneinfo
 
         val expectedResult = List(

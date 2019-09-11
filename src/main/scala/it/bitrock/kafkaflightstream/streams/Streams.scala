@@ -112,8 +112,9 @@ object Streams {
 
     def buildTop5Arrival(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
 
-      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-arrival")
-      implicit val groupedTable: Grouped[String, Airport]           = Grouped.`with`(s"${config.kafka.topology.topArrivalAirportTopic}-table")
+      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] =
+        Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-arrival")
+      implicit val groupedTable: Grouped[String, Airport] = Grouped.`with`(s"${config.kafka.topology.topArrivalAirportTopic}-table")
       implicit val materialized: Materialized[String, Long, ByteArrayWindowStore] =
         Materialized.as(s"${config.kafka.topology.topArrivalAirportTopic}-count")
       implicit val materializedTable: Materialized[String, TopAirportList, ByteArrayKeyValueStore] =
@@ -130,8 +131,9 @@ object Streams {
     }
     def buildTop5Departure(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
 
-      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] = Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-departure")
-      implicit val groupedTable: Grouped[String, Airport]           = Grouped.`with`(s"${config.kafka.topology.topDepartureAirportTopic}-table")
+      implicit val groupedRaw: Grouped[String, FlightEnrichedEvent] =
+        Grouped.`with`(s"${config.kafka.topology.flightReceivedTopic}-departure")
+      implicit val groupedTable: Grouped[String, Airport] = Grouped.`with`(s"${config.kafka.topology.topDepartureAirportTopic}-table")
       implicit val materialized: Materialized[String, Long, ByteArrayWindowStore] =
         Materialized.as(s"${config.kafka.topology.topDepartureAirportTopic}-count")
       implicit val materializedTable: Materialized[String, TopAirportList, ByteArrayKeyValueStore] =

@@ -3,7 +3,19 @@ package it.bitrock.kafkaflightstream.streams
 import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
-import it.bitrock.kafkaflightstream.model.{AirlineRaw, AirplaneRaw, Airport, AirportRaw, CityRaw, FlightEnrichedEvent, FlightRaw, FlightWithAirline, FlightWithAllAirportInfo, FlightWithDepartureAirportInfo, TopAirportList}
+import it.bitrock.kafkaflightstream.model.{
+  AirlineRaw,
+  AirplaneRaw,
+  Airport,
+  AirportRaw,
+  CityRaw,
+  FlightEnrichedEvent,
+  FlightRaw,
+  FlightWithAirline,
+  FlightWithAllAirportInfo,
+  FlightWithDepartureAirportInfo,
+  TopAirportList
+}
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.AvroSerdes
 import org.apache.kafka.streams.KafkaStreams
