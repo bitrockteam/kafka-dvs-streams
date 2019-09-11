@@ -53,8 +53,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           kafkaStreamsOptions.flightWithDepartureAirportInfo
         implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
         implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
-
+        //output topic
         implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
+        implicit val topAggregationKeySerde: Serde[Long]                  = kafkaStreamsOptions.topAggregationKeySerde
+        implicit val topAirportListSerde: Serde[TopAirportList]           = kafkaStreamsOptions.topAirportListEventSerde
+        implicit val topAirportSerde: Serde[Airport]                      = kafkaStreamsOptions.topAirportEventSerde
 
         val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
           val eventFlight   = EuropeanFlightEvent
@@ -113,8 +116,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           kafkaStreamsOptions.flightWithDepartureAirportInfo
         implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
         implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
-
+        //output topic
         implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
+        implicit val topAggregationKeySerde: Serde[Long]                  = kafkaStreamsOptions.topAggregationKeySerde
+        implicit val topAirportListSerde: Serde[TopAirportList]           = kafkaStreamsOptions.topAirportListEventSerde
+        implicit val topAirportSerde: Serde[Airport]                      = kafkaStreamsOptions.topAirportEventSerde
 
         val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
           val eventFlight   = EuropeanFlightEvent
@@ -172,8 +178,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           kafkaStreamsOptions.flightWithDepartureAirportInfo
         implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
         implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
-
+        //output topic
         implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
+        implicit val topAggregationKeySerde: Serde[Long]                  = kafkaStreamsOptions.topAggregationKeySerde
+        implicit val topAirportListSerde: Serde[TopAirportList]           = kafkaStreamsOptions.topAirportListEventSerde
+        implicit val topAirportSerde: Serde[Airport]                      = kafkaStreamsOptions.topAirportEventSerde
 
         val receivedRecordsSize = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
           val eventFlight   = ForeignFlightEvent
