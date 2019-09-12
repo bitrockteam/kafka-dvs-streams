@@ -311,6 +311,56 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
       }
     }
+
+    "produce TopSpeedList elements in the appropriate topic" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val topSpeedListSerde: Serde[TopSpeedList] = kafkaStreamsOptions.topSpeedListEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+
+          val airportMessages = List(
+            EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+            EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+          )
+          val airlineMessage  = List(AirlineEvent.codeIcaoAirline                      -> AirlineEvent)
+          val airplaneMessage = List(AirplaneEvent.numberRegistration.replace("-", "") -> AirplaneEvent)
+
+          val flightMessages = Seq(
+            "LX6U" -> EuropeanFlightEvent,
+            "LX6U" -> EuropeanFlightEvent.copy(speed = Speed(100.55, 0)),
+            "1"    -> EuropeanFlightEvent.copy(flight = Flight("1", "1", "1"), speed = Speed(600.55, 0)),
+            "2"    -> EuropeanFlightEvent.copy(flight = Flight("2", "2", "2"), speed = Speed(700.55, 0)),
+            "3"    -> EuropeanFlightEvent.copy(flight = Flight("3", "3", "3"), speed = Speed(900.55, 0)),
+            "4"    -> EuropeanFlightEvent.copy(flight = Flight("4", "4", "4"), speed = Speed(900.55, 0)),
+            "5"    -> EuropeanFlightEvent.copy(flight = Flight("5", "5", "5"), speed = Speed(500, 0))
+          )
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages.toList)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
+          publishToKafka(appConfig.kafka.topology.airportRawTopic, airportMessages)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
+
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopSpeedList](
+            Set(appConfig.kafka.topology.topSpeedTopic),
+            1,
+            // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
+            timeout = ConsumerPollTimeout
+          )
+
+          messagesMap(appConfig.kafka.topology.topSpeedTopic).headOption
+            .map { case (_, v) => v }
+        }
+
+        receivedRecords.value.elements.size shouldBe 5
+        receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopSpeedResult.elements
+      }
+    }
   }
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] {
@@ -337,7 +387,9 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         Serdes.Long,
         serdeFrom[TopArrivalAirportList],
         serdeFrom[TopDepartureAirportList],
-        serdeFrom[Airport]
+        serdeFrom[Airport],
+        serdeFrom[TopSpeedList],
+        serdeFrom[SpeedFlight]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 

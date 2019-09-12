@@ -1,12 +1,12 @@
 package it.bitrock.kafkaflightstream.streams
 
-import it.bitrock.kafkaflightstream.model.{Airport, TopArrivalAirportList, TopDepartureAirportList}
+import it.bitrock.kafkaflightstream.model.{Airport, SpeedFlight, TopArrivalAirportList, TopDepartureAirportList, TopSpeedList}
 
 import scala.collection.SortedSet
 
 trait TopElementsAggregator[A, E, K] {
 
-  type ElementsOrderingTypes = (Long, String)
+  type ElementsOrderingTypes = (Double, String)
 
   implicit val ordering: Ordering[E] = Ordering[ElementsOrderingTypes].on[E](element2OrderingTypes)
 
@@ -36,7 +36,7 @@ trait TopElementsAggregator[A, E, K] {
 
 final class TopArrivalAirportAggregator(override val topAmount: Int) extends TopElementsAggregator[TopArrivalAirportList, Airport, String] {
 
-  override lazy val element2OrderingTypes: Airport => (Long, String) =
+  override lazy val element2OrderingTypes: Airport => (Double, String) =
     // Note: Long comparison is reversed!
     x => (-x.eventCount, x.airportCode)
 
@@ -53,7 +53,7 @@ final class TopArrivalAirportAggregator(override val topAmount: Int) extends Top
 final class TopDepartureAirportAggregator(override val topAmount: Int)
     extends TopElementsAggregator[TopDepartureAirportList, Airport, String] {
 
-  override lazy val element2OrderingTypes: Airport => (Long, String) =
+  override lazy val element2OrderingTypes: Airport => (Double, String) =
     // Note: Long comparison is reversed!
     x => (-x.eventCount, x.airportCode)
 
@@ -63,6 +63,22 @@ final class TopDepartureAirportAggregator(override val topAmount: Int)
     agg.elements.filterNot(_.airportCode == element.airportCode).toList
 
   override def updateTopList(agg: TopDepartureAirportList, newTopList: List[Airport]): TopDepartureAirportList =
+    agg.copy(elements = newTopList)
+
+}
+
+final class TopSpeedFlightAggregator(override val topAmount: Int) extends TopElementsAggregator[TopSpeedList, SpeedFlight, String] {
+
+  override lazy val element2OrderingTypes: SpeedFlight => (Double, String) =
+    // Note: Long comparison is reversed!
+    x => (-x.speed, x.flightCode)
+
+  override def initializer: TopSpeedList = TopSpeedList()
+
+  override def removeElementFromTopList(agg: TopSpeedList, element: SpeedFlight): List[SpeedFlight] =
+    agg.elements.filterNot(_.flightCode == element.flightCode).toList
+
+  override def updateTopList(agg: TopSpeedList, newTopList: List[SpeedFlight]): TopSpeedList =
     agg.copy(elements = newTopList)
 
 }
