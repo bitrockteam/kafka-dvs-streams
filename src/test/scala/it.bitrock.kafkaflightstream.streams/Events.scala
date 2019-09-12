@@ -26,6 +26,39 @@ trait Events {
     "MIL"
   )
 
+  val EuropeanAirport3 = AirportRaw(
+    "5232",
+    "Mirgorod",
+    "MXR",
+    "49.966667",
+    "33.6",
+    "Ukraine",
+    "UA",
+    "MXR"
+  )
+
+  val EuropeanAirport4 = AirportRaw(
+    "5306",
+    "Capodichino",
+    "NAP",
+    "40.886112",
+    "14.291667",
+    "Italy",
+    "IT",
+    "NAP"
+  )
+
+  val EuropeanAirport5 = AirportRaw(
+    "5332",
+    "Cote D'azur International Airport",
+    "NCE",
+    "40.886112",
+    "14.291667",
+    "France",
+    "FR",
+    "NCE"
+  )
+
   val ForeignAirport1 = AirportRaw(
     "2",
     "Chicago O'hare International",
