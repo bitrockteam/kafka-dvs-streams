@@ -7,9 +7,9 @@ import it.bitrock.kafkaflightstream.model._
 import it.bitrock.kafkaflightstream.streams.config.{AppConfig, KafkaConfig}
 import org.apache.kafka.clients.consumer.{ConsumerConfig, OffsetResetStrategy}
 import org.apache.kafka.common.serialization.Serde
-import org.apache.kafka.streams.kstream.{GlobalKTable, TimeWindows, Windowed}
+import org.apache.kafka.streams.kstream.{GlobalKTable, TimeWindows}
 import org.apache.kafka.streams.scala.ImplicitConversions._
-import org.apache.kafka.streams.scala.kstream.{Grouped, KStream, KTable, Materialized}
+import org.apache.kafka.streams.scala.kstream.{Grouped, KStream, Materialized}
 import org.apache.kafka.streams.scala.{ByteArrayKeyValueStore, ByteArrayWindowStore, StreamsBuilder}
 import org.apache.kafka.streams.{StreamsConfig, Topology}
 
@@ -77,18 +77,15 @@ object Streams {
     implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
     //implicit val cityRawSerde: Serde[CityRaw] = kafkaStreamsOptions.cityRawSerde
 
-    //for join trasformation
-    implicit val flightWithDepartureAirportInfoSerde: Serde[FlightWithDepartureAirportInfo] =
-      kafkaStreamsOptions.flightWithDepartureAirportInfo
-    implicit val flightWithAllAirportSerde: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
-    implicit val flightWithAirlineSerde: Serde[FlightWithAirline]           = kafkaStreamsOptions.flightWithAirline
-
     //output topic
     implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent]         = kafkaStreamsOptions.flightEnrichedEventSerde
     implicit val topAggregationKeySerde: Serde[Long]                          = kafkaStreamsOptions.topAggregationKeySerde
     implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList]     = kafkaStreamsOptions.topArrivalAirportListEventSerde
     implicit val topDepartureAirportListSerde: Serde[TopDepartureAirportList] = kafkaStreamsOptions.topDepartureAirportListEventSerde
-    implicit val topAirportSerde: Serde[Airport]                              = kafkaStreamsOptions.topAirportEventSerde
+    implicit val topSpeedListSerde: Serde[TopSpeedList]                       = kafkaStreamsOptions.topSpeedListEventSerde
+
+    implicit val topAirportSerde: Serde[Airport]   = kafkaStreamsOptions.topAirportEventSerde
+    implicit val topSpeedSerde: Serde[SpeedFlight] = kafkaStreamsOptions.topSpeedFlightEventSerde
 
     def buildFlightReceived(
         fligthtRawStream: KStream[String, FlightRaw],
@@ -107,6 +104,19 @@ object Streams {
 
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
       flightAirportAirlineAirplane
+    }
+
+    def buildTopFlightSpeed(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+      val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
+
+      flightEnriched
+        .groupBy((key, _) => key)
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .reduce((_, value2) => value2)
+        .groupBy((k, v) => (k.window.start.toString, SpeedFlight(k.key, v.speed)))
+        .aggregate(topSpeedFlightAggregator.initializer)(topSpeedFlightAggregator.adder, topSpeedFlightAggregator.subtractor)
+        .toStream
+        .to(config.kafka.topology.topSpeedTopic)
     }
 
     def buildTop5Arrival(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
@@ -160,6 +170,7 @@ object Streams {
     val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
     buildTop5Arrival(flightReceivedStream)
     buildTop5Departure(flightReceivedStream)
+    buildTopFlightSpeed(flightReceivedStream)
 
     streamsBuilder.build
   }

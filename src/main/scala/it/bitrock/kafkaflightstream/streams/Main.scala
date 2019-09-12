@@ -14,8 +14,10 @@ import it.bitrock.kafkaflightstream.model.{
   FlightWithAirline,
   FlightWithAllAirportInfo,
   FlightWithDepartureAirportInfo,
+  SpeedFlight,
   TopArrivalAirportList,
-  TopDepartureAirportList
+  TopDepartureAirportList,
+  TopSpeedList
 }
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.AvroSerdes
@@ -46,7 +48,9 @@ object Main extends App with LazyLogging {
     Serdes.Long,
     avroSerdes.serdeFrom[TopArrivalAirportList],
     avroSerdes.serdeFrom[TopDepartureAirportList],
-    avroSerdes.serdeFrom[Airport]
+    avroSerdes.serdeFrom[Airport],
+    avroSerdes.serdeFrom[TopSpeedList],
+    avroSerdes.serdeFrom[SpeedFlight]
   )
 
   val topology = Streams.buildTopology(config, kafkaStreamsOptions)

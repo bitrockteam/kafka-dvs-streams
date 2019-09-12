@@ -19,5 +19,7 @@ final case class KafkaStreamsOptions(
     topAggregationKeySerde: Serde[Long],
     topArrivalAirportListEventSerde: Serde[TopArrivalAirportList],
     topDepartureAirportListEventSerde: Serde[TopDepartureAirportList],
-    topAirportEventSerde: Serde[Airport]
+    topAirportEventSerde: Serde[Airport],
+    topSpeedListEventSerde: Serde[TopSpeedList],
+    topSpeedFlightEventSerde: Serde[SpeedFlight]
 )
