@@ -27,6 +27,7 @@ ENV JAVA_OPTS="-Xmx512m"
 COPY --from=sbt-build /app.zip .
 RUN unzip app.zip
 
-RUN chmod u+x bin/kafka-flightstream-streams
+COPY entrypoint.sh ./
+RUN chmod u+x entrypoint.sh bin/kafka-flightstream-streams
 
-ENTRYPOINT ["./bin/kafka-flightstream-streams"]
+ENTRYPOINT ["./entrypoint.sh"]
