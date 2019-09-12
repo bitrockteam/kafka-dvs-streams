@@ -38,22 +38,15 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
   "Streams" should {
 
-    "joined succesfully with consistent data" in ResourceLoaner.withFixture {
+    "be joined succesfully with consistent data" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
-        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
-        implicit val flightRawSerde: Serde[FlightRaw]    = kafkaStreamsOptions.flightRawSerde
-
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
         implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
         implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
-        implicit val cityRawSerde: Serde[CityRaw]         = kafkaStreamsOptions.cityRawSerde
         implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
-
-        implicit val flightWithDepartureAirportInfo: Serde[FlightWithDepartureAirportInfo] =
-          kafkaStreamsOptions.flightWithDepartureAirportInfo
-        implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
-        implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
-
+        //output topic
         implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
 
         val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
@@ -98,22 +91,15 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
     }
 
-    "joined succesfully with consistent data but without airplane informations" in ResourceLoaner.withFixture {
+    "be joined succesfully with consistent data but without airplane informations" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
-        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
-        implicit val flightRawSerde: Serde[FlightRaw]    = kafkaStreamsOptions.flightRawSerde
-
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
         implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
         implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
-        implicit val cityRawSerde: Serde[CityRaw]         = kafkaStreamsOptions.cityRawSerde
         implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
-
-        implicit val flightWithDepartureAirportInfo: Serde[FlightWithDepartureAirportInfo] =
-          kafkaStreamsOptions.flightWithDepartureAirportInfo
-        implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
-        implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
-
+        //output topic
         implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
 
         val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
@@ -145,7 +131,6 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).take(1)
         }
-        println(receivedRecords)
         val expectedEvent1: FlightEnrichedEvent = ExpectedFlightEnrichedEventWithoutAirplaneinfo
 
         val expectedResult = List(
@@ -157,22 +142,15 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
     }
 
-    "joined but without results because arrival airport is outside europe countries list" in ResourceLoaner.withFixture {
+    "be joined but without results because arrival airport is outside europe countries list" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
-        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
-        implicit val flightRawSerde: Serde[FlightRaw]    = kafkaStreamsOptions.flightRawSerde
-
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
         implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
         implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
-        implicit val cityRawSerde: Serde[CityRaw]         = kafkaStreamsOptions.cityRawSerde
         implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
-
-        implicit val flightWithDepartureAirportInfo: Serde[FlightWithDepartureAirportInfo] =
-          kafkaStreamsOptions.flightWithDepartureAirportInfo
-        implicit val flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo] = kafkaStreamsOptions.flightWithAllAirportInfo
-        implicit val flightWithAirline: Serde[FlightWithAirline]               = kafkaStreamsOptions.flightWithAirline
-
+        //output topic
         implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
 
         val receivedRecordsSize = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
@@ -209,6 +187,130 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
 
     }
+
+    "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList] = kafkaStreamsOptions.topArrivalAirportListEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+
+          val airportMessages = List(
+            EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+            EuropeanAirport2.codeIataAirport -> EuropeanAirport2,
+            EuropeanAirport3.codeIataAirport -> EuropeanAirport3,
+            EuropeanAirport4.codeIataAirport -> EuropeanAirport4,
+            EuropeanAirport5.codeIataAirport -> EuropeanAirport5
+          )
+
+          val airlineMessage  = List(AirlineEvent.codeIcaoAirline                      -> AirlineEvent)
+          val airplaneMessage = List(AirplaneEvent.numberRegistration.replace("-", "") -> AirplaneEvent)
+
+          val flightMessages1 = 1 to 3 map { key =>
+            key.toString -> EuropeanFlightEvent
+          }
+
+          val flightMessages2 = 4 to 9 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(departure = CommonCode("MXP", "MXP"), arrival = CommonCode("MXR", "MXR"))
+          }
+
+          val flightMessages3 = 10 to 18 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(departure = CommonCode("NAP", "NAP"), arrival = CommonCode("ZRH", "ZRH"))
+          }
+
+          val flightMessages4 = 19 to 20 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(departure = CommonCode("NCE", "NCE"), arrival = CommonCode("NAP", "NAP"))
+          }
+
+          val messages = flightMessages1 ++ flightMessages2 ++ flightMessages3 ++ flightMessages4
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, messages.toList)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
+          publishToKafka(appConfig.kafka.topology.airportRawTopic, airportMessages)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
+
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopArrivalAirportList](
+            Set(appConfig.kafka.topology.topArrivalAirportTopic),
+            1,
+            // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
+            timeout = ConsumerPollTimeout
+          )
+
+          messagesMap(appConfig.kafka.topology.topArrivalAirportTopic).headOption
+            .map { case (_, v) => v }
+        }
+
+        receivedRecords.value.elements.size shouldBe 4
+        receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopArrivalResult.elements
+      }
+    }
+
+    "produce TopDepartureAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val topDepartureAirportListSerde: Serde[TopDepartureAirportList] = kafkaStreamsOptions.topDepartureAirportListEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+
+          val airportMessages = List(
+            EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+            EuropeanAirport2.codeIataAirport -> EuropeanAirport2,
+            EuropeanAirport3.codeIataAirport -> EuropeanAirport3,
+            EuropeanAirport4.codeIataAirport -> EuropeanAirport4,
+            EuropeanAirport5.codeIataAirport -> EuropeanAirport5
+          )
+
+          val airlineMessage  = List(AirlineEvent.codeIcaoAirline                      -> AirlineEvent)
+          val airplaneMessage = List(AirplaneEvent.numberRegistration.replace("-", "") -> AirplaneEvent)
+
+          val flightMessages1 = 1 to 3 map { key =>
+            key.toString -> EuropeanFlightEvent
+          }
+
+          val flightMessages2 = 4 to 9 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(departure = CommonCode("MXP", "MXP"), arrival = CommonCode("MXR", "MXR"))
+          }
+
+          val flightMessages3 = 10 to 18 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(departure = CommonCode("NAP", "NAP"), arrival = CommonCode("ZRH", "ZRH"))
+          }
+
+          val flightMessages4 = 19 to 20 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(departure = CommonCode("NCE", "NCE"), arrival = CommonCode("NAP", "NAP"))
+          }
+
+          val messages = flightMessages1 ++ flightMessages2 ++ flightMessages3 ++ flightMessages4
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, messages.toList)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
+          publishToKafka(appConfig.kafka.topology.airportRawTopic, airportMessages)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
+
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopDepartureAirportList](
+            Set(appConfig.kafka.topology.topDepartureAirportTopic),
+            1,
+            // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
+            timeout = ConsumerPollTimeout
+          )
+
+          messagesMap(appConfig.kafka.topology.topDepartureAirportTopic).headOption
+            .map { case (_, v) => v }
+        }
+
+        receivedRecords.value.elements.size shouldBe 4
+        receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
+      }
+    }
   }
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] {
@@ -231,7 +333,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[FlightWithDepartureAirportInfo],
         serdeFrom[FlightWithAllAirportInfo],
         serdeFrom[FlightWithAirline],
-        serdeFrom[FlightEnrichedEvent]
+        serdeFrom[FlightEnrichedEvent],
+        Serdes.Long,
+        serdeFrom[TopArrivalAirportList],
+        serdeFrom[TopDepartureAirportList],
+        serdeFrom[Airport]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 
