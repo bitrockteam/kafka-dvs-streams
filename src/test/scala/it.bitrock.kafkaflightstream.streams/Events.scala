@@ -190,4 +190,21 @@ trait Events {
 
   val ExpectedFlightEnrichedEventWithoutAirplaneinfo: FlightEnrichedEvent = ExpectedEuropeanFlightEnrichedEvent.copy(airplane = None)
 
+  val ExpectedTopArrivalResult = TopArrivalAirportList(
+    List(
+      Airport("ZRH", 9),
+      Airport("MXR", 6),
+      Airport("MXP", 3),
+      Airport("NAP", 2)
+    )
+  )
+
+  val ExpectedTopDepartureResult = TopDepartureAirportList(
+    List(
+      Airport("NAP", 9),
+      Airport("MXP", 6),
+      Airport("ZRH", 3),
+      Airport("NCE", 2)
+    )
+  )
 }

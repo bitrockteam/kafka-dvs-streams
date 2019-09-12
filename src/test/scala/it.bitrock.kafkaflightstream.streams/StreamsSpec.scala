@@ -245,17 +245,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
             .map { case (_, v) => v }
         }
 
-        val expectedResult = TopArrivalAirportList(
-          List(
-            Airport("ZRH", 9),
-            Airport("MXR", 6),
-            Airport("MXP", 3),
-            Airport("NAP", 2)
-          )
-        )
-
         receivedRecords.value.elements.size shouldBe 4
-        receivedRecords.value.elements should contain theSameElementsInOrderAs expectedResult.elements
+        receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopArrivalResult.elements
       }
     }
 
@@ -316,17 +307,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
             .map { case (_, v) => v }
         }
 
-        val expectedResult = TopDepartureAirportList(
-          List(
-            Airport("NAP", 9),
-            Airport("MXP", 6),
-            Airport("ZRH", 3),
-            Airport("NCE", 2)
-          )
-        )
-
         receivedRecords.value.elements.size shouldBe 4
-        receivedRecords.value.elements should contain theSameElementsInOrderAs expectedResult.elements
+        receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
       }
     }
   }
