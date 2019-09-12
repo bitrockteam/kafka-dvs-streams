@@ -207,4 +207,14 @@ trait Events {
       Airport("NCE", 2)
     )
   )
+
+  val ExpectedTopSpeedResult = TopSpeedList(
+    Seq(
+      SpeedFlight("3", 900.55),
+      SpeedFlight("4", 900.55),
+      SpeedFlight("2", 700.55),
+      SpeedFlight("1", 600.55),
+      SpeedFlight("5", 500)
+    )
+  )
 }
