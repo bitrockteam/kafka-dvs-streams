@@ -179,13 +179,15 @@ trait Events {
   )
 
   val ExpectedEuropeanFlightEnrichedEvent: FlightEnrichedEvent = FlightEnrichedEvent(
+    "LX6U",
     GeographyInfo(49.2655, -1.9623, 9753.6, 282.76),
     805.14,
     AirportInfo("ZRH", "Zurigo", "Swiss", "CH"),
     AirportInfo("MXP", "Milano Malpensa", "Italy", "IT"),
     AirlineInfo("SWISS", "67"),
     Some(AirplaneInfo("Airbus A330/A340", "4B187A")),
-    "en-route"
+    "en-route",
+    "1567415880"
   )
 
   val ExpectedFlightEnrichedEventWithoutAirplaneinfo: FlightEnrichedEvent = ExpectedEuropeanFlightEnrichedEvent.copy(airplane = None)

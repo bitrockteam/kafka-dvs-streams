@@ -56,7 +56,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           val eventAirline  = AirlineEvent
           val eventAirplane = AirplaneEvent
 
-          val flightMessage = List(eventFlight.flight.icaoNumber -> eventFlight)
+          val flightMessage = List(eventFlight.flight.iataNumber -> eventFlight)
           val airportMessages = List(
             eventAirport1.codeIataAirport -> eventAirport1,
             eventAirport2.codeIataAirport -> eventAirport2
@@ -82,7 +82,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         val expectedEvent1: FlightEnrichedEvent = ExpectedEuropeanFlightEnrichedEvent
 
         val expectedResult = List(
-          (EuropeanFlightEvent.flight.icaoNumber, expectedEvent1)
+          (EuropeanFlightEvent.flight.iataNumber, expectedEvent1)
         )
 
         receivedRecords should contain theSameElementsAs expectedResult
@@ -109,7 +109,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           val eventAirline  = AirlineEvent
           val eventAirplane = AirplaneEvent.copy(numberRegistration = "falso")
 
-          val flightMessage = List(eventFlight.flight.icaoNumber -> eventFlight)
+          val flightMessage = List(eventFlight.flight.iataNumber -> eventFlight)
           val airportMessages = List(
             eventAirport1.codeIataAirport -> eventAirport1,
             eventAirport2.codeIataAirport -> eventAirport2
@@ -134,7 +134,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         val expectedEvent1: FlightEnrichedEvent = ExpectedFlightEnrichedEventWithoutAirplaneinfo
 
         val expectedResult = List(
-          (EuropeanFlightEvent.flight.icaoNumber, expectedEvent1)
+          (EuropeanFlightEvent.flight.iataNumber, expectedEvent1)
         )
 
         receivedRecords should contain theSameElementsAs expectedResult
@@ -160,7 +160,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           val eventAirline  = AirlineEvent
           val eventAirplane = AirplaneEvent
 
-          val flightMessage = List(eventFlight.flight.icaoNumber -> eventFlight)
+          val flightMessage = List(eventFlight.flight.iataNumber -> eventFlight)
           val airportMessages = List(
             eventAirport1.codeIataAirport -> eventAirport1,
             eventAirport2.codeIataAirport -> eventAirport2

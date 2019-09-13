@@ -197,28 +197,37 @@ object Streams {
     flightRawStream
       .join(airportRawTable)(
         (_, value) => value.departure.iataCode,
-        (flight, airport) =>
+        (flightRaw, airportRaw) =>
           FlightWithDepartureAirportInfo(
-            GeographyInfo(flight.geography.latitude, flight.geography.longitude, flight.geography.altitude, flight.geography.direction),
-            flight.speed.horizontal,
-            AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country),
-            flight.arrival.iataCode,
-            flight.airline.icaoCode,
-            flight.aircraft.regNumber,
-            flight.status
+            flightRaw.flight.iataNumber,
+            GeographyInfo(
+              flightRaw.geography.latitude,
+              flightRaw.geography.longitude,
+              flightRaw.geography.altitude,
+              flightRaw.geography.direction
+            ),
+            flightRaw.speed.horizontal,
+            AirportInfo(airportRaw.codeIataAirport, airportRaw.nameAirport, airportRaw.nameCountry, airportRaw.codeIso2Country),
+            flightRaw.arrival.iataCode,
+            flightRaw.airline.icaoCode,
+            flightRaw.aircraft.regNumber,
+            flightRaw.status,
+            flightRaw.system.updated
           )
       )
       .join(airportRawTable)(
         (_, value2) => value2.codeAirportArrival,
-        (flightReceivedOnlyDeparture, airport) =>
+        (flightReceivedOnlyDeparture, airportRaw) =>
           FlightWithAllAirportInfo(
+            flightReceivedOnlyDeparture.iataNumber,
             flightReceivedOnlyDeparture.geography,
             flightReceivedOnlyDeparture.speed,
             flightReceivedOnlyDeparture.airportDeparture,
-            AirportInfo(airport.codeIataAirport, airport.nameAirport, airport.nameCountry, airport.codeIso2Country),
+            AirportInfo(airportRaw.codeIataAirport, airportRaw.nameAirport, airportRaw.nameCountry, airportRaw.codeIso2Country),
             flightReceivedOnlyDeparture.airlineCode,
             flightReceivedOnlyDeparture.airplaneRegNumber,
-            flightReceivedOnlyDeparture.status
+            flightReceivedOnlyDeparture.status,
+            flightReceivedOnlyDeparture.updated
           )
       )
       .filter(
@@ -236,15 +245,17 @@ object Streams {
     flightWithAllAirportStream
       .join(airlineRawTable)(
         (_, value) => value.airlineCode,
-        (flightAndAirport, airline) =>
+        (flightAndAirport, airlineRaw) =>
           FlightWithAirline(
+            flightAndAirport.iataNumber,
             flightAndAirport.geography,
             flightAndAirport.speed,
             flightAndAirport.airportDeparture,
             flightAndAirport.airportArrival,
-            AirlineInfo(airline.nameAirline, airline.sizeAirline),
+            AirlineInfo(airlineRaw.nameAirline, airlineRaw.sizeAirline),
             flightAndAirport.airplaneRegNumber,
-            flightAndAirport.status
+            flightAndAirport.status,
+            flightAndAirport.updated
           )
       )
   }
@@ -256,15 +267,17 @@ object Streams {
     flightWithAirline
       .leftJoin(airplaneRawTable)(
         (_, value) => value.airplaneRegNumber,
-        (flightAndAirline, airplaneTable) =>
+        (flightAndAirline, airplaneRaw) =>
           FlightEnrichedEvent(
+            flightAndAirline.iataNumber,
             flightAndAirline.geography,
             flightAndAirline.speed,
             flightAndAirline.airportDeparture,
             flightAndAirline.airportArrival,
             flightAndAirline.airline,
-            Option(airplaneTable).map(airplaneTable => AirplaneInfo(airplaneTable.productionLine, airplaneTable.modelCode)),
-            flightAndAirline.status
+            Option(airplaneRaw).map(airplaneRaw => AirplaneInfo(airplaneRaw.productionLine, airplaneRaw.modelCode)),
+            flightAndAirline.status,
+            flightAndAirline.updated
           )
       )
   }
