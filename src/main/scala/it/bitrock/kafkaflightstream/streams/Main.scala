@@ -9,6 +9,7 @@ import it.bitrock.kafkaflightstream.model.{
   Airport,
   AirportRaw,
   CityRaw,
+  CountFlightStatus,
   FlightEnrichedEvent,
   FlightRaw,
   FlightWithAirline,
@@ -50,7 +51,8 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[TopDepartureAirportList],
     avroSerdes.serdeFrom[Airport],
     avroSerdes.serdeFrom[TopSpeedList],
-    avroSerdes.serdeFrom[SpeedFlight]
+    avroSerdes.serdeFrom[SpeedFlight],
+    avroSerdes.serdeFrom[CountFlightStatus]
   )
 
   val topology = Streams.buildTopology(config, kafkaStreamsOptions)

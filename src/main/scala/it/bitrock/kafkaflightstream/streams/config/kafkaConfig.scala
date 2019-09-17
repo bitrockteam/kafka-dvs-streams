@@ -21,6 +21,7 @@ final case class TopologyConfig(
     topArrivalAirportTopic: String,
     topDepartureAirportTopic: String,
     topSpeedTopic: String,
+    totalFlightTopic: String,
     aggregationTimeWindowSize: FiniteDuration,
     commitInterval: FiniteDuration,
     cacheMaxSizeBytes: Long,

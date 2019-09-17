@@ -219,4 +219,11 @@ trait Events {
       SpeedFlight("5", 500)
     )
   )
+
+  val ExpectedTotalFlightResult: Seq[CountFlightStatus] = Seq(
+    CountFlightStatus("en-route", 3),
+    CountFlightStatus("started", 1),
+    CountFlightStatus("landed", 2)
+  )
+
 }

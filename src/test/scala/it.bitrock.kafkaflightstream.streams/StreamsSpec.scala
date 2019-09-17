@@ -361,6 +361,56 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         receivedRecords.value.elements should contain theSameElementsInOrderAs ExpectedTopSpeedResult.elements
       }
     }
+
+    "produce TotalFlight elements in the appropriate topic" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val countFlightStatusSerde: Serde[CountFlightStatus] = kafkaStreamsOptions.countFlightStatusEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+
+          val airportMessages = List(
+            EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+            EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+          )
+          val airlineMessage  = List(AirlineEvent.codeIcaoAirline                      -> AirlineEvent)
+          val airplaneMessage = List(AirplaneEvent.numberRegistration.replace("-", "") -> AirplaneEvent)
+
+          val flightMessages = Seq(
+            "1" -> EuropeanFlightEvent.copy(flight = Flight("1", "", ""), status = "en-route"),
+            "2" -> EuropeanFlightEvent.copy(flight = Flight("2", "", ""), status = "en-route"),
+            "3" -> EuropeanFlightEvent.copy(flight = Flight("3", "", ""), status = "landed"),
+            "4" -> EuropeanFlightEvent.copy(flight = Flight("4", "", ""), status = "started"),
+            "4" -> EuropeanFlightEvent.copy(flight = Flight("4", "", ""), status = "started"),
+            "5" -> EuropeanFlightEvent.copy(flight = Flight("5", "", ""), status = "en-route"),
+            "5" -> EuropeanFlightEvent.copy(flight = Flight("5", "", ""), status = "landed"),
+            "6" -> EuropeanFlightEvent.copy(flight = Flight("6", "", ""), status = "en-route")
+          )
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages.toList)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, airlineMessage)
+          publishToKafka(appConfig.kafka.topology.airportRawTopic, airportMessages)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessage)
+
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlightStatus](
+            Set(appConfig.kafka.topology.totalFlightTopic),
+            3,
+            // Use greater-than-default timeout since 5 seconds is not enough for the async processing to complete
+            timeout = ConsumerPollTimeout
+          )
+
+          messagesMap(appConfig.kafka.topology.totalFlightTopic)
+        }
+
+        receivedRecords.map(_._2) should contain theSameElementsAs ExpectedTotalFlightResult
+      }
+    }
+
   }
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] {
@@ -389,7 +439,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[TopDepartureAirportList],
         serdeFrom[Airport],
         serdeFrom[TopSpeedList],
-        serdeFrom[SpeedFlight]
+        serdeFrom[SpeedFlight],
+        serdeFrom[CountFlightStatus]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 
@@ -399,7 +450,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         appConfig.kafka.topology.airportRawTopic,
         appConfig.kafka.topology.cityRawTopic,
         appConfig.kafka.topology.airplaneRawTopic,
-        appConfig.kafka.topology.flightReceivedTopic
+        appConfig.kafka.topology.flightReceivedTopic,
+        appConfig.kafka.topology.totalFlightTopic
       )
 
       body(
