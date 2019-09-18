@@ -279,6 +279,6 @@ object Streams {
   }
 
   private val lastUpdatedFlight: (FlightEnrichedEvent, FlightEnrichedEvent) => FlightEnrichedEvent =
-    (v1, v2) => if (v1.updated.toLong > v2.updated.toLong) v1 else v2
+    (older, newer) => if (newer.updated.toLong > older.updated.toLong) newer else older
 
 }
