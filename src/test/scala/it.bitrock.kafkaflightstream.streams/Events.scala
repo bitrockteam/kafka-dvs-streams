@@ -4,226 +4,128 @@ import it.bitrock.kafkaflightstream.model._
 
 trait Events {
 
-  val EuropeanAirport1 = AirportRaw(
-    "1",
-    "Zurigo",
-    "ZRH",
-    "1234535",
-    "13244345",
-    "Swiss",
-    "CH",
-    "CH"
+  final val FlightCode = "LX6U"
+  final val Updated    = "232323"
+  final val Speeds     = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
+  final val Status     = Array("en-route", "en-route", "landed", "started", "started", "en-route", "en-route", "started", "landed", "en-route")
+
+  final val ParamsEuropeanAirport1 = AirportParams("ZRH", "CH")
+  final val ParamsEuropeanAirport2 = AirportParams("MXP", "IT")
+  final val ParamsEuropeanAirport3 = AirportParams("MXR", "UA")
+  final val ParamsEuropeanAirport4 = AirportParams("NAP", "IT")
+  final val ParamsEuropeanAirport5 = AirportParams("NCE", "FR")
+  final val ParamsEuropeanAirport6 = AirportParams("AEI", "ES")
+  final val ParamsEuropeanAirport7 = AirportParams("BVG", "NO")
+  final val ParamsForeignAirport   = AirportParams("ORD", "US")
+  final val ParamsAirline          = AirlineParams("SWR", "SWISS")
+  final val ParamsAirplane         = AirplaneParams("HBJHA")
+  final val ParamsEuropeanFlight = FlightParams(
+    ParamsEuropeanAirport1.iataCode,
+    ParamsEuropeanAirport2.iataCode,
+    ParamsAirline.icaoCode,
+    ParamsAirplane.numberRegistration
+  )
+  final val ParamsEuropeanFlightWithInvalidAirplane = FlightParams(
+    ParamsEuropeanAirport1.iataCode,
+    ParamsEuropeanAirport2.iataCode,
+    ParamsAirline.icaoCode,
+    "invalid numberRegistration"
+  )
+  final val ParamsForeignFlight = FlightParams(
+    ParamsEuropeanAirport1.iataCode,
+    ParamsForeignAirport.iataCode,
+    ParamsAirline.icaoCode,
+    ParamsAirplane.numberRegistration
   )
 
-  val EuropeanAirport2 = AirportRaw(
-    "5231",
-    "Milano Malpensa",
-    "MXP",
-    "45.627403",
-    "8.71237",
-    "Italy",
-    "IT",
-    "MIL"
-  )
+  final val EuropeanAirport1: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport1)
+  final val EuropeanAirport2: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport2)
+  final val EuropeanAirport3: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport3)
+  final val EuropeanAirport4: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport4)
+  final val EuropeanAirport5: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport5)
+  final val EuropeanAirport6: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport6)
+  final val EuropeanAirport7: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport7)
+  final val ForeignAirport: AirportRaw                    = buildAirportRaw(ParamsForeignAirport)
+  final val AirlineEvent: AirlineRaw                      = buildAirlineRaw(ParamsAirline)
+  final val AirplaneEvent: AirplaneRaw                    = buildAirplaneRaw(ParamsAirplane)
+  final val EuropeanFlightEvent: FlightRaw                = buildFlightRaw(ParamsEuropeanFlight)
+  final val EuropeanFlightEventWithoutAirplane: FlightRaw = buildFlightRaw(ParamsEuropeanFlightWithInvalidAirplane)
+  final val ForeignFlightEvent: FlightRaw                 = buildFlightRaw(ParamsForeignFlight)
 
-  val EuropeanAirport3 = AirportRaw(
-    "5232",
-    "Mirgorod",
-    "MXR",
-    "49.966667",
-    "33.6",
-    "Ukraine",
-    "UA",
-    "MXR"
-  )
-
-  val EuropeanAirport4 = AirportRaw(
-    "5306",
-    "Capodichino",
-    "NAP",
-    "40.886112",
-    "14.291667",
-    "Italy",
-    "IT",
-    "NAP"
-  )
-
-  val EuropeanAirport5 = AirportRaw(
-    "5332",
-    "Cote D'azur International Airport",
-    "NCE",
-    "40.886112",
-    "14.291667",
-    "France",
-    "FR",
-    "NCE"
-  )
-
-  val ForeignAirport1 = AirportRaw(
-    "2",
-    "Chicago O'hare International",
-    "ORD",
-    "41.976913",
-    "-87.90488",
-    "United States",
-    "US",
-    "CHI"
-  )
-
-  val AirlineEvent = AirlineRaw(
-    "79",
-    "SWISS",
-    "LX",
-    "SWR",
-    "SWISS",
-    "active",
-    "67",
-    "Switzerland",
-    "CH"
-  )
-
-  val AirplaneEvent = AirplaneRaw(
-    "HB-JHA",
-    "Airbus A330/A340",
-    "A330",
-    "A330-343(E)",
-    "4B187A",
-    "A333",
+  final val ExpectedEuropeanFlightEnrichedEvent = FlightEnrichedEvent(
+    FlightCode,
+    GeographyInfo(0, 0, 0, 0),
+    0,
+    AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
+    AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
+    AirlineInfo(ParamsAirline.nameAirline, ""),
+    Some(AirplaneInfo("", "")),
     "",
+    Updated
+  )
+  final val ExpectedEuropeanFlightEnrichedEventWithoutAirplane = FlightEnrichedEvent(
+    FlightCode,
+    GeographyInfo(0, 0, 0, 0),
+    0,
+    AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
+    AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
+    AirlineInfo(ParamsAirline.nameAirline, ""),
+    None,
     "",
-    "JET",
-    "8",
-    "active"
+    Updated
   )
-
-  val EuropeanFlightEvent: FlightRaw = FlightRaw(
-    Geography(
-      49.2655,
-      -1.9623,
-      9753.6,
-      282.76
-    ),
-    Speed(
-      805.14,
-      0
-    ),
-    CommonCode(
-      "ZRH",
-      "LSZH"
-    ),
-    CommonCode(
-      "MXP",
-      "LIMC"
-    ),
-    Aircraft(
-      "HBJHA",
-      "A333",
-      "",
-      "A333"
-    ),
-    CommonCode(
-      "LX",
-      "SWR"
-    ),
-    Flight(
-      "LX6U",
-      "SWR6U",
-      "6U"
-    ),
-    System(
-      "1567415880",
-      "3061"
-    ),
-    "en-route"
-  )
-
-  val ForeignFlightEvent: FlightRaw = FlightRaw(
-    Geography(
-      49.2655,
-      -1.9623,
-      9753.6,
-      282.76
-    ),
-    Speed(
-      805.14,
-      0
-    ),
-    CommonCode(
-      "ZRH",
-      "LSZH"
-    ),
-    CommonCode(
-      "ORD",
-      "KORD"
-    ),
-    Aircraft(
-      "HBJHA",
-      "A333",
-      "",
-      "A333"
-    ),
-    CommonCode(
-      "LX",
-      "SWR"
-    ),
-    Flight(
-      "LX6U",
-      "SWR6U",
-      "6U"
-    ),
-    System(
-      "1567415880",
-      "3061"
-    ),
-    "en-route"
-  )
-
-  val ExpectedEuropeanFlightEnrichedEvent: FlightEnrichedEvent = FlightEnrichedEvent(
-    "LX6U",
-    GeographyInfo(49.2655, -1.9623, 9753.6, 282.76),
-    805.14,
-    AirportInfo("ZRH", "Zurigo", "Swiss", "CH"),
-    AirportInfo("MXP", "Milano Malpensa", "Italy", "IT"),
-    AirlineInfo("SWISS", "67"),
-    Some(AirplaneInfo("Airbus A330/A340", "4B187A")),
-    "en-route",
-    "1567415880"
-  )
-
-  val ExpectedFlightEnrichedEventWithoutAirplaneinfo: FlightEnrichedEvent = ExpectedEuropeanFlightEnrichedEvent.copy(airplane = None)
-
-  val ExpectedTopArrivalResult = TopArrivalAirportList(
+  final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
-      Airport("ZRH", 9),
-      Airport("MXR", 6),
-      Airport("MXP", 3),
-      Airport("NAP", 2)
+      Airport(ParamsEuropeanAirport7.iataCode, 11),
+      Airport(ParamsEuropeanAirport3.iataCode, 9),
+      Airport(ParamsEuropeanAirport2.iataCode, 6),
+      Airport(ParamsEuropeanAirport6.iataCode, 5),
+      Airport(ParamsEuropeanAirport5.iataCode, 4)
     )
   )
-
-  val ExpectedTopDepartureResult = TopDepartureAirportList(
+  final val ExpectedTopDepartureResult = TopDepartureAirportList(
     List(
-      Airport("NAP", 9),
-      Airport("MXP", 6),
-      Airport("ZRH", 3),
-      Airport("NCE", 2)
+      Airport(ParamsEuropeanAirport7.iataCode, 11),
+      Airport(ParamsEuropeanAirport3.iataCode, 9),
+      Airport(ParamsEuropeanAirport2.iataCode, 6),
+      Airport(ParamsEuropeanAirport6.iataCode, 5),
+      Airport(ParamsEuropeanAirport5.iataCode, 4)
     )
   )
-
-  val ExpectedTopSpeedResult = TopSpeedList(
+  final val ExpectedTopSpeedResult = TopSpeedList(
     Seq(
-      SpeedFlight("3", 900.55),
-      SpeedFlight("4", 900.55),
-      SpeedFlight("2", 700.55),
-      SpeedFlight("1", 600.55),
-      SpeedFlight("5", 500)
+      SpeedFlight("3", Speeds(3)),
+      SpeedFlight("8", Speeds(8)),
+      SpeedFlight("5", Speeds(5)),
+      SpeedFlight("2", Speeds(2)),
+      SpeedFlight("7", Speeds(7))
     )
   )
-
-  val ExpectedTotalFlightResult: Seq[CountFlightStatus] = Seq(
-    CountFlightStatus("en-route", 3),
-    CountFlightStatus("started", 1),
+  final val ExpectedTotalFlightResult: Seq[CountFlightStatus] = Seq(
+    CountFlightStatus("en-route", 5),
+    CountFlightStatus("started", 3),
     CountFlightStatus("landed", 2)
   )
+
+  case class AirportParams(iataCode: String, codeCountry: String)
+  case class AirlineParams(icaoCode: String, nameAirline: String)
+  case class AirplaneParams(numberRegistration: String)
+  case class FlightParams(departureAirportCode: String, arrivalAirportCode: String, airlineCode: String, airplaneCode: String)
+
+  def buildAirportRaw(params: AirportParams)   = AirportRaw("", "", params.iataCode, "", "", "", params.codeCountry, "")
+  def buildAirlineRaw(params: AirlineParams)   = AirlineRaw("", params.nameAirline, "", params.icaoCode, "", "", "", "", "")
+  def buildAirplaneRaw(params: AirplaneParams) = AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
+  def buildFlightRaw(params: FlightParams) =
+    FlightRaw(
+      Geography(0, 0, 0, 0),
+      Speed(0, 0),
+      CommonCode(params.departureAirportCode, ""),
+      CommonCode(params.arrivalAirportCode, ""),
+      Aircraft(params.airplaneCode, "", "", ""),
+      CommonCode("", params.airlineCode),
+      Flight(FlightCode, "", ""),
+      System(Updated, ""),
+      ""
+    )
 
 }
