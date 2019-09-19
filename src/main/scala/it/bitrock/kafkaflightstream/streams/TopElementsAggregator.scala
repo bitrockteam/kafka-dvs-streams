@@ -1,6 +1,14 @@
 package it.bitrock.kafkaflightstream.streams
 
-import it.bitrock.kafkaflightstream.model.{Airport, SpeedFlight, TopArrivalAirportList, TopDepartureAirportList, TopSpeedList}
+import it.bitrock.kafkaflightstream.model.{
+  Airline,
+  Airport,
+  SpeedFlight,
+  TopAirlineList,
+  TopArrivalAirportList,
+  TopDepartureAirportList,
+  TopSpeedList
+}
 
 import scala.collection.SortedSet
 
@@ -79,6 +87,22 @@ final class TopSpeedFlightAggregator(override val topAmount: Int) extends TopEle
     agg.elements.filterNot(_.flightCode == element.flightCode).toList
 
   override def updateTopList(agg: TopSpeedList, newTopList: List[SpeedFlight]): TopSpeedList =
+    agg.copy(elements = newTopList)
+
+}
+
+final class TopAirlineAggregator(override val topAmount: Int) extends TopElementsAggregator[TopAirlineList, Airline, String] {
+
+  override lazy val element2OrderingTypes: Airline => (Double, String) =
+    // Note: Long comparison is reversed!
+    x => (-x.eventCount, x.airlineName)
+
+  override def initializer: TopAirlineList = TopAirlineList()
+
+  override def removeElementFromTopList(agg: TopAirlineList, element: Airline): List[Airline] =
+    agg.elements.filterNot(_.airlineName == element.airlineName).toList
+
+  override def updateTopList(agg: TopAirlineList, newTopList: List[Airline]): TopAirlineList =
     agg.copy(elements = newTopList)
 
 }

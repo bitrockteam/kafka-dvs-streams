@@ -17,24 +17,30 @@ trait Events {
   final val ParamsEuropeanAirport6 = AirportParams("AEI", "ES")
   final val ParamsEuropeanAirport7 = AirportParams("BVG", "NO")
   final val ParamsForeignAirport   = AirportParams("ORD", "US")
-  final val ParamsAirline          = AirlineParams("SWR", "SWISS")
+  final val ParamsAirline1         = AirlineParams("SWR", "SWISS")
+  final val ParamsAirline2         = AirlineParams("ESQ", "Europ Star Aircraft")
+  final val ParamsAirline3         = AirlineParams("FFI", "Infinit Air")
+  final val ParamsAirline4         = AirlineParams("GEC", "Lufthansa Cargo")
+  final val ParamsAirline5         = AirlineParams("LLP", "Small Planet Airlines Polska")
+  final val ParamsAirline6         = AirlineParams("DRU", "ALROSA Mirny Air Enterprise")
+  final val ParamsAirline7         = AirlineParams("KAT", "Kato Airline")
   final val ParamsAirplane         = AirplaneParams("HBJHA")
   final val ParamsEuropeanFlight = FlightParams(
     ParamsEuropeanAirport1.iataCode,
     ParamsEuropeanAirport2.iataCode,
-    ParamsAirline.icaoCode,
+    ParamsAirline1.icaoCode,
     ParamsAirplane.numberRegistration
   )
   final val ParamsEuropeanFlightWithInvalidAirplane = FlightParams(
     ParamsEuropeanAirport1.iataCode,
     ParamsEuropeanAirport2.iataCode,
-    ParamsAirline.icaoCode,
+    ParamsAirline1.icaoCode,
     "invalid numberRegistration"
   )
   final val ParamsForeignFlight = FlightParams(
     ParamsEuropeanAirport1.iataCode,
     ParamsForeignAirport.iataCode,
-    ParamsAirline.icaoCode,
+    ParamsAirline1.icaoCode,
     ParamsAirplane.numberRegistration
   )
 
@@ -46,7 +52,13 @@ trait Events {
   final val EuropeanAirport6: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport6)
   final val EuropeanAirport7: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport7)
   final val ForeignAirport: AirportRaw                    = buildAirportRaw(ParamsForeignAirport)
-  final val AirlineEvent: AirlineRaw                      = buildAirlineRaw(ParamsAirline)
+  final val AirlineEvent1: AirlineRaw                     = buildAirlineRaw(ParamsAirline1)
+  final val AirlineEvent2: AirlineRaw                     = buildAirlineRaw(ParamsAirline2)
+  final val AirlineEvent3: AirlineRaw                     = buildAirlineRaw(ParamsAirline3)
+  final val AirlineEvent4: AirlineRaw                     = buildAirlineRaw(ParamsAirline4)
+  final val AirlineEvent5: AirlineRaw                     = buildAirlineRaw(ParamsAirline5)
+  final val AirlineEvent6: AirlineRaw                     = buildAirlineRaw(ParamsAirline6)
+  final val AirlineEvent7: AirlineRaw                     = buildAirlineRaw(ParamsAirline7)
   final val AirplaneEvent: AirplaneRaw                    = buildAirplaneRaw(ParamsAirplane)
   final val EuropeanFlightEvent: FlightRaw                = buildFlightRaw(ParamsEuropeanFlight)
   final val EuropeanFlightEventWithoutAirplane: FlightRaw = buildFlightRaw(ParamsEuropeanFlightWithInvalidAirplane)
@@ -58,7 +70,7 @@ trait Events {
     0,
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
     AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
-    AirlineInfo(ParamsAirline.nameAirline, ""),
+    AirlineInfo(ParamsAirline1.nameAirline, ""),
     Some(AirplaneInfo("", "")),
     "",
     Updated
@@ -69,7 +81,7 @@ trait Events {
     0,
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
     AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
-    AirlineInfo(ParamsAirline.nameAirline, ""),
+    AirlineInfo(ParamsAirline1.nameAirline, ""),
     None,
     "",
     Updated
@@ -99,6 +111,15 @@ trait Events {
       SpeedFlight("5", Speeds(5)),
       SpeedFlight("2", Speeds(2)),
       SpeedFlight("7", Speeds(7))
+    )
+  )
+  final val ExpectedTopAirlineResult = TopAirlineList(
+    Seq(
+      Airline(ParamsAirline7.nameAirline, 11),
+      Airline(ParamsAirline3.nameAirline, 9),
+      Airline(ParamsAirline2.nameAirline, 6),
+      Airline(ParamsAirline6.nameAirline, 5),
+      Airline(ParamsAirline5.nameAirline, 4)
     )
   )
   final val ExpectedTotalFlightResult: Seq[CountFlightStatus] = Seq(

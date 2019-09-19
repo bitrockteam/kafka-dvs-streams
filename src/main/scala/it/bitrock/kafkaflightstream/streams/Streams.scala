@@ -97,8 +97,10 @@ object Streams {
     implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList]     = kafkaStreamsOptions.topArrivalAirportListEventSerde
     implicit val topDepartureAirportListSerde: Serde[TopDepartureAirportList] = kafkaStreamsOptions.topDepartureAirportListEventSerde
     implicit val topSpeedListSerde: Serde[TopSpeedList]                       = kafkaStreamsOptions.topSpeedListEventSerde
+    implicit val topAirlineListSerde: Serde[TopAirlineList]                   = kafkaStreamsOptions.topAirlineListEventSerde
     implicit val topAirportSerde: Serde[Airport]                              = kafkaStreamsOptions.topAirportEventSerde
     implicit val topSpeedSerde: Serde[SpeedFlight]                            = kafkaStreamsOptions.topSpeedFlightEventSerde
+    implicit val topAirlineSerde: Serde[Airline]                              = kafkaStreamsOptions.topAirlineEventSerde
     implicit val countFlightStatusSerde: Serde[CountFlightStatus]             = kafkaStreamsOptions.countFlightStatusEventSerde
 
     def buildFlightReceived(
@@ -158,6 +160,20 @@ object Streams {
         .to(config.kafka.topology.topSpeedTopic)
     }
 
+    def buildTopAirline(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+      val topAirlineAggregator = new TopAirlineAggregator(config.topElementsAmount)
+
+      flightEnriched
+        .filter((_, v) => v.status == "en-route")
+        .groupBy((_, value) => value.airline.nameAirline)
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .count
+        .groupBy((k, v) => (k.window.start.toString, Airline(k.key, v)))
+        .aggregate(topAirlineAggregator.initializer)(topAirlineAggregator.adder, topAirlineAggregator.subtractor)
+        .toStream
+        .to(config.kafka.topology.topAirlineTopic)
+    }
+
     def buildTotalFlights(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
       val countFlightAggregator = new CountFlightAggregator()
 
@@ -180,6 +196,7 @@ object Streams {
     buildTopArrival(flightReceivedStream)
     buildTopDeparture(flightReceivedStream)
     buildTopFlightSpeed(flightReceivedStream)
+    buildTopAirline(flightReceivedStream)
     buildTotalFlights(flightReceivedStream)
 
     streamsBuilder.build

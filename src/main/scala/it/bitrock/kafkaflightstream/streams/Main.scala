@@ -4,6 +4,7 @@ import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
 import it.bitrock.kafkaflightstream.model.{
+  Airline,
   AirlineRaw,
   AirplaneRaw,
   Airport,
@@ -16,6 +17,7 @@ import it.bitrock.kafkaflightstream.model.{
   FlightWithAllAirportInfo,
   FlightWithDepartureAirportInfo,
   SpeedFlight,
+  TopAirlineList,
   TopArrivalAirportList,
   TopDepartureAirportList,
   TopSpeedList
@@ -52,6 +54,8 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[Airport],
     avroSerdes.serdeFrom[TopSpeedList],
     avroSerdes.serdeFrom[SpeedFlight],
+    avroSerdes.serdeFrom[TopAirlineList],
+    avroSerdes.serdeFrom[Airline],
     avroSerdes.serdeFrom[CountFlightStatus]
   )
 
