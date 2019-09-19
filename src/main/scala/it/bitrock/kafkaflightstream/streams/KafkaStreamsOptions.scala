@@ -22,5 +22,7 @@ final case class KafkaStreamsOptions(
     topAirportEventSerde: Serde[Airport],
     topSpeedListEventSerde: Serde[TopSpeedList],
     topSpeedFlightEventSerde: Serde[SpeedFlight],
+    topAirlineListEventSerde: Serde[TopAirlineList],
+    topAirlineEventSerde: Serde[Airline],
     countFlightStatusEventSerde: Serde[CountFlightStatus]
 )
