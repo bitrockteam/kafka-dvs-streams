@@ -377,7 +377,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
               status = Status(key)
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages.toList)
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -394,7 +394,50 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2)
         }
-        receivedRecords should contain theSameElementsAs ExpectedTotalFlightResult
+        receivedRecords should contain theSameElementsAs ExpectedTotalFlightResult1
+
+      }
+    }
+
+    "produce TotalFlight elements according to updated fields" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val countFlightStatusSerde: Serde[CountFlightStatus] = kafkaStreamsOptions.countFlightStatusEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+          val firstFlightMessages = List(
+            FlightCode1 -> EuropeanFlightEvent.copy(status = "en-route", system = System(Updated1, "")),
+            FlightCode2 -> EuropeanFlightEvent.copy(status = "en-route", system = System(Updated1, ""))
+          )
+          val secondFlightMessages = List(
+            FlightCode1 -> EuropeanFlightEvent.copy(status = "started", system = System(Updated2, "")),
+            FlightCode2 -> EuropeanFlightEvent.copy(status = "landed", system = System(Updated1, ""))
+          )
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, firstFlightMessages)
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, secondFlightMessages)
+          publishToKafka(
+            appConfig.kafka.topology.airportRawTopic,
+            List(
+              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+            )
+          )
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlightStatus](
+            topics = Set(appConfig.kafka.topology.totalFlightTopic),
+            number = 2,
+            timeout = ConsumerPollTimeout
+          )
+          messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2)
+        }
+        receivedRecords should contain theSameElementsAs ExpectedTotalFlightResult2
 
       }
     }

@@ -4,10 +4,12 @@ import it.bitrock.kafkaflightstream.model._
 
 trait Events {
 
-  final val FlightCode = "LX6U"
-  final val Updated    = "232323"
-  final val Speeds     = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
-  final val Status     = Array("en-route", "en-route", "landed", "started", "started", "en-route", "en-route", "started", "landed", "en-route")
+  final val FlightCode1 = "LX6U"
+  final val Updated1    = "12345"
+  final val FlightCode2 = "AZ7T"
+  final val Updated2    = "54321"
+  final val Speeds      = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
+  final val Status      = Array("en-route", "en-route", "landed", "started", "started", "en-route", "en-route", "started", "landed", "en-route")
 
   final val ParamsEuropeanAirport1 = AirportParams("ZRH", "CH")
   final val ParamsEuropeanAirport2 = AirportParams("MXP", "IT")
@@ -65,7 +67,7 @@ trait Events {
   final val ForeignFlightEvent: FlightRaw                 = buildFlightRaw(ParamsForeignFlight)
 
   final val ExpectedEuropeanFlightEnrichedEvent = FlightEnrichedEvent(
-    FlightCode,
+    FlightCode1,
     GeographyInfo(0, 0, 0, 0),
     0,
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
@@ -73,10 +75,10 @@ trait Events {
     AirlineInfo(ParamsAirline1.nameAirline, ""),
     Some(AirplaneInfo("", "")),
     "",
-    Updated
+    Updated1
   )
   final val ExpectedEuropeanFlightEnrichedEventWithoutAirplane = FlightEnrichedEvent(
-    FlightCode,
+    FlightCode1,
     GeographyInfo(0, 0, 0, 0),
     0,
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
@@ -84,7 +86,7 @@ trait Events {
     AirlineInfo(ParamsAirline1.nameAirline, ""),
     None,
     "",
-    Updated
+    Updated1
   )
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
@@ -122,10 +124,14 @@ trait Events {
       Airline(ParamsAirline5.nameAirline, 4)
     )
   )
-  final val ExpectedTotalFlightResult: Seq[CountFlightStatus] = Seq(
+  final val ExpectedTotalFlightResult1: Seq[CountFlightStatus] = Seq(
     CountFlightStatus("en-route", 5),
     CountFlightStatus("started", 3),
     CountFlightStatus("landed", 2)
+  )
+  final val ExpectedTotalFlightResult2: Seq[CountFlightStatus] = Seq(
+    CountFlightStatus("en-route", 1),
+    CountFlightStatus("started", 1)
   )
 
   case class AirportParams(iataCode: String, codeCountry: String)
@@ -144,8 +150,8 @@ trait Events {
       CommonCode(params.arrivalAirportCode, ""),
       Aircraft(params.airplaneCode, "", "", ""),
       CommonCode("", params.airlineCode),
-      Flight(FlightCode, "", ""),
-      System(Updated, ""),
+      Flight(FlightCode1, "", ""),
+      System(Updated1, ""),
       ""
     )
 
