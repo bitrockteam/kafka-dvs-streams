@@ -151,9 +151,11 @@ object Streams {
     def buildTopFlightSpeed(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
       val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
 
-      flightEnriched.groupByKey
+      flightEnriched
+        .filter((_, v) => v.status == "en-route")
+        .groupByKey
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
-        .reduce(lastUpdatedFlight)
+        .reduce((_, v2) => v2)
         .groupBy((k, v) => (k.window.start.toString, SpeedFlight(k.key, v.speed)))
         .aggregate(topSpeedFlightAggregator.initializer)(topSpeedFlightAggregator.adder, topSpeedFlightAggregator.subtractor)
         .toStream
@@ -175,13 +177,13 @@ object Streams {
     }
 
     def buildTotalFlights(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
-      val countFlightAggregator = new CountFlightAggregator()
 
-      flightEnriched.groupByKey
-        .reduce(lastUpdatedFlight)
-        .groupBy((_, v) => (v.status, v))
-        .aggregate(countFlightAggregator.initializer)(countFlightAggregator.adder, countFlightAggregator.subtractor)
+      flightEnriched
+        .groupBy((_, value) => value.status)
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .count
         .toStream
+        .map((k, v) => (k.window.start.toString, CountFlightStatus(k.key, v)))
         .to(config.kafka.topology.totalFlightTopic)
     }
 
@@ -299,8 +301,5 @@ object Streams {
           )
       )
   }
-
-  private val lastUpdatedFlight: (FlightEnrichedEvent, FlightEnrichedEvent) => FlightEnrichedEvent =
-    (older, newer) => if (newer.updated.toLong > older.updated.toLong) newer else older
 
 }
