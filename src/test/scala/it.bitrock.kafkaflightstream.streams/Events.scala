@@ -4,12 +4,14 @@ import it.bitrock.kafkaflightstream.model._
 
 trait Events {
 
-  final val FlightCode1 = "LX6U"
-  final val Updated1    = "12345"
-  final val FlightCode2 = "AZ7T"
-  final val Updated2    = "54321"
-  final val Speeds      = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
-  final val Status      = Array("en-route", "en-route", "landed", "started", "started", "en-route", "en-route", "started", "landed", "en-route")
+  final val FlightIataCode1 = "EI35Y"
+  final val FlightIcaoCode1 = "EIN35Y"
+  final val Updated1        = "12345"
+  final val FlightIataCode2 = "AZ7TF"
+  final val FlightIcaoCode2 = "AZA7TF"
+  final val Updated2        = "54321"
+  final val Speeds          = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
+  final val Status          = Array("en-route", "en-route", "landed", "started", "started", "en-route", "en-route", "started", "landed", "en-route")
 
   final val ParamsEuropeanAirport1 = AirportParams("ZRH", "CH")
   final val ParamsEuropeanAirport2 = AirportParams("MXP", "IT")
@@ -67,23 +69,25 @@ trait Events {
   final val ForeignFlightEvent: FlightRaw                 = buildFlightRaw(ParamsForeignFlight)
 
   final val ExpectedEuropeanFlightEnrichedEvent = FlightEnrichedEvent(
-    FlightCode1,
+    FlightIataCode1,
+    FlightIcaoCode1,
     GeographyInfo(0, 0, 0, 0),
     0,
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
     AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
-    AirlineInfo(ParamsAirline1.nameAirline, ""),
-    Some(AirplaneInfo("", "")),
+    AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
+    Some(AirplaneInfo(ParamsAirplane.numberRegistration, "", "")),
     "",
     Updated1
   )
   final val ExpectedEuropeanFlightEnrichedEventWithoutAirplane = FlightEnrichedEvent(
-    FlightCode1,
+    FlightIataCode1,
+    FlightIcaoCode1,
     GeographyInfo(0, 0, 0, 0),
     0,
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
     AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
-    AirlineInfo(ParamsAirline1.nameAirline, ""),
+    AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
     None,
     "",
     Updated1
@@ -150,7 +154,7 @@ trait Events {
       CommonCode(params.arrivalAirportCode, ""),
       Aircraft(params.airplaneCode, "", "", ""),
       CommonCode("", params.airlineCode),
-      Flight(FlightCode1, "", ""),
+      Flight(FlightIataCode1, FlightIcaoCode1, ""),
       System(Updated1, ""),
       ""
     )

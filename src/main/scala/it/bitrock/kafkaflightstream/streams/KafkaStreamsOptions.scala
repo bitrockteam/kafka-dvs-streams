@@ -1,6 +1,24 @@
 package it.bitrock.kafkaflightstream.streams
 
-import it.bitrock.kafkaflightstream.model._
+import it.bitrock.kafkaflightstream.model.{
+  Airline,
+  AirlineRaw,
+  AirplaneRaw,
+  Airport,
+  AirportRaw,
+  CityRaw,
+  CountFlightStatus,
+  FlightEnrichedEvent,
+  FlightRaw,
+  FlightWithAirline,
+  FlightWithAllAirportInfo,
+  FlightWithDepartureAirportInfo,
+  SpeedFlight,
+  TopAirlineList,
+  TopArrivalAirportList,
+  TopDepartureAirportList,
+  TopSpeedList
+}
 import org.apache.kafka.common.serialization.Serde
 
 final case class KafkaStreamsOptions(

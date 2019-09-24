@@ -213,6 +213,7 @@ object Streams {
         (flightRaw, airportRaw) =>
           FlightWithDepartureAirportInfo(
             flightRaw.flight.iataNumber,
+            flightRaw.flight.icaoNumber,
             GeographyInfo(
               flightRaw.geography.latitude,
               flightRaw.geography.longitude,
@@ -233,6 +234,7 @@ object Streams {
         (flightReceivedOnlyDeparture, airportRaw) =>
           FlightWithAllAirportInfo(
             flightReceivedOnlyDeparture.iataNumber,
+            flightReceivedOnlyDeparture.icaoNumber,
             flightReceivedOnlyDeparture.geography,
             flightReceivedOnlyDeparture.speed,
             flightReceivedOnlyDeparture.airportDeparture,
@@ -261,11 +263,12 @@ object Streams {
         (flightAndAirport, airlineRaw) =>
           FlightWithAirline(
             flightAndAirport.iataNumber,
+            flightAndAirport.icaoNumber,
             flightAndAirport.geography,
             flightAndAirport.speed,
             flightAndAirport.airportDeparture,
             flightAndAirport.airportArrival,
-            AirlineInfo(airlineRaw.nameAirline, airlineRaw.sizeAirline),
+            AirlineInfo(airlineRaw.codeIcaoAirline, airlineRaw.nameAirline, airlineRaw.sizeAirline),
             flightAndAirport.airplaneRegNumber,
             flightAndAirport.status,
             flightAndAirport.updated
@@ -283,12 +286,14 @@ object Streams {
         (flightAndAirline, airplaneRaw) =>
           FlightEnrichedEvent(
             flightAndAirline.iataNumber,
+            flightAndAirline.icaoNumber,
             flightAndAirline.geography,
             flightAndAirline.speed,
             flightAndAirline.airportDeparture,
             flightAndAirline.airportArrival,
             flightAndAirline.airline,
-            Option(airplaneRaw).map(airplaneRaw => AirplaneInfo(airplaneRaw.productionLine, airplaneRaw.modelCode)),
+            Option(airplaneRaw)
+              .map(airplaneRaw => AirplaneInfo(airplaneRaw.numberRegistration, airplaneRaw.productionLine, airplaneRaw.modelCode)),
             flightAndAirline.status,
             flightAndAirline.updated
           )
