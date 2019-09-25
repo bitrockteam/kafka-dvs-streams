@@ -102,6 +102,7 @@ object Streams {
     implicit val topSpeedSerde: Serde[SpeedFlight]                            = kafkaStreamsOptions.topSpeedFlightEventSerde
     implicit val topAirlineSerde: Serde[Airline]                              = kafkaStreamsOptions.topAirlineEventSerde
     implicit val countFlightStatusSerde: Serde[CountFlightStatus]             = kafkaStreamsOptions.countFlightStatusEventSerde
+    implicit val countAirlineSerde: Serde[CountAirline]                       = kafkaStreamsOptions.countAirlineEventSerde
 
     def buildFlightReceived(
         fligthtRawStream: KStream[String, FlightRaw],
@@ -126,7 +127,7 @@ object Streams {
       val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
 
       flightEnriched
-        .groupBy((_, value) => value.airportArrival.codeAirport)
+        .groupBy((_, v) => v.airportArrival.codeAirport)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
@@ -139,7 +140,7 @@ object Streams {
       val topDepartureAirportAggregator = new TopDepartureAirportAggregator(config.topElementsAmount)
 
       flightEnriched
-        .groupBy((_, value) => value.airportDeparture.codeAirport)
+        .groupBy((_, v) => v.airportDeparture.codeAirport)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
@@ -167,7 +168,7 @@ object Streams {
 
       flightEnriched
         .filter((_, v) => v.status == "en-route")
-        .groupBy((_, value) => value.airline.nameAirline)
+        .groupBy((_, v) => v.airline.nameAirline)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .groupBy((k, v) => (k.window.start.toString, Airline(k.key, v)))
@@ -179,12 +180,27 @@ object Streams {
     def buildTotalFlights(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
 
       flightEnriched
-        .groupBy((_, value) => value.status)
+        .groupBy((_, v) => v.status)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .toStream
         .map((k, v) => (k.window.start.toString, CountFlightStatus(k.key, v)))
         .to(config.kafka.topology.totalFlightTopic)
+    }
+
+    def buildTotalAirlines(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+
+      flightEnriched
+        .filter((_, v) => v.status == "en-route")
+        .groupBy((_, v) => v.airline.codeAirline)
+        .reduce((_, v) => v)
+        .toStream
+        .groupBy((_, _) => AllRecordsKey)
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .count()
+        .toStream
+        .map((k, v) => (k.window.start.toString, CountAirline(v)))
+        .to(config.kafka.topology.totalAirlineTopic)
     }
 
     val streamsBuilder   = new StreamsBuilder
@@ -200,6 +216,7 @@ object Streams {
     buildTopFlightSpeed(flightReceivedStream)
     buildTopAirline(flightReceivedStream)
     buildTotalFlights(flightReceivedStream)
+    buildTotalAirlines(flightReceivedStream)
 
     streamsBuilder.build
   }
@@ -211,7 +228,7 @@ object Streams {
 
     flightRawStream
       .join(airportRawTable)(
-        (_, value) => value.departure.iataCode,
+        (_, v) => v.departure.iataCode,
         (flightRaw, airportRaw) =>
           FlightWithDepartureAirportInfo(
             flightRaw.flight.iataNumber,
@@ -232,7 +249,7 @@ object Streams {
           )
       )
       .join(airportRawTable)(
-        (_, value2) => value2.codeAirportArrival,
+        (_, v) => v.codeAirportArrival,
         (flightReceivedOnlyDeparture, airportRaw) =>
           FlightWithAllAirportInfo(
             flightReceivedOnlyDeparture.iataNumber,
@@ -248,9 +265,9 @@ object Streams {
           )
       )
       .filter(
-        (_, value) =>
-          europeanCountries.contains(value.airportDeparture.codeIso2Country) &&
-            europeanCountries.contains(value.airportArrival.codeIso2Country)
+        (_, v) =>
+          europeanCountries.contains(v.airportDeparture.codeIso2Country) &&
+            europeanCountries.contains(v.airportArrival.codeIso2Country)
       )
   }
 
@@ -261,7 +278,7 @@ object Streams {
 
     flightWithAllAirportStream
       .join(airlineRawTable)(
-        (_, value) => value.airlineCode,
+        (_, v) => v.airlineCode,
         (flightAndAirport, airlineRaw) =>
           FlightWithAirline(
             flightAndAirport.iataNumber,
@@ -284,7 +301,7 @@ object Streams {
   ): KStream[String, FlightEnrichedEvent] = {
     flightWithAirline
       .leftJoin(airplaneRawTable)(
-        (_, value) => value.airplaneRegNumber,
+        (_, v) => v.airplaneRegNumber,
         (flightAndAirline, airplaneRaw) =>
           FlightEnrichedEvent(
             flightAndAirline.iataNumber,
