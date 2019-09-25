@@ -398,6 +398,55 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
     }
 
+    "produce TotalAirline elements in the appropriate topic" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val countAirlineSerde: Serde[CountAirline] = kafkaStreamsOptions.countAirlineEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+          val flightMessages = 0 to 9 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(
+              flight = Flight(key.toString, key.toString, ""),
+              airline = CommonCode("", CodeAirlineArray(key))
+            )
+          }
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
+          publishToKafka(
+            appConfig.kafka.topology.airportRawTopic,
+            List(
+              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+            )
+          )
+          publishToKafka(
+            appConfig.kafka.topology.airlineRawTopic,
+            List(
+              AirlineEvent1.codeIcaoAirline -> AirlineEvent1,
+              AirlineEvent2.codeIcaoAirline -> AirlineEvent2,
+              AirlineEvent3.codeIcaoAirline -> AirlineEvent3,
+              AirlineEvent4.codeIcaoAirline -> AirlineEvent4,
+              AirlineEvent5.codeIcaoAirline -> AirlineEvent5
+            )
+          )
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountAirline](
+            topics = Set(appConfig.kafka.topology.totalAirlineTopic),
+            number = 1,
+            timeout = ConsumerPollTimeout
+          )
+          messagesMap(appConfig.kafka.topology.totalAirlineTopic).map(_._2).head
+        }
+        receivedRecords shouldBe ExpectedTotalAirlineResult
+
+      }
+    }
+
   }
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] {
@@ -429,7 +478,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[SpeedFlight],
         serdeFrom[TopAirlineList],
         serdeFrom[Airline],
-        serdeFrom[CountFlightStatus]
+        serdeFrom[CountFlightStatus],
+        serdeFrom[CountAirline]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 
