@@ -7,9 +7,7 @@ trait Events {
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
   final val Updated        = "12345"
-  final val StatusStarted  = "started"
   final val StatusEnRoute  = "en-route"
-  final val StatusLanded   = "landed"
 
   final val ParamsEuropeanAirport1 = AirportParams("ZRH", "CH")
   final val ParamsEuropeanAirport2 = AirportParams("MXP", "IT")
@@ -47,18 +45,6 @@ trait Events {
   )
 
   final val SpeedArray = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
-  final val StatusArray = Array(
-    StatusEnRoute,
-    StatusEnRoute,
-    StatusLanded,
-    StatusStarted,
-    StatusStarted,
-    StatusEnRoute,
-    StatusEnRoute,
-    StatusStarted,
-    StatusLanded,
-    StatusEnRoute
-  )
   final val CodeAirlineArray = Array(
     ParamsAirline1.icaoCode,
     ParamsAirline2.icaoCode,
@@ -152,11 +138,7 @@ trait Events {
       Airline(ParamsAirline5.nameAirline, 4)
     )
   )
-  final val ExpectedTotalFlightResult: Seq[CountFlightStatus] = Seq(
-    CountFlightStatus(StatusEnRoute, 5),
-    CountFlightStatus(StatusStarted, 3),
-    CountFlightStatus(StatusLanded, 2)
-  )
+  final val ExpectedTotalFlightResult  = CountFlightStatus(StatusEnRoute, 10)
   final val ExpectedTotalAirlineResult = CountAirline(5)
 
   case class AirportParams(iataCode: String, codeCountry: String)

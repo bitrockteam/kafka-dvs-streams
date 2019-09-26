@@ -73,7 +73,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
     }
 
-    "be joined successfully with consistent data but without airplane informations" in ResourceLoaner.withFixture {
+    "be joined successfully with consistent data but without airplane info" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
         implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
         implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
@@ -371,10 +371,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              status = StatusArray(key)
-            )
+            key.toString -> EuropeanFlightEvent.copy(flight = Flight(key.toString, key.toString, ""))
           }
           publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
@@ -388,12 +385,12 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlightStatus](
             topics = Set(appConfig.kafka.topology.totalFlightTopic),
-            number = 3,
+            number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2)
+          messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2).head
         }
-        receivedRecords should contain theSameElementsAs ExpectedTotalFlightResult
+        receivedRecords.eventCount shouldBe ExpectedTotalFlightResult.eventCount
 
       }
     }
