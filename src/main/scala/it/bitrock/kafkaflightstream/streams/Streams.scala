@@ -313,7 +313,6 @@ object Streams {
             flightAndAirline.updated
           )
       )
-      .filter((_, v) => v.airplane.isDefined)
 
   }
 
