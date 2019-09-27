@@ -31,12 +31,6 @@ trait Events {
     ParamsAirline1.icaoCode,
     ParamsAirplane.numberRegistration
   )
-  final val ParamsEuropeanFlightWithInvalidAirplane = FlightParams(
-    ParamsEuropeanAirport1.iataCode,
-    ParamsEuropeanAirport2.iataCode,
-    ParamsAirline1.icaoCode,
-    "invalid numberRegistration"
-  )
   final val ParamsForeignFlight = FlightParams(
     ParamsEuropeanAirport1.iataCode,
     ParamsForeignAirport.iataCode,
@@ -58,25 +52,24 @@ trait Events {
     ParamsAirline1.icaoCode
   )
 
-  final val EuropeanAirport1: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport1)
-  final val EuropeanAirport2: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport2)
-  final val EuropeanAirport3: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport3)
-  final val EuropeanAirport4: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport4)
-  final val EuropeanAirport5: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport5)
-  final val EuropeanAirport6: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport6)
-  final val EuropeanAirport7: AirportRaw                  = buildAirportRaw(ParamsEuropeanAirport7)
-  final val ForeignAirport: AirportRaw                    = buildAirportRaw(ParamsForeignAirport)
-  final val AirlineEvent1: AirlineRaw                     = buildAirlineRaw(ParamsAirline1)
-  final val AirlineEvent2: AirlineRaw                     = buildAirlineRaw(ParamsAirline2)
-  final val AirlineEvent3: AirlineRaw                     = buildAirlineRaw(ParamsAirline3)
-  final val AirlineEvent4: AirlineRaw                     = buildAirlineRaw(ParamsAirline4)
-  final val AirlineEvent5: AirlineRaw                     = buildAirlineRaw(ParamsAirline5)
-  final val AirlineEvent6: AirlineRaw                     = buildAirlineRaw(ParamsAirline6)
-  final val AirlineEvent7: AirlineRaw                     = buildAirlineRaw(ParamsAirline7)
-  final val AirplaneEvent: AirplaneRaw                    = buildAirplaneRaw(ParamsAirplane)
-  final val EuropeanFlightEvent: FlightRaw                = buildFlightRaw(ParamsEuropeanFlight)
-  final val EuropeanFlightEventWithoutAirplane: FlightRaw = buildFlightRaw(ParamsEuropeanFlightWithInvalidAirplane)
-  final val ForeignFlightEvent: FlightRaw                 = buildFlightRaw(ParamsForeignFlight)
+  final val EuropeanAirport1: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport1)
+  final val EuropeanAirport2: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport2)
+  final val EuropeanAirport3: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport3)
+  final val EuropeanAirport4: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport4)
+  final val EuropeanAirport5: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport5)
+  final val EuropeanAirport6: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport6)
+  final val EuropeanAirport7: AirportRaw   = buildAirportRaw(ParamsEuropeanAirport7)
+  final val ForeignAirport: AirportRaw     = buildAirportRaw(ParamsForeignAirport)
+  final val AirlineEvent1: AirlineRaw      = buildAirlineRaw(ParamsAirline1)
+  final val AirlineEvent2: AirlineRaw      = buildAirlineRaw(ParamsAirline2)
+  final val AirlineEvent3: AirlineRaw      = buildAirlineRaw(ParamsAirline3)
+  final val AirlineEvent4: AirlineRaw      = buildAirlineRaw(ParamsAirline4)
+  final val AirlineEvent5: AirlineRaw      = buildAirlineRaw(ParamsAirline5)
+  final val AirlineEvent6: AirlineRaw      = buildAirlineRaw(ParamsAirline6)
+  final val AirlineEvent7: AirlineRaw      = buildAirlineRaw(ParamsAirline7)
+  final val AirplaneEvent: AirplaneRaw     = buildAirplaneRaw(ParamsAirplane)
+  final val EuropeanFlightEvent: FlightRaw = buildFlightRaw(ParamsEuropeanFlight)
+  final val ForeignFlightEvent: FlightRaw  = buildFlightRaw(ParamsForeignFlight)
 
   final val ExpectedEuropeanFlightEnrichedEvent = FlightEnrichedEvent(
     FlightIataCode,
@@ -87,18 +80,6 @@ trait Events {
     AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
     AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
     Some(AirplaneInfo(ParamsAirplane.numberRegistration, "", "")),
-    StatusEnRoute,
-    Updated
-  )
-  final val ExpectedEuropeanFlightEnrichedEventWithoutAirplane = FlightEnrichedEvent(
-    FlightIataCode,
-    FlightIcaoCode,
-    GeographyInfo(0, 0, 0, 0),
-    0,
-    AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
-    AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
-    AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
-    None,
     StatusEnRoute,
     Updated
   )
