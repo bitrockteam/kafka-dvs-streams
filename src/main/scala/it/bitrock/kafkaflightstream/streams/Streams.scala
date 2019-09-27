@@ -296,7 +296,7 @@ object Streams {
       airplaneRawTable: GlobalKTable[String, AirplaneRaw]
   ): KStream[String, FlightEnrichedEvent] = {
     flightWithAirline
-      .join(airplaneRawTable)(
+      .leftJoin(airplaneRawTable)(
         (_, v) => v.airplaneRegNumber,
         (flightAndAirline, airplaneRaw) =>
           FlightEnrichedEvent(
@@ -313,6 +313,8 @@ object Streams {
             flightAndAirline.updated
           )
       )
+      .filter((_, v) => v.airplane.isDefined)
+
   }
 
 }
