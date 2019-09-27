@@ -96,6 +96,37 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
     }
 
+    "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+          val flightMessages = 0 to 9 map { key =>
+            key.toString -> EuropeanFlightEvent.copy(flight = Flight(key.toString, key.toString, ""))
+          }
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
+          publishToKafka(
+            appConfig.kafka.topology.airportRawTopic,
+            List(
+              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+            )
+          )
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
+            topics = Set(appConfig.kafka.topology.flightReceivedListTopic),
+            number = 1,
+            timeout = ConsumerPollTimeout
+          )
+          messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2).head
+        }
+        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedFlightReceivedList
+
+      }
+    }
+
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -381,6 +412,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[FlightWithAllAirportInfo],
         serdeFrom[FlightWithAirline],
         serdeFrom[FlightEnrichedEvent],
+        serdeFrom[FlightReceivedList],
         Serdes.Long,
         serdeFrom[TopArrivalAirportList],
         serdeFrom[TopDepartureAirportList],

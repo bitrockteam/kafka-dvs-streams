@@ -11,6 +11,7 @@ import it.bitrock.kafkaflightstream.model.{
   CountFlightStatus,
   FlightEnrichedEvent,
   FlightRaw,
+  FlightReceivedList,
   FlightWithAirline,
   FlightWithAllAirportInfo,
   FlightWithDepartureAirportInfo,
@@ -35,6 +36,7 @@ final case class KafkaStreamsOptions(
     flightWithAirline: Serde[FlightWithAirline],
     //final output
     flightEnrichedEventSerde: Serde[FlightEnrichedEvent],
+    flightReceivedListEventSerde: Serde[FlightReceivedList],
     topAggregationKeySerde: Serde[Long],
     topArrivalAirportListEventSerde: Serde[TopArrivalAirportList],
     topDepartureAirportListEventSerde: Serde[TopDepartureAirportList],

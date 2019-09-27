@@ -83,6 +83,9 @@ trait Events {
     StatusEnRoute,
     Updated
   )
+  final val ExpectedFlightReceivedList = 0 to 9 map { key =>
+    ExpectedEuropeanFlightEnrichedEvent.copy(iataNumber = key.toString, icaoNumber = key.toString)
+  }
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
       Airport(ParamsEuropeanAirport7.iataCode, 11),

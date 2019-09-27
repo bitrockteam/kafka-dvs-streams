@@ -18,6 +18,7 @@ final case class TopologyConfig(
     cityRawTopic: String,
     airplaneRawTopic: String,
     flightReceivedTopic: String,
+    flightReceivedListTopic: String,
     topArrivalAirportTopic: String,
     topDepartureAirportTopic: String,
     topSpeedTopic: String,
