@@ -73,43 +73,43 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
     }
 
-//    "be joined successfully with consistent data but without airplane info" in ResourceLoaner.withFixture {
-//      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
-//        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
-//        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
-//        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
-//        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
-//        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
-//        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
-//        //output topic
-//        implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
-//
-//        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
-//          publishToKafka(
-//            appConfig.kafka.topology.flightRawTopic,
-//            EuropeanFlightEventWithoutAirplane.flight.icaoNumber,
-//            EuropeanFlightEventWithoutAirplane
-//          )
-//          publishToKafka(
-//            appConfig.kafka.topology.airportRawTopic,
-//            List(
-//              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-//              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-//            )
-//          )
-//          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-//          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-//          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightEnrichedEvent](
-//            topics = Set(appConfig.kafka.topology.flightReceivedTopic),
-//            number = 1,
-//            timeout = ConsumerPollTimeout
-//          )
-//          messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
-//        }
-//        receivedRecords shouldBe (ExpectedEuropeanFlightEnrichedEventWithoutAirplane.icaoNumber, ExpectedEuropeanFlightEnrichedEventWithoutAirplane)
-//
-//      }
-//    }
+    "be joined successfully with consistent data but without airplane info" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+        implicit val embKafkaConfig: EmbeddedKafkaConfig  = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]              = kafkaStreamsOptions.keySerde
+        implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
+        implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
+        implicit val airlineRawSerde: Serde[AirlineRaw]   = kafkaStreamsOptions.airlineRawSerde
+        implicit val airplaneRawSerde: Serde[AirplaneRaw] = kafkaStreamsOptions.airplaneRawSerde
+        //output topic
+        implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent] = kafkaStreamsOptions.flightEnrichedEventSerde
+
+        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+          publishToKafka(
+            appConfig.kafka.topology.flightRawTopic,
+            EuropeanFlightEventWithoutAirplane.flight.icaoNumber,
+            EuropeanFlightEventWithoutAirplane
+          )
+          publishToKafka(
+            appConfig.kafka.topology.airportRawTopic,
+            List(
+              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+            )
+          )
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightEnrichedEvent](
+            topics = Set(appConfig.kafka.topology.flightReceivedTopic),
+            number = 1,
+            timeout = ConsumerPollTimeout
+          )
+          messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
+        }
+        receivedRecords shouldBe (ExpectedEuropeanFlightEnrichedEventWithoutAirplane.icaoNumber, ExpectedEuropeanFlightEnrichedEventWithoutAirplane)
+
+      }
+    }
 
     "be joined but without results because arrival airport is outside europe countries list" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
