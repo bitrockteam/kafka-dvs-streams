@@ -6,6 +6,7 @@ import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDe
 import it.bitrock.kafkaflightstream.model._
 import it.bitrock.kafkaflightstream.streams.config.{AppConfig, KafkaConfig}
 import org.apache.kafka.clients.consumer.{ConsumerConfig, OffsetResetStrategy}
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.kstream.{GlobalKTable, TimeWindows}
 import org.apache.kafka.streams.scala.ImplicitConversions._
@@ -76,6 +77,7 @@ object Streams {
     props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, config.topology.cacheMaxSizeBytes.toString)
     props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, config.topology.threadsAmount.toString)
     props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, config.topology.commitInterval.toMillis.toString)
+    props.put(ProducerConfig.LINGER_MS_CONFIG, config.topology.linger.toMillis.toString)
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, AutoOffsetResetStrategy.toString.toLowerCase)
     props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, config.schemaRegistryUrl.toString)
     props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, UseSpecificAvroReader.toString)
@@ -193,10 +195,9 @@ object Streams {
         .reduce((_, v) => v)
         .toStream
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count()
         .toStream
-        .map((k, v) => (k.window.start.toString, CountAirline(v)))
+        .mapValues(CountAirline(_))
         .to(config.kafka.topology.totalAirlineTopic)
     }
 
