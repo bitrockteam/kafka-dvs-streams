@@ -189,6 +189,7 @@ object Streams {
 
       flightEnriched
         .groupBy((_, v) => v.airline.codeAirline)
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .reduce((_, v) => v)
         .toStream
         .groupBy((_, _) => AllRecordsKey)
