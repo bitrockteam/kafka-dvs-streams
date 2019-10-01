@@ -39,6 +39,18 @@ trait Events {
   )
 
   final val SpeedArray = Array(123.45, 800, 958.37, 1216.67, 750, 987, 675.45, 900, 1000, 345.89)
+  final val ProductionLineArray = Array(
+    "Boeing 727",
+    "McDonnell Douglas DC",
+    "Airbus A318/A319/A32",
+    "Boeing 737 NG",
+    "",
+    "Embraer EMB-190/EMB-",
+    "ATR 42/72",
+    "Saab 340",
+    "Airbus A330/A340",
+    "Boeing 737 Classic"
+  )
   final val CodeAirlineArray = Array(
     ParamsAirline1.icaoCode,
     ParamsAirline2.icaoCode,
@@ -71,7 +83,7 @@ trait Events {
   final val EuropeanFlightEvent: FlightRaw = buildFlightRaw(ParamsEuropeanFlight)
   final val ForeignFlightEvent: FlightRaw  = buildFlightRaw(ParamsForeignFlight)
 
-  final val ExpectedEuropeanFlightEnrichedEvent = FlightEnrichedEvent(
+  final val ExpectedEuropeanFlightEnrichedEvent = FlightReceived(
     FlightIataCode,
     FlightIcaoCode,
     GeographyInfo(0, 0, 0, 0),
@@ -79,13 +91,22 @@ trait Events {
     AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
     AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
     AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
-    Some(AirplaneInfo(ParamsAirplane.numberRegistration, "", "")),
+    AirplaneInfo(ParamsAirplane.numberRegistration, "", ""),
     StatusEnRoute,
     Updated
   )
-  final val ExpectedFlightReceivedList = 0 to 9 map { key =>
-    ExpectedEuropeanFlightEnrichedEvent.copy(iataNumber = key.toString, icaoNumber = key.toString)
-  }
+  final val ExpectedFlightReceivedList =
+    (0 to 9)
+      .filter(key => ProductionLineArray(key).contains("Boeing") || ProductionLineArray(key).contains("Airbus"))
+      .map(
+        key =>
+          ExpectedEuropeanFlightEnrichedEvent.copy(
+            iataNumber = key.toString,
+            icaoNumber = key.toString,
+            airplane = AirplaneInfo(key.toString, ProductionLineArray(key), "")
+          )
+      )
+
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
       Airport(ParamsEuropeanAirport7.iataCode, 11),
@@ -122,7 +143,7 @@ trait Events {
       Airline(ParamsAirline5.nameAirline, 4)
     )
   )
-  final val ExpectedTotalFlightResult  = CountFlightStatus(StatusEnRoute, 10)
+  final val ExpectedTotalFlightResult  = CountFlight(10)
   final val ExpectedTotalAirlineResult = CountAirline(5)
 
   case class AirportParams(iataCode: String, codeCountry: String)

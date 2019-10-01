@@ -17,9 +17,10 @@ import org.apache.kafka.streams.{StreamsConfig, Topology}
 object Streams {
 
   // Whether or not to deserialize `SpecificRecord`s when possible
-  final val UseSpecificAvroReader   = true
-  final val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
-  final val AllRecordsKey: String   = "all"
+  final val UseSpecificAvroReader            = true
+  final val AutoOffsetResetStrategy          = OffsetResetStrategy.EARLIEST
+  final val AllRecordsKey: String            = "all"
+  final val AirplaneFilterList: List[String] = List("Boeing", "Airbus")
 
   private final val europeanCountries = Set(
     "AL",
@@ -94,7 +95,7 @@ object Streams {
     //implicit val cityRawSerde: Serde[CityRaw] = kafkaStreamsOptions.cityRawSerde
 
     //output topic
-    implicit val flightEnrichedEventSerde: Serde[FlightEnrichedEvent]         = kafkaStreamsOptions.flightEnrichedEventSerde
+    implicit val flightReceivedEventSerde: Serde[FlightReceived]              = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList]      = kafkaStreamsOptions.flightReceivedListEventSerde
     implicit val topAggregationKeySerde: Serde[Long]                          = kafkaStreamsOptions.topAggregationKeySerde
     implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList]     = kafkaStreamsOptions.topArrivalAirportListEventSerde
@@ -104,7 +105,7 @@ object Streams {
     implicit val topAirportSerde: Serde[Airport]                              = kafkaStreamsOptions.topAirportEventSerde
     implicit val topSpeedSerde: Serde[SpeedFlight]                            = kafkaStreamsOptions.topSpeedFlightEventSerde
     implicit val topAirlineSerde: Serde[Airline]                              = kafkaStreamsOptions.topAirlineEventSerde
-    implicit val countFlightStatusSerde: Serde[CountFlightStatus]             = kafkaStreamsOptions.countFlightStatusEventSerde
+    implicit val countFlightSerde: Serde[CountFlight]                         = kafkaStreamsOptions.countFlightEventSerde
     implicit val countAirlineSerde: Serde[CountAirline]                       = kafkaStreamsOptions.countAirlineEventSerde
 
     def buildFlightReceived(
@@ -112,23 +113,24 @@ object Streams {
         airportRawTable: GlobalKTable[String, AirportRaw],
         airlineRawTable: GlobalKTable[String, AirlineRaw],
         airplaneRawTable: GlobalKTable[String, AirplaneRaw]
-    ): KStream[String, FlightEnrichedEvent] = {
+    ): KStream[String, FlightReceived] = {
 
       val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawTable)
 
       val flightAirportAirline: KStream[String, FlightWithAirline] =
         flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
-      val flightAirportAirlineAirplane: KStream[String, FlightEnrichedEvent] =
+      val flightAirportAirlineAirplane: KStream[String, FlightReceived] =
         flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
       flightAirportAirlineAirplane
     }
 
-    def buildFlightReceivedList(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildFlightReceivedList(flightEnriched: KStream[String, FlightReceived]): Unit = {
 
       flightEnriched
+        .filter((_, v) => AirplaneFilterList.exists(v.airplane.productionLine.contains(_)))
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
@@ -137,7 +139,7 @@ object Streams {
         .to(config.kafka.topology.flightReceivedListTopic)
     }
 
-    def buildTopArrival(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildTopArrival(flightEnriched: KStream[String, FlightReceived]): Unit = {
       val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
 
       flightEnriched
@@ -150,7 +152,7 @@ object Streams {
         .to(config.kafka.topology.topArrivalAirportTopic)
     }
 
-    def buildTopDeparture(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildTopDeparture(flightEnriched: KStream[String, FlightReceived]): Unit = {
       val topDepartureAirportAggregator = new TopDepartureAirportAggregator(config.topElementsAmount)
 
       flightEnriched
@@ -163,7 +165,7 @@ object Streams {
         .to(config.kafka.topology.topDepartureAirportTopic)
     }
 
-    def buildTopFlightSpeed(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildTopFlightSpeed(flightEnriched: KStream[String, FlightReceived]): Unit = {
       val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
 
       flightEnriched.groupByKey
@@ -175,7 +177,7 @@ object Streams {
         .to(config.kafka.topology.topSpeedTopic)
     }
 
-    def buildTopAirline(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildTopAirline(flightEnriched: KStream[String, FlightReceived]): Unit = {
       val topAirlineAggregator = new TopAirlineAggregator(config.topElementsAmount)
 
       flightEnriched
@@ -188,18 +190,18 @@ object Streams {
         .to(config.kafka.topology.topAirlineTopic)
     }
 
-    def buildTotalFlights(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildTotalFlights(flightEnriched: KStream[String, FlightReceived]): Unit = {
 
       flightEnriched
-        .groupBy((_, v) => v.status)
+        .groupBy((_, _) => AllRecordsKey)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .toStream
-        .map((k, v) => (k.window.start.toString, CountFlightStatus(k.window.start.toString, v)))
+        .map((k, v) => (k.window.start.toString, CountFlight(v)))
         .to(config.kafka.topology.totalFlightTopic)
     }
 
-    def buildTotalAirlines(flightEnriched: KStream[String, FlightEnrichedEvent]): Unit = {
+    def buildTotalAirlines(flightEnriched: KStream[String, FlightReceived]): Unit = {
 
       flightEnriched
         .groupBy((_, v) => v.airline.codeAirline)
@@ -310,12 +312,12 @@ object Streams {
   private def flightWithAirportAndAirlineToAirplaneEnrichment(
       flightWithAirline: KStream[String, FlightWithAirline],
       airplaneRawTable: GlobalKTable[String, AirplaneRaw]
-  ): KStream[String, FlightEnrichedEvent] = {
+  ): KStream[String, FlightReceived] = {
     flightWithAirline
       .join(airplaneRawTable)(
         (_, v) => v.airplaneRegNumber,
         (flightAndAirline, airplaneRaw) =>
-          FlightEnrichedEvent(
+          FlightReceived(
             flightAndAirline.iataNumber,
             flightAndAirline.icaoNumber,
             flightAndAirline.geography,
@@ -323,8 +325,7 @@ object Streams {
             flightAndAirline.airportDeparture,
             flightAndAirline.airportArrival,
             flightAndAirline.airline,
-            Option(airplaneRaw)
-              .map(airplaneRaw => AirplaneInfo(airplaneRaw.numberRegistration, airplaneRaw.productionLine, airplaneRaw.modelCode)),
+            AirplaneInfo(airplaneRaw.numberRegistration, airplaneRaw.productionLine, airplaneRaw.modelCode),
             flightAndAirline.status,
             flightAndAirline.updated
           )

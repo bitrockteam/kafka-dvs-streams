@@ -55,7 +55,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightEnrichedEvent](
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
             topics = Set(appConfig.kafka.topology.flightReceivedTopic),
             number = 1,
             timeout = ConsumerPollTimeout
@@ -85,7 +85,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
 
           an[TimeoutException] should be thrownBy {
-            consumeNumberKeyedMessagesFromTopics[String, FlightEnrichedEvent](
+            consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
               topics = Set(appConfig.kafka.topology.flightReceivedTopic),
               number = 1,
               timeout = ConsumerPollTimeout
@@ -103,7 +103,16 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> EuropeanFlightEvent.copy(flight = Flight(key.toString, key.toString, ""))
+            key.toString -> EuropeanFlightEvent.copy(
+              flight = Flight(key.toString, key.toString, ""),
+              aircraft = Aircraft(key.toString, "", "", "")
+            )
+          }
+          val airplaneMessages = 0 to 9 map { key =>
+            key.toString -> AirplaneEvent.copy(
+              numberRegistration = key.toString,
+              productionLine = ProductionLineArray(key)
+            )
           }
           publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
@@ -114,7 +123,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
             )
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessages)
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
             topics = Set(appConfig.kafka.topology.flightReceivedListTopic),
             number = 1,
@@ -334,7 +343,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlightStatus](
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlight](
             topics = Set(appConfig.kafka.topology.totalFlightTopic),
             number = 1,
             timeout = ConsumerPollTimeout
@@ -411,7 +420,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[FlightWithDepartureAirportInfo],
         serdeFrom[FlightWithAllAirportInfo],
         serdeFrom[FlightWithAirline],
-        serdeFrom[FlightEnrichedEvent],
+        serdeFrom[FlightReceived],
         serdeFrom[FlightReceivedList],
         Serdes.Long,
         serdeFrom[TopArrivalAirportList],
@@ -421,7 +430,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[SpeedFlight],
         serdeFrom[TopAirlineList],
         serdeFrom[Airline],
-        serdeFrom[CountFlightStatus],
+        serdeFrom[CountFlight],
         serdeFrom[CountAirline]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)

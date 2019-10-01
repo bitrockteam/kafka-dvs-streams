@@ -3,27 +3,7 @@ package it.bitrock.kafkaflightstream.streams
 import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
-import it.bitrock.kafkaflightstream.model.{
-  Airline,
-  AirlineRaw,
-  AirplaneRaw,
-  Airport,
-  AirportRaw,
-  CityRaw,
-  CountAirline,
-  CountFlightStatus,
-  FlightEnrichedEvent,
-  FlightRaw,
-  FlightReceivedList,
-  FlightWithAirline,
-  FlightWithAllAirportInfo,
-  FlightWithDepartureAirportInfo,
-  SpeedFlight,
-  TopAirlineList,
-  TopArrivalAirportList,
-  TopDepartureAirportList,
-  TopSpeedList
-}
+import it.bitrock.kafkaflightstream.model.{System => _, _}
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.AvroSerdes
 import org.apache.kafka.streams.KafkaStreams
@@ -49,7 +29,7 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[FlightWithDepartureAirportInfo],
     avroSerdes.serdeFrom[FlightWithAllAirportInfo],
     avroSerdes.serdeFrom[FlightWithAirline],
-    avroSerdes.serdeFrom[FlightEnrichedEvent],
+    avroSerdes.serdeFrom[FlightReceived],
     avroSerdes.serdeFrom[FlightReceivedList],
     Serdes.Long,
     avroSerdes.serdeFrom[TopArrivalAirportList],
@@ -59,7 +39,7 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[SpeedFlight],
     avroSerdes.serdeFrom[TopAirlineList],
     avroSerdes.serdeFrom[Airline],
-    avroSerdes.serdeFrom[CountFlightStatus],
+    avroSerdes.serdeFrom[CountFlight],
     avroSerdes.serdeFrom[CountAirline]
   )
 
