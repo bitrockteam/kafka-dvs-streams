@@ -209,10 +209,9 @@ object Streams {
         .reduce((_, v) => v)
         .toStream
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count()
         .toStream
-        .map((k, v) => (k.window.start.toString, CountAirline(v)))
+        .mapValues(CountAirline(_))
         .to(config.kafka.topology.totalAirlineTopic)
     }
 
