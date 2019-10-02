@@ -1,25 +1,6 @@
 package it.bitrock.kafkaflightstream.streams
 
-import it.bitrock.kafkaflightstream.model.{
-  Airline,
-  AirlineRaw,
-  AirplaneRaw,
-  Airport,
-  AirportRaw,
-  CityRaw,
-  CountAirline,
-  CountFlightStatus,
-  FlightEnrichedEvent,
-  FlightRaw,
-  FlightWithAirline,
-  FlightWithAllAirportInfo,
-  FlightWithDepartureAirportInfo,
-  SpeedFlight,
-  TopAirlineList,
-  TopArrivalAirportList,
-  TopDepartureAirportList,
-  TopSpeedList
-}
+import it.bitrock.kafkaflightstream.model._
 import org.apache.kafka.common.serialization.Serde
 
 final case class KafkaStreamsOptions(
@@ -34,7 +15,8 @@ final case class KafkaStreamsOptions(
     flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo],
     flightWithAirline: Serde[FlightWithAirline],
     //final output
-    flightEnrichedEventSerde: Serde[FlightEnrichedEvent],
+    flightReceivedEventSerde: Serde[FlightReceived],
+    flightReceivedListEventSerde: Serde[FlightReceivedList],
     topAggregationKeySerde: Serde[Long],
     topArrivalAirportListEventSerde: Serde[TopArrivalAirportList],
     topDepartureAirportListEventSerde: Serde[TopDepartureAirportList],
@@ -43,6 +25,6 @@ final case class KafkaStreamsOptions(
     topSpeedFlightEventSerde: Serde[SpeedFlight],
     topAirlineListEventSerde: Serde[TopAirlineList],
     topAirlineEventSerde: Serde[Airline],
-    countFlightStatusEventSerde: Serde[CountFlightStatus],
+    countFlightEventSerde: Serde[CountFlight],
     countAirlineEventSerde: Serde[CountAirline]
 )
