@@ -350,7 +350,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2).head
         }
-        receivedRecords.eventCount shouldBe ExpectedTotalFlightResult.eventCount
+        receivedRecords.eventCount shouldBe ExpectedTotalFlightResult
 
       }
     }
@@ -393,7 +393,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           messagesMap(appConfig.kafka.topology.totalAirlineTopic).map(_._2).head
         }
-        receivedRecords shouldBe ExpectedTotalAirlineResult
+        receivedRecords.eventCount shouldBe ExpectedTotalAirlineResult
 
       }
     }

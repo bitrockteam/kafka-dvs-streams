@@ -197,7 +197,7 @@ object Streams {
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .toStream
-        .map((k, v) => (k.window.start.toString, CountFlight(v)))
+        .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v)))
         .to(config.kafka.topology.totalFlightTopic)
     }
 
@@ -212,7 +212,7 @@ object Streams {
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count()
         .toStream
-        .map((k, v) => (k.window.start.toString, CountAirline(v)))
+        .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v)))
         .to(config.kafka.topology.totalAirlineTopic)
     }
 
@@ -253,7 +253,14 @@ object Streams {
               flightRaw.geography.direction
             ),
             flightRaw.speed.horizontal,
-            AirportInfo(airportRaw.codeIataAirport, airportRaw.nameAirport, airportRaw.nameCountry, airportRaw.codeIso2Country),
+            AirportInfo(
+              airportRaw.codeIataAirport,
+              airportRaw.nameAirport,
+              airportRaw.nameCountry,
+              airportRaw.codeIso2Country,
+              airportRaw.timezone,
+              airportRaw.gmt
+            ),
             flightRaw.arrival.iataCode,
             flightRaw.airline.icaoCode,
             flightRaw.aircraft.regNumber,
@@ -270,7 +277,14 @@ object Streams {
             flightReceivedOnlyDeparture.geography,
             flightReceivedOnlyDeparture.speed,
             flightReceivedOnlyDeparture.airportDeparture,
-            AirportInfo(airportRaw.codeIataAirport, airportRaw.nameAirport, airportRaw.nameCountry, airportRaw.codeIso2Country),
+            AirportInfo(
+              airportRaw.codeIataAirport,
+              airportRaw.nameAirport,
+              airportRaw.nameCountry,
+              airportRaw.codeIso2Country,
+              airportRaw.timezone,
+              airportRaw.gmt
+            ),
             flightReceivedOnlyDeparture.airlineCode,
             flightReceivedOnlyDeparture.airplaneRegNumber,
             flightReceivedOnlyDeparture.status,
