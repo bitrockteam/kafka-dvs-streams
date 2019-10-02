@@ -96,6 +96,8 @@ pipeline {
                         sh "docker push ${DOCKER_REPOSITORY}/${GITHUB_REPO}:${tagAfter}"
                         sh "docker tag ${DOCKER_REPOSITORY}/${GITHUB_REPO}:${tagAfter} ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
                         sh "docker push ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
+			sh "docker rmi ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
+			sh "docker rmi ${DOCKER_REPOSITORY}/${GITHUB_REPO}:${tagAfter}"
                         sh "printf '[{\"name\":\"kafka-flightstream-streams\",\"imageUri\":\"%s\"}]' \$(git describe --tags --abbrev=0 | sed 's/^v//') > imagedefinitions.json"
                     }
                 }
