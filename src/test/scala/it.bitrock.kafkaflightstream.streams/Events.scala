@@ -88,8 +88,8 @@ trait Events {
     FlightIcaoCode,
     GeographyInfo(0, 0, 0, 0),
     0,
-    AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry),
-    AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry),
+    AirportInfo(ParamsEuropeanAirport1.iataCode, "", "", ParamsEuropeanAirport1.codeCountry, "", ""),
+    AirportInfo(ParamsEuropeanAirport2.iataCode, "", "", ParamsEuropeanAirport2.codeCountry, "", ""),
     AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
     AirplaneInfo(ParamsAirplane.numberRegistration, "", ""),
     StatusEnRoute,
@@ -143,15 +143,15 @@ trait Events {
       Airline(ParamsAirline5.nameAirline, 4)
     )
   )
-  final val ExpectedTotalFlightResult  = CountFlight(10)
-  final val ExpectedTotalAirlineResult = CountAirline(5)
+  final val ExpectedTotalFlightResult  = 10
+  final val ExpectedTotalAirlineResult = 5
 
   case class AirportParams(iataCode: String, codeCountry: String)
   case class AirlineParams(icaoCode: String, nameAirline: String)
   case class AirplaneParams(numberRegistration: String)
   case class FlightParams(departureAirportCode: String, arrivalAirportCode: String, airlineCode: String, airplaneCode: String)
 
-  private def buildAirportRaw(params: AirportParams)   = AirportRaw("", "", params.iataCode, "", "", "", params.codeCountry, "")
+  private def buildAirportRaw(params: AirportParams)   = AirportRaw("", "", params.iataCode, "", "", "", params.codeCountry, "", "", "")
   private def buildAirlineRaw(params: AirlineParams)   = AirlineRaw("", params.nameAirline, "", params.icaoCode, "", "", "", "", "")
   private def buildAirplaneRaw(params: AirplaneParams) = AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
   private def buildFlightRaw(params: FlightParams) =
