@@ -209,9 +209,10 @@ object Streams {
         .reduce((_, v) => v)
         .toStream
         .groupBy((_, _) => AllRecordsKey)
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count()
         .toStream
-        .mapValues(CountAirline(_))
+        .map((k, v) => (k.window.start.toString, CountAirline(v)))
         .to(config.kafka.topology.totalAirlineTopic)
     }
 
@@ -220,7 +221,6 @@ object Streams {
     val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
     val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
     val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
-    //val cityRawStream  = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic)
 
     val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
     buildFlightReceivedList(flightReceivedStream)
