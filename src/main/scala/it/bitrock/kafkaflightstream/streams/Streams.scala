@@ -197,7 +197,7 @@ object Streams {
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .count
         .toStream
-        .map((k, _) => (k.window.start.toString, CountFlight(k.window.start)))
+        .map((k, v) => (k.window.start.toString, CountFlight(v)))
         .to(config.kafka.topology.totalFlightTopic)
     }
 
