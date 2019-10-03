@@ -97,7 +97,7 @@ trait Events {
   )
   final val ExpectedFlightReceivedList =
     (0 to 9)
-      .filter(key => ProductionLineArray(key).contains("Boeing") || ProductionLineArray(key).contains("Airbus"))
+      .filter(key => ProductionLineArray(key).contains("Boeing 737") || ProductionLineArray(key).contains("Airbus A318/A319/A32"))
       .map(
         key =>
           ExpectedEuropeanFlightEnrichedEvent.copy(

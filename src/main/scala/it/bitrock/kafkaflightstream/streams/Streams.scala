@@ -20,7 +20,7 @@ object Streams {
   final val UseSpecificAvroReader            = true
   final val AutoOffsetResetStrategy          = OffsetResetStrategy.EARLIEST
   final val AllRecordsKey: String            = "all"
-  final val AirplaneFilterList: List[String] = List("Boeing", "Airbus")
+  final val AirplaneFilterList: List[String] = List("Boeing 737", "Airbus A318/A319/A32")
 
   private final val europeanCountries = Set(
     "AL",
