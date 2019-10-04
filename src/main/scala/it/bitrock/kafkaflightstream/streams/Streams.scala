@@ -13,6 +13,7 @@ import org.apache.kafka.streams.scala.kstream.{KStream, Suppressed}
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.{StreamsConfig, Topology}
+import scala.concurrent.duration._
 
 object Streams {
 
@@ -131,7 +132,7 @@ object Streams {
       flightEnriched
         .filter((_, v) => AirplaneFilterList.exists(v.airplane.productionLine.contains(_)))
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(TimeWindows.of(duration2JavaDuration(8.seconds)))
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
