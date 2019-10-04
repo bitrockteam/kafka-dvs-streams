@@ -26,8 +26,7 @@ final case class TopologyConfig(
     totalFlightTopic: String,
     totalAirlineTopic: String,
     aggregationTimeWindowSize: FiniteDuration,
+    aggregationTimeWindowGrace: FiniteDuration,
     commitInterval: FiniteDuration,
-    linger: FiniteDuration,
-    cacheMaxSizeBytes: Long,
     threadsAmount: Int
 )
