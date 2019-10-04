@@ -431,7 +431,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         serdeFrom[TopAirlineList],
         serdeFrom[Airline],
         serdeFrom[CountFlight],
-        serdeFrom[CountAirline]
+        serdeFrom[CountAirline],
+        serdeFrom[CodeAirlineList]
       )
       val topology = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 
