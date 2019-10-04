@@ -108,6 +108,7 @@ object Streams {
     implicit val topAirlineSerde: Serde[Airline]                              = kafkaStreamsOptions.topAirlineEventSerde
     implicit val countFlightSerde: Serde[CountFlight]                         = kafkaStreamsOptions.countFlightEventSerde
     implicit val countAirlineSerde: Serde[CountAirline]                       = kafkaStreamsOptions.countAirlineEventSerde
+    implicit val codeAirlineListSerde: Serde[CodeAirlineList]                 = kafkaStreamsOptions.codeAirlineListEventSerde
 
     def buildFlightReceived(
         fligthtRawStream: KStream[String, FlightRaw],
@@ -205,15 +206,11 @@ object Streams {
     def buildTotalAirlines(flightEnriched: KStream[String, FlightReceived]): Unit = {
 
       flightEnriched
-        .groupBy((_, v) => v.airline.codeAirline)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
-        .reduce((_, v) => v)
-        .toStream
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
-        .count()
+        .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.codeAirline))
         .toStream
-        .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v)))
+        .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v.elements.distinct.size)))
         .to(config.kafka.topology.totalAirlineTopic)
     }
 
