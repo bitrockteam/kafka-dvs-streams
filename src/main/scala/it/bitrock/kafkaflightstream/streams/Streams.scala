@@ -135,8 +135,13 @@ object Streams {
       flightEnriched
         .filter((_, v) => AirplaneFilterList.exists(v.airplane.productionLine.contains(_)))
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(8.seconds)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(8.seconds))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
@@ -165,8 +170,13 @@ object Streams {
 
       flightEnriched
         .groupBy((_, v) => v.airportDeparture.codeAirport)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .count
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
         .aggregate(topDepartureAirportAggregator.initializer)(topDepartureAirportAggregator.adder, topDepartureAirportAggregator.subtractor)
         .toStream
@@ -177,8 +187,13 @@ object Streams {
       val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
 
       flightEnriched.groupByKey
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .reduce((_, v2) => v2)
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .groupBy((k, v) => (k.window.start.toString, SpeedFlight(k.key, v.speed)))
         .aggregate(topSpeedFlightAggregator.initializer)(topSpeedFlightAggregator.adder, topSpeedFlightAggregator.subtractor)
         .toStream
@@ -190,8 +205,13 @@ object Streams {
 
       flightEnriched
         .groupBy((_, v) => v.airline.nameAirline)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .count
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .groupBy((k, v) => (k.window.start.toString, Airline(k.key, v)))
         .aggregate(topAirlineAggregator.initializer)(topAirlineAggregator.adder, topAirlineAggregator.subtractor)
         .toStream
@@ -218,8 +238,13 @@ object Streams {
 
       flightEnriched
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.codeAirline))
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v.elements.distinct.size)))
         .to(config.kafka.topology.totalAirlineTopic)
