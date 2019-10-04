@@ -6,7 +6,6 @@ import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDe
 import it.bitrock.kafkaflightstream.model._
 import it.bitrock.kafkaflightstream.streams.config.{AppConfig, KafkaConfig}
 import org.apache.kafka.clients.consumer.{ConsumerConfig, OffsetResetStrategy}
-import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.kstream.{GlobalKTable, TimeWindows}
 import org.apache.kafka.streams.scala.ImplicitConversions._
@@ -14,7 +13,6 @@ import org.apache.kafka.streams.scala.kstream.{KStream, Suppressed}
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.{StreamsConfig, Topology}
-import scala.concurrent.duration._
 
 object Streams {
 
@@ -77,10 +75,8 @@ object Streams {
     val props = new Properties
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, config.applicationId)
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers)
-    props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, config.topology.cacheMaxSizeBytes.toString)
     props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, config.topology.threadsAmount.toString)
     props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, config.topology.commitInterval.toMillis.toString)
-    props.put(ProducerConfig.LINGER_MS_CONFIG, config.topology.linger.toMillis.toString)
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, AutoOffsetResetStrategy.toString.toLowerCase)
     props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, config.schemaRegistryUrl.toString)
     props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, UseSpecificAvroReader.toString)
@@ -135,13 +131,8 @@ object Streams {
       flightEnriched
         .filter((_, v) => AirplaneFilterList.exists(v.airplane.productionLine.contains(_)))
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(
-          TimeWindows
-            .of(duration2JavaDuration(8.seconds))
-            .grace(duration2JavaDuration(1.seconds))
-        )
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
-        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
@@ -155,7 +146,7 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .grace(duration2JavaDuration(1.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
@@ -173,7 +164,7 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .grace(duration2JavaDuration(1.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
@@ -190,7 +181,7 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .grace(duration2JavaDuration(1.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .reduce((_, v2) => v2)
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
@@ -208,7 +199,7 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .grace(duration2JavaDuration(1.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
@@ -225,7 +216,7 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .grace(duration2JavaDuration(1.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
@@ -241,7 +232,7 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .grace(duration2JavaDuration(1.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.codeAirline))
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
