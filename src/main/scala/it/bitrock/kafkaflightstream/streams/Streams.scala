@@ -10,8 +10,9 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.kstream.{GlobalKTable, TimeWindows}
 import org.apache.kafka.streams.scala.ImplicitConversions._
-import org.apache.kafka.streams.scala.kstream.KStream
+import org.apache.kafka.streams.scala.kstream.{KStream, Suppressed}
 import org.apache.kafka.streams.scala.StreamsBuilder
+import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.{StreamsConfig, Topology}
 import scala.concurrent.duration._
 
@@ -146,8 +147,13 @@ object Streams {
 
       flightEnriched
         .groupBy((_, v) => v.airportArrival.codeAirport)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .count
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
         .aggregate(topArrivalAirportAggregator.initializer)(topArrivalAirportAggregator.adder, topArrivalAirportAggregator.subtractor)
         .toStream
@@ -196,8 +202,13 @@ object Streams {
 
       flightEnriched
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .grace(duration2JavaDuration(1.seconds))
+        )
         .count
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v)))
         .to(config.kafka.topology.totalFlightTopic)
