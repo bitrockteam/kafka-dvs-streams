@@ -1,9 +1,15 @@
-FROM bigtruedata/sbt:0.13.15-2.12 AS sbt-build
+FROM bigtruedata/scala:2.12 AS sbt-build
+
+# install sbt
+RUN wget -O- 'https://github.com/sbt/sbt/releases/download/v1.2.8/sbt-1.2.8.tgz' \
+    |  tar xzf - -C /usr/local --strip-components=1 \
+    && sbt exit
 
 WORKDIR /app
 
 # fetch dependencies first in order to leverage build cache
 COPY .sbt .sbt
+COPY .sbtopts .
 COPY project project
 COPY *.sbt ./
 RUN sbt update
