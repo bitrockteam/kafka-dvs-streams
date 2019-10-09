@@ -196,91 +196,91 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
       }
     }
 
-    "produce TopDepartureAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
-        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+//    "produce TopDepartureAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
+//      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+//        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+//        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+//
+//        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+//          val flightMessages = 1 to 40 map { key =>
+//            val codeIataAirport = key match {
+//              case x if x >= 1 && x <= 3   => EuropeanAirport1.codeIataAirport
+//              case x if x >= 4 && x <= 9   => EuropeanAirport2.codeIataAirport
+//              case x if x >= 10 && x <= 18 => EuropeanAirport3.codeIataAirport
+//              case x if x >= 19 && x <= 20 => EuropeanAirport4.codeIataAirport
+//              case x if x >= 21 && x <= 24 => EuropeanAirport5.codeIataAirport
+//              case x if x >= 25 && x <= 29 => EuropeanAirport6.codeIataAirport
+//              case x if x >= 30 && x <= 40 => EuropeanAirport7.codeIataAirport
+//            }
+//            key.toString -> EuropeanFlightEvent.copy(
+//              flight = Flight(key.toString, key.toString, ""),
+//              departure = CommonCode(codeIataAirport, "")
+//            )
+//          }
+//          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
+//          publishToKafka(
+//            appConfig.kafka.topology.airportRawTopic,
+//            List(
+//              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+//              EuropeanAirport2.codeIataAirport -> EuropeanAirport2,
+//              EuropeanAirport3.codeIataAirport -> EuropeanAirport3,
+//              EuropeanAirport4.codeIataAirport -> EuropeanAirport4,
+//              EuropeanAirport5.codeIataAirport -> EuropeanAirport5,
+//              EuropeanAirport6.codeIataAirport -> EuropeanAirport6,
+//              EuropeanAirport7.codeIataAirport -> EuropeanAirport7
+//            )
+//          )
+//          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+//          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+//          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+//          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopDepartureAirportList](
+//            topics = Set(appConfig.kafka.topology.topDepartureAirportTopic),
+//            number = 1,
+//            timeout = ConsumerPollTimeout
+//          )
+//          messagesMap(appConfig.kafka.topology.topDepartureAirportTopic).head._2
+//        }
+//        receivedRecords.elements.size shouldBe 5
+//        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
+//
+//      }
+//    }
 
-        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
-          val flightMessages = 1 to 40 map { key =>
-            val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => EuropeanAirport1.codeIataAirport
-              case x if x >= 4 && x <= 9   => EuropeanAirport2.codeIataAirport
-              case x if x >= 10 && x <= 18 => EuropeanAirport3.codeIataAirport
-              case x if x >= 19 && x <= 20 => EuropeanAirport4.codeIataAirport
-              case x if x >= 21 && x <= 24 => EuropeanAirport5.codeIataAirport
-              case x if x >= 25 && x <= 29 => EuropeanAirport6.codeIataAirport
-              case x if x >= 30 && x <= 40 => EuropeanAirport7.codeIataAirport
-            }
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              departure = CommonCode(codeIataAirport, "")
-            )
-          }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2,
-              EuropeanAirport3.codeIataAirport -> EuropeanAirport3,
-              EuropeanAirport4.codeIataAirport -> EuropeanAirport4,
-              EuropeanAirport5.codeIataAirport -> EuropeanAirport5,
-              EuropeanAirport6.codeIataAirport -> EuropeanAirport6,
-              EuropeanAirport7.codeIataAirport -> EuropeanAirport7
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopDepartureAirportList](
-            topics = Set(appConfig.kafka.topology.topDepartureAirportTopic),
-            number = 1,
-            timeout = ConsumerPollTimeout
-          )
-          messagesMap(appConfig.kafka.topology.topDepartureAirportTopic).head._2
-        }
-        receivedRecords.elements.size shouldBe 5
-        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
-
-      }
-    }
-
-    "produce TopSpeedList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
-        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
-
-        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
-          val flightMessages = 0 to 9 map { key =>
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              speed = Speed(SpeedArray(key), 0.0)
-            )
-          }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopSpeedList](
-            topics = Set(appConfig.kafka.topology.topSpeedTopic),
-            number = 1,
-            timeout = ConsumerPollTimeout
-          )
-          messagesMap(appConfig.kafka.topology.topSpeedTopic).head._2
-        }
-        receivedRecords.elements.size shouldBe 5
-        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopSpeedResult.elements
-
-      }
-    }
+//    "produce TopSpeedList elements in the appropriate topic" in ResourceLoaner.withFixture {
+//      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+//        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+//        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+//
+//        val receivedRecords = runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
+//          val flightMessages = 0 to 9 map { key =>
+//            key.toString -> EuropeanFlightEvent.copy(
+//              flight = Flight(key.toString, key.toString, ""),
+//              speed = Speed(SpeedArray(key), 0.0)
+//            )
+//          }
+//          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
+//          publishToKafka(
+//            appConfig.kafka.topology.airportRawTopic,
+//            List(
+//              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
+//              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+//            )
+//          )
+//          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+//          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+//          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+//          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopSpeedList](
+//            topics = Set(appConfig.kafka.topology.topSpeedTopic),
+//            number = 1,
+//            timeout = ConsumerPollTimeout
+//          )
+//          messagesMap(appConfig.kafka.topology.topSpeedTopic).head._2
+//        }
+//        receivedRecords.elements.size shouldBe 5
+//        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopSpeedResult.elements
+//
+//      }
+//    }
 
     "produce TopAirlineList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
