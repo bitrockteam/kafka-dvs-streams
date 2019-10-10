@@ -21,7 +21,7 @@ object Streams {
   final val UseSpecificAvroReader            = true
   final val AutoOffsetResetStrategy          = OffsetResetStrategy.EARLIEST
   final val AllRecordsKey: String            = "all"
-  final val AirplaneFilterList: List[String] = List("Boeing 737", "Airbus A318/A319/A32")
+  final val AirplaneFilterList: List[String] = List("Airbus A318/A319/A32")
 
   private final val europeanCountries = Set(
     "AL",
@@ -252,9 +252,9 @@ object Streams {
     val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
     buildFlightReceivedList(flightReceivedStream)
     buildTopArrival(flightReceivedStream)
-    //buildTopDeparture(flightReceivedStream)
-    //buildTopFlightSpeed(flightReceivedStream)
+    buildTopDeparture(flightReceivedStream)
     buildTopAirline(flightReceivedStream)
+    buildTopFlightSpeed(flightReceivedStream)
     buildTotalFlights(flightReceivedStream)
     buildTotalAirlines(flightReceivedStream)
 
