@@ -102,6 +102,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
     }
 
+    /*
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -140,6 +141,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedFlightReceivedList
     }
+    */
 
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
