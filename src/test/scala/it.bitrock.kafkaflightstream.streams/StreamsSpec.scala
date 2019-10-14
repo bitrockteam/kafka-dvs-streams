@@ -1,11 +1,13 @@
 package it.bitrock.kafkaflightstream.streams
 
+import java.util.concurrent.TimeoutException
+
 import it.bitrock.kafkaflightstream.model._
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.kafkageostream.testcommons.{FixtureLoanerAnyResult, Suite}
-import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import net.manub.embeddedkafka.schemaregistry._
+import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.clients.producer._
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.scala.Serdes
@@ -13,7 +15,6 @@ import org.apache.kafka.streams.{StreamsConfig, Topology}
 import org.scalatest.{OptionValues, WordSpecLike}
 
 import scala.concurrent.duration._
-import java.util.concurrent.TimeoutException
 
 object StreamsSpec {
 
@@ -49,7 +50,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
   "Streams" should {
 
     "be joined successfully with consistent data" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -72,12 +73,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
         }
         receivedRecords shouldBe (ExpectedEuropeanFlightEnrichedEvent.icaoNumber, ExpectedEuropeanFlightEnrichedEvent)
-
-      }
     }
 
     "be joined but without results because arrival airport is outside europe countries list" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -101,12 +100,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
             )
           }
         }
-
-      }
     }
 
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -141,12 +138,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2).head
         }
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedFlightReceivedList
-
-      }
     }
 
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -192,12 +187,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopArrivalResult.elements
-
-      }
     }
 
     "produce TopDepartureAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -242,12 +235,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
-
-      }
     }
 
     "produce TopSpeedList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -278,12 +269,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopSpeedResult.elements
-
-      }
     }
 
     "produce TopAirlineList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -334,12 +323,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopAirlineResult.elements
-
-      }
     }
 
     "produce TotalFlight elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -366,12 +353,10 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2).head
         }
         receivedRecords.eventCount shouldBe ExpectedTotalFlightResult
-
-      }
     }
 
     "produce TotalAirline elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) => {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
@@ -410,8 +395,6 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           messagesMap(appConfig.kafka.topology.totalAirlineTopic).map(_._2).head
         }
         receivedRecords.eventCount shouldBe ExpectedTotalAirlineResult
-
-      }
     }
 
   }
