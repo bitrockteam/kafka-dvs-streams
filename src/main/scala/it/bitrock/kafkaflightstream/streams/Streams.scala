@@ -82,9 +82,16 @@ object Streams {
     }
 
     def buildFlightReceivedList(flightEnriched: KStream[String, FlightReceived]): Unit =
-      flightEnriched
+      flightEnriched.groupByKey
+        .reduce((_, v) => v)
+        .toStream
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(TimeWindows.of(duration2JavaDuration(8.seconds)))
+        .windowedBy(
+          TimeWindows
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .advanceBy(duration2JavaDuration(3.seconds))
+            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
+        )
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
