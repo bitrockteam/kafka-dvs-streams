@@ -29,5 +29,6 @@ final case class TopologyConfig(
     aggregationTimeWindowGrace: FiniteDuration,
     commitInterval: FiniteDuration,
     cacheMaxSizeBytes: Long,
+    maxRequestSize: Long,
     threadsAmount: Int
 )
