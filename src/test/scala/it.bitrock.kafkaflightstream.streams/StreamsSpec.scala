@@ -130,6 +130,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, airplaneMessages)
+          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
             topics = Set(appConfig.kafka.topology.flightReceivedListTopic),
             number = 1,
