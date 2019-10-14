@@ -93,6 +93,7 @@ object Streams {
             .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
