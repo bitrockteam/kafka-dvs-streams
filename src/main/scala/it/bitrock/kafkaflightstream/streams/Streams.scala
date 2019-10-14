@@ -9,68 +9,19 @@ import org.apache.kafka.clients.consumer.{ConsumerConfig, OffsetResetStrategy}
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.kstream.{GlobalKTable, TimeWindows}
 import org.apache.kafka.streams.scala.ImplicitConversions._
-import org.apache.kafka.streams.scala.kstream.{KStream, Suppressed}
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
+import org.apache.kafka.streams.scala.kstream.{KStream, Suppressed}
 import org.apache.kafka.streams.{StreamsConfig, Topology}
+
 import scala.concurrent.duration._
 
 object Streams {
 
   // Whether or not to deserialize `SpecificRecord`s when possible
-  final val UseSpecificAvroReader            = true
-  final val AutoOffsetResetStrategy          = OffsetResetStrategy.EARLIEST
-  final val AllRecordsKey: String            = "all"
-  final val AirplaneFilterList: List[String] = List("Airbus A318/A319/A32")
-
-  private final val europeanCountries = Set(
-    "AL",
-    "AD",
-    "AT",
-    "BE",
-    "BY",
-    "BA",
-    "BG",
-    "CY",
-    "HR",
-    "DK",
-    "EE",
-    "FI",
-    "FR",
-    "DE",
-    "GR",
-    "IE",
-    "IS",
-    "IT",
-    "XK",
-    "LV",
-    "LI",
-    "LT",
-    "LU",
-    "MK",
-    "MT",
-    "MD",
-    "MC",
-    "ME",
-    "NO",
-    "NL",
-    "PL",
-    "PT",
-    "GB",
-    "CZ",
-    "RO",
-    "RU",
-    "SM",
-    "RS",
-    "SK",
-    "SI",
-    "ES",
-    "SE",
-    "CH",
-    "UA",
-    "HU",
-    "VA"
-  )
+  final val UseSpecificAvroReader   = true
+  final val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
+  final val AllRecordsKey: String   = "all"
 
   def streamProperties(config: KafkaConfig): Properties = {
     val props = new Properties
@@ -128,17 +79,14 @@ object Streams {
       flightAirportAirlineAirplane
     }
 
-    def buildFlightReceivedList(flightEnriched: KStream[String, FlightReceived]): Unit = {
-
+    def buildFlightReceivedList(flightEnriched: KStream[String, FlightReceived]): Unit =
       flightEnriched
-        .filter((_, v) => AirplaneFilterList.exists(v.airplane.productionLine.contains(_)))
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(TimeWindows.of(duration2JavaDuration(8.seconds)))
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
-    }
 
     def buildTopArrival(flightEnriched: KStream[String, FlightReceived]): Unit = {
       val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
@@ -211,8 +159,7 @@ object Streams {
         .to(config.kafka.topology.topAirlineTopic)
     }
 
-    def buildTotalFlights(flightEnriched: KStream[String, FlightReceived]): Unit = {
-
+    def buildTotalFlights(flightEnriched: KStream[String, FlightReceived]): Unit =
       flightEnriched
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
@@ -225,10 +172,8 @@ object Streams {
         .toStream
         .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v)))
         .to(config.kafka.topology.totalFlightTopic)
-    }
 
-    def buildTotalAirlines(flightEnriched: KStream[String, FlightReceived]): Unit = {
-
+    def buildTotalAirlines(flightEnriched: KStream[String, FlightReceived]): Unit =
       flightEnriched
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
@@ -241,7 +186,6 @@ object Streams {
         .toStream
         .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v.elements.distinct.size)))
         .to(config.kafka.topology.totalAirlineTopic)
-    }
 
     val streamsBuilder   = new StreamsBuilder
     val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.flightRawTopic)
@@ -264,8 +208,7 @@ object Streams {
   private def flightRawToAirportEnrichment(
       flightRawStream: KStream[String, FlightRaw],
       airportRawTable: GlobalKTable[String, AirportRaw]
-  ): KStream[String, FlightWithAllAirportInfo] = {
-
+  ): KStream[String, FlightWithAllAirportInfo] =
     flightRawStream
       .join(airportRawTable)(
         (_, v) => v.departure.iataCode,
@@ -318,18 +261,11 @@ object Streams {
             flightReceivedOnlyDeparture.updated
           )
       )
-      .filter(
-        (_, v) =>
-          europeanCountries.contains(v.airportDeparture.codeIso2Country) &&
-            europeanCountries.contains(v.airportArrival.codeIso2Country)
-      )
-  }
 
   private def flightWithAirportToAirlineEnrichment(
       flightWithAllAirportStream: KStream[String, FlightWithAllAirportInfo],
       airlineRawTable: GlobalKTable[String, AirlineRaw]
-  ): KStream[String, FlightWithAirline] = {
-
+  ): KStream[String, FlightWithAirline] =
     flightWithAllAirportStream
       .join(airlineRawTable)(
         (_, v) => v.airlineCode,
@@ -347,12 +283,11 @@ object Streams {
             flightAndAirport.updated
           )
       )
-  }
 
   private def flightWithAirportAndAirlineToAirplaneEnrichment(
       flightWithAirline: KStream[String, FlightWithAirline],
       airplaneRawTable: GlobalKTable[String, AirplaneRaw]
-  ): KStream[String, FlightReceived] = {
+  ): KStream[String, FlightReceived] =
     flightWithAirline
       .join(airplaneRawTable)(
         (_, v) => v.airplaneRegNumber,
@@ -370,7 +305,5 @@ object Streams {
             flightAndAirline.updated
           )
       )
-
-  }
 
 }
