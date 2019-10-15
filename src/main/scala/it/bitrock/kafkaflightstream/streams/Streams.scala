@@ -63,13 +63,13 @@ object Streams {
     implicit val codeAirlineListSerde: Serde[CodeAirlineList]                 = kafkaStreamsOptions.codeAirlineListEventSerde
 
     def buildFlightReceived(
-        fligthtRawStream: KStream[String, FlightRaw],
+        flightRawStream: KStream[String, FlightRaw],
         airportRawTable: GlobalKTable[String, AirportRaw],
         airlineRawTable: GlobalKTable[String, AirlineRaw],
         airplaneRawTable: GlobalKTable[String, AirplaneRaw]
     ): KStream[String, FlightReceived] = {
 
-      val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(fligthtRawStream, airportRawTable)
+      val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(flightRawStream, airportRawTable)
 
       val flightAirportAirline: KStream[String, FlightWithAirline] =
         flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
@@ -89,11 +89,10 @@ object Streams {
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .advanceBy(duration2JavaDuration(3.seconds))
+            .advanceBy(duration2JavaDuration(5.seconds))
             .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
-        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
