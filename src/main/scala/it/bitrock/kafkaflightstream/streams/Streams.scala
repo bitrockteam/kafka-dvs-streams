@@ -90,7 +90,6 @@ object Streams {
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
             .advanceBy(duration2JavaDuration(5.seconds))
-            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
         .toStream
