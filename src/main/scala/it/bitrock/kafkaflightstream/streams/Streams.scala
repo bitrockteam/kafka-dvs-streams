@@ -38,7 +38,7 @@ object Streams {
     props
   }
 
-  def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): Topology = {
+  def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[Topology] = {
     implicit val KeySerde: Serde[String]              = kafkaStreamsOptions.keySerde
     implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
     implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
@@ -80,14 +80,18 @@ object Streams {
       flightAirportAirlineAirplane
     }
 
-    def buildFlightReceivedList(flightEnriched: KStream[String, FlightReceived]): Unit =
-      flightEnriched
+    def buildFlightReceivedList(): StreamsBuilder = {
+      val streamsBuilder = new StreamsBuilder
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
+      streamsBuilder
+    }
 
     def buildTopArrival(flightEnriched: KStream[String, FlightReceived]): Unit = {
       val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
@@ -195,7 +199,6 @@ object Streams {
     val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
 
     val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
-    buildFlightReceivedList(flightReceivedStream)
     buildTopArrival(flightReceivedStream)
     buildTopDeparture(flightReceivedStream)
     buildTopAirline(flightReceivedStream)
@@ -205,7 +208,7 @@ object Streams {
 
     val props = new Properties()
     props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
-    streamsBuilder.build(props)
+    List(streamsBuilder.build(props), buildFlightReceivedList().build(props))
   }
 
   private def flightRawToAirportEnrichment(
