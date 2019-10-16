@@ -52,7 +52,7 @@ object Main extends App with LazyLogging {
   logger.debug(s"Using streams properties: $kafkaStreamsProperties")
 
   val streams = topologies.map(topology => new KafkaStreams(topology, kafkaStreamsProperties))
-  val latch   = new CountDownLatch(1)
+  val latch   = new CountDownLatch(streams.size)
 
   streams.foreach(stream => {
     sys.addShutdownHook {
@@ -70,15 +70,15 @@ object Main extends App with LazyLogging {
       logger.error("Uncaught exception while running streams", e)
       System.exit(0)
     })
-
-    try {
-      logger.info("Starting streams")
-      stream.start()
-      latch.await()
-    } catch {
-      case e: Throwable =>
-        logger.error("Exception starting streams", e)
-        System.exit(1)
-    }
   })
+
+  try {
+    logger.info("Starting streams")
+    streams.foreach(stream => stream.start())
+    latch.await()
+  } catch {
+    case e: Throwable =>
+      logger.error("Exception starting streams", e)
+      System.exit(1)
+  }
 }
