@@ -1,7 +1,5 @@
 package it.bitrock.kafkaflightstream.streams
 
-import java.util.concurrent.TimeoutException
-
 import it.bitrock.kafkaflightstream.model._
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.ImplicitConversions._
@@ -114,7 +112,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedFlightReceivedList
     }
 
-    /*    "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
+    "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
@@ -369,7 +367,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           messagesMap(appConfig.kafka.topology.totalAirlineTopic).map(_._2).head
         }
         receivedRecords.eventCount shouldBe ExpectedTotalAirlineResult
-    }*/
+    }
 
   }
 
