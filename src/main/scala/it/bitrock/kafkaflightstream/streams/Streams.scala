@@ -35,6 +35,7 @@ object Streams {
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, config.topology.maxRequestSize.toString)
     props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, config.schemaRegistryUrl.toString)
     props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, UseSpecificAvroReader.toString)
+    props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
 
     props
   }
@@ -203,14 +204,16 @@ object Streams {
 
     val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
     buildFlightReceivedList(flightReceivedStream)
-    buildTopArrival(flightReceivedStream)
-    buildTopDeparture(flightReceivedStream)
-    buildTopAirline(flightReceivedStream)
-    buildTopFlightSpeed(flightReceivedStream)
-    buildTotalFlights(flightReceivedStream)
-    buildTotalAirlines(flightReceivedStream)
+    //buildTopArrival(flightReceivedStream)
+    //buildTopDeparture(flightReceivedStream)
+    //buildTopAirline(flightReceivedStream)
+    //buildTopFlightSpeed(flightReceivedStream)
+    //buildTotalFlights(flightReceivedStream)
+    //buildTotalAirlines(flightReceivedStream)
 
-    streamsBuilder.build
+    val props = new Properties()
+    props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
+    streamsBuilder.build(props)
   }
 
   private def flightRawToAirportEnrichment(
