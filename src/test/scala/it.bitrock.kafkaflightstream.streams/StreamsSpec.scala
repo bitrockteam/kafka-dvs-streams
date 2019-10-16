@@ -75,33 +75,6 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         receivedRecords shouldBe (ExpectedEuropeanFlightEnrichedEvent.icaoNumber, ExpectedEuropeanFlightEnrichedEvent)
     }
 
-    "be joined but without results because arrival airport is outside europe countries list" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
-        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
-
-        runStreams(topicsToCreate, topology, TopologyTestExtraConf) {
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, ForeignFlightEvent.flight.icaoNumber, ForeignFlightEvent)
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-
-          an[TimeoutException] should be thrownBy {
-            consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
-              topics = Set(appConfig.kafka.topology.flightReceivedTopic),
-              number = 1,
-              timeout = ConsumerPollTimeout
-            )
-          }
-        }
-    }
-
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
