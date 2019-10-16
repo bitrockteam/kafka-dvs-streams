@@ -15,8 +15,6 @@ import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.scala.kstream.{KStream, Suppressed}
 import org.apache.kafka.streams.{StreamsConfig, Topology}
 
-import scala.concurrent.duration._
-
 object Streams {
 
   // Whether or not to deserialize `SpecificRecord`s when possible
@@ -83,15 +81,9 @@ object Streams {
     }
 
     def buildFlightReceivedList(flightEnriched: KStream[String, FlightReceived]): Unit =
-      flightEnriched.groupByKey
-        .reduce((_, v) => v)
-        .toStream
+      flightEnriched
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(
-          TimeWindows
-            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-            .advanceBy(duration2JavaDuration(5.seconds))
-        )
+        .windowedBy(TimeWindows.of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize)))
         .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(agg.elements :+ v))
         .toStream
         .map((k, v) => (k.window.start.toString, v))
@@ -204,12 +196,12 @@ object Streams {
 
     val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
     buildFlightReceivedList(flightReceivedStream)
-    //buildTopArrival(flightReceivedStream)
-    //buildTopDeparture(flightReceivedStream)
-    //buildTopAirline(flightReceivedStream)
-    //buildTopFlightSpeed(flightReceivedStream)
-    //buildTotalFlights(flightReceivedStream)
-    //buildTotalAirlines(flightReceivedStream)
+    buildTopArrival(flightReceivedStream)
+    buildTopDeparture(flightReceivedStream)
+    buildTopAirline(flightReceivedStream)
+    buildTopFlightSpeed(flightReceivedStream)
+    buildTotalFlights(flightReceivedStream)
+    buildTotalAirlines(flightReceivedStream)
 
     val props = new Properties()
     props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
