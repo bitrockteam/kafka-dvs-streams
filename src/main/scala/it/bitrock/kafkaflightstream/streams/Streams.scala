@@ -24,7 +24,6 @@ object Streams {
 
   def streamProperties(config: KafkaConfig): Properties = {
     val props = new Properties
-    props.put(StreamsConfig.APPLICATION_ID_CONFIG, config.applicationId)
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers)
     props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, config.topology.threadsAmount.toString)
     props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, config.topology.commitInterval.toMillis.toString)
