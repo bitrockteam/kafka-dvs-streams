@@ -44,39 +44,41 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[CodeAirlineList]
   )
 
-  val topology = Streams.buildTopology(config, kafkaStreamsOptions)
-  logger.debug(s"Built topology: ${topology.describe}")
+  val topologies = Streams.buildTopology(config, kafkaStreamsOptions)
+  logger.debug(s"Built topology: ${topologies.head.describe}")
+  logger.debug(s"Built topology: ${topologies(1).describe}")
 
   val kafkaStreamsProperties = Streams.streamProperties(config.kafka)
   logger.debug(s"Using streams properties: $kafkaStreamsProperties")
 
-  val streams = new KafkaStreams(topology, kafkaStreamsProperties)
+  val streams = topologies.map(topology => new KafkaStreams(topology, kafkaStreamsProperties))
   val latch   = new CountDownLatch(1)
 
-  sys.addShutdownHook {
-    logger.info("Shutting down")
+  streams.foreach(stream => {
+    sys.addShutdownHook {
+      logger.info("Shutting down")
 
-    if (streams.state.isRunning) {
-      val shutdownTimeout = 1.second
-      streams.close(duration2JavaDuration(shutdownTimeout))
+      if (stream.state.isRunning) {
+        val shutdownTimeout = 1.second
+        stream.close(duration2JavaDuration(shutdownTimeout))
+      }
+
+      latch.countDown()
     }
 
-    latch.countDown()
-  }
+    stream.setUncaughtExceptionHandler((_: Thread, e: Throwable) => {
+      logger.error("Uncaught exception while running streams", e)
+      System.exit(0)
+    })
 
-  streams.setUncaughtExceptionHandler((_: Thread, e: Throwable) => {
-    logger.error("Uncaught exception while running streams", e)
-    System.exit(0)
+    try {
+      logger.info("Starting streams")
+      stream.start()
+      latch.await()
+    } catch {
+      case e: Throwable =>
+        logger.error("Exception starting streams", e)
+        System.exit(1)
+    }
   })
-
-  try {
-    logger.info("Starting streams")
-    streams.start()
-    latch.await()
-  } catch {
-    case e: Throwable =>
-      logger.error("Exception starting streams", e)
-      System.exit(1)
-  }
-
 }
