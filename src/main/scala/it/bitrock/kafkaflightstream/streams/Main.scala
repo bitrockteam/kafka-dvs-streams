@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import it.bitrock.kafkaflightstream.model.{System => _, _}
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.AvroSerdes
-import org.apache.kafka.streams.{KafkaStreams, StreamsConfig}
+import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.scala.Serdes
 
 import scala.concurrent.duration._
@@ -45,15 +45,12 @@ object Main extends App with LazyLogging {
   )
 
   val topologies = Streams.buildTopology(config, kafkaStreamsOptions)
-  logger.debug(s"Built topology: ${topologies.head.describe}")
-  logger.debug(s"Built topology: ${topologies(1).describe}")
 
-  val streams = topologies.zipWithIndex.map {
-    case (topology, index) =>
-      val kafkaStreamsProperties = Streams.streamProperties(config.kafka)
-      kafkaStreamsProperties.put(StreamsConfig.APPLICATION_ID_CONFIG, s"${config.kafka.applicationId}-$index")
-      logger.debug(s"Using streams properties: $kafkaStreamsProperties")
-      new KafkaStreams(topology, kafkaStreamsProperties)
+  val streams = topologies.map {
+    case (topology, props) =>
+      logger.debug(s"Built topology: ${topology.describe}")
+      logger.debug(s"Using streams properties: $props")
+      new KafkaStreams(topology, props)
   }
   val latch = new CountDownLatch(streams.size)
 
