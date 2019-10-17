@@ -1,15 +1,18 @@
 package it.bitrock.kafkaflightstream.streams
 
+import java.util.Properties
+
 import it.bitrock.kafkaflightstream.model._
 import it.bitrock.kafkaflightstream.streams.config.AppConfig
 import it.bitrock.kafkageostream.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.kafkageostream.testcommons.{FixtureLoanerAnyResult, Suite}
+import net.manub.embeddedkafka.UUIDs
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.clients.producer._
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.scala.Serdes
-import org.apache.kafka.streams.{StreamsConfig, Topology}
+import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 import org.scalatest.{OptionValues, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -35,7 +38,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     // test's timeout (5 secs) to ensure we observe the expected processing results.
     StreamsConfig.COMMIT_INTERVAL_MS_CONFIG -> 3.seconds.toMillis.toString
   )
-  final val ConsumerPollTimeout: FiniteDuration = 15.seconds
+  final val ConsumerPollTimeout: FiniteDuration = 60.seconds
 
   def dummyFlightForcingSuppression(topic: String) = new ProducerRecord(
     topic,
@@ -56,11 +59,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
   "Streams" should {
 
     "be joined successfully with consistent data" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
           publishToKafka(appConfig.kafka.topology.flightRawTopic, EuropeanFlightEvent.flight.icaoNumber, EuropeanFlightEvent)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
@@ -82,11 +85,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology(1), TopologyTestExtraConf) {
+        val receivedRecords = runStreams(topicsToCreate, topologies(1), TopologyTestExtraConf) {
           val flightMessages = 0 to 9 map { key =>
             key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
               iataNumber = key.toString,
@@ -107,11 +110,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeIataAirport = key match {
               case x if x >= 1 && x <= 3   => EuropeanAirport1.codeIataAirport
@@ -122,13 +125,12 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
               case x if x >= 25 && x <= 29 => EuropeanAirport6.codeIataAirport
               case x if x >= 30 && x <= 40 => EuropeanAirport7.codeIataAirport
             }
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              arrival = CommonCode(codeIataAirport, "")
+            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+              iataNumber = key.toString,
+              icaoNumber = key.toString,
+              airportArrival = AirportInfo(codeIataAirport, "", "", "", "", "")
             )
           }
-
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -143,7 +145,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopArrivalAirportList](
             topics = Set(appConfig.kafka.topology.topArrivalAirportTopic),
             number = 1,
@@ -156,11 +159,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce TopDepartureAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeIataAirport = key match {
               case x if x >= 1 && x <= 3   => EuropeanAirport1.codeIataAirport
@@ -171,12 +174,12 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
               case x if x >= 25 && x <= 29 => EuropeanAirport6.codeIataAirport
               case x if x >= 30 && x <= 40 => EuropeanAirport7.codeIataAirport
             }
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              departure = CommonCode(codeIataAirport, "")
+            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+              iataNumber = key.toString,
+              icaoNumber = key.toString,
+              airportDeparture = AirportInfo(codeIataAirport, "", "", "", "", "")
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -191,7 +194,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopDepartureAirportList](
             topics = Set(appConfig.kafka.topology.topDepartureAirportTopic),
             number = 1,
@@ -204,18 +208,18 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce TopSpeedList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              speed = Speed(SpeedArray(key), 0.0)
+            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+              iataNumber = key.toString,
+              icaoNumber = key.toString,
+              speed = SpeedArray(key)
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -225,7 +229,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopSpeedList](
             topics = Set(appConfig.kafka.topology.topSpeedTopic),
             number = 1,
@@ -238,11 +243,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce TopAirlineList elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeAirline = key match {
               case x if x >= 1 && x <= 3   => AirlineEvent1.codeIcaoAirline
@@ -253,12 +258,21 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
               case x if x >= 25 && x <= 29 => AirlineEvent6.codeIcaoAirline
               case x if x >= 30 && x <= 40 => AirlineEvent7.codeIcaoAirline
             }
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              airline = CommonCode("", codeAirline)
+            val nameAirline = key match {
+              case x if x >= 1 && x <= 3   => AirlineEvent1.nameAirline
+              case x if x >= 4 && x <= 9   => AirlineEvent2.nameAirline
+              case x if x >= 10 && x <= 18 => AirlineEvent3.nameAirline
+              case x if x >= 19 && x <= 20 => AirlineEvent4.nameAirline
+              case x if x >= 21 && x <= 24 => AirlineEvent5.nameAirline
+              case x if x >= 25 && x <= 29 => AirlineEvent6.nameAirline
+              case x if x >= 30 && x <= 40 => AirlineEvent7.nameAirline
+            }
+            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+              iataNumber = key.toString,
+              icaoNumber = key.toString,
+              airline = AirlineInfo(codeAirline, nameAirline, "")
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -279,7 +293,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
             )
           )
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopAirlineList](
             topics = Set(appConfig.kafka.topology.topAirlineTopic),
             number = 1,
@@ -292,15 +307,17 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce TotalFlight elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> EuropeanFlightEvent.copy(flight = Flight(key.toString, key.toString, ""))
+            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+              iataNumber = key.toString,
+              icaoNumber = key.toString
+            )
           }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -310,7 +327,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlight](
             topics = Set(appConfig.kafka.topology.totalFlightTopic),
             number = 1,
@@ -322,18 +340,18 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     }
 
     "produce TotalAirline elements in the appropriate topic" in ResourceLoaner.withFixture {
-      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topology, topicsToCreate) =>
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
-        val receivedRecords = runStreams(topicsToCreate, topology.head, TopologyTestExtraConf) {
+        val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> EuropeanFlightEvent.copy(
-              flight = Flight(key.toString, key.toString, ""),
-              airline = CommonCode("", CodeAirlineArray(key))
+            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+              iataNumber = key.toString,
+              icaoNumber = key.toString,
+              airline = AirlineInfo(CodeAirlineArray(key), "", "")
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, flightMessages)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
@@ -352,7 +370,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
             )
           )
           publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
-          publishToKafka(dummyFlightForcingSuppression(appConfig.kafka.topology.flightRawTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountAirline](
             topics = Set(appConfig.kafka.topology.totalAirlineTopic),
             number = 1,
@@ -362,7 +381,6 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         }
         receivedRecords.eventCount shouldBe ExpectedTotalAirlineResult
     }
-
   }
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] {
@@ -406,10 +424,29 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           embeddedKafkaConfig,
           appConfig,
           kafkaStreamsOptions,
-          topologies,
+          topologies.map(_._1),
           List()
         )
       )
+    }
+
+    def runAll[A](topicsToCreate: Seq[String], topologies: List[Topology])(body: List[KafkaStreams] => A): A = {
+      runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
+        import scala.collection.JavaConverters._
+
+        val streams = topologies.tail.map(topology => {
+          val streamsConf = streamsConfig.config(UUIDs.newUuid().toString, TopologyTestExtraConf)
+          val props       = new Properties
+          props.putAll(streamsConf.asJava)
+          val otherStream = new KafkaStreams(topology, props)
+          otherStream.start()
+          otherStream
+        })
+
+        val result = body(streams)
+        streams.foreach(_.close())
+        result
+      }
     }
   }
 

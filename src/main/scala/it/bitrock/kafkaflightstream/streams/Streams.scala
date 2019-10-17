@@ -37,7 +37,7 @@ object Streams {
     props
   }
 
-  def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[Topology] = {
+  def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
     implicit val KeySerde: Serde[String]              = kafkaStreamsOptions.keySerde
     implicit val flightRawSerde: Serde[FlightRaw]     = kafkaStreamsOptions.flightRawSerde
     implicit val airportRawSerde: Serde[AirportRaw]   = kafkaStreamsOptions.airportRawSerde
@@ -60,12 +60,12 @@ object Streams {
     implicit val countAirlineSerde: Serde[CountAirline]                       = kafkaStreamsOptions.countAirlineEventSerde
     implicit val codeAirlineListSerde: Serde[CodeAirlineList]                 = kafkaStreamsOptions.codeAirlineListEventSerde
 
-    def buildFlightReceived(
-        flightRawStream: KStream[String, FlightRaw],
-        airportRawTable: GlobalKTable[String, AirportRaw],
-        airlineRawTable: GlobalKTable[String, AirlineRaw],
-        airplaneRawTable: GlobalKTable[String, AirplaneRaw]
-    ): KStream[String, FlightReceived] = {
+    def buildFlightReceivedStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder   = new StreamsBuilder
+      val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.flightRawTopic)
+      val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
+      val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
+      val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
 
       val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(flightRawStream, airportRawTable)
 
@@ -76,10 +76,10 @@ object Streams {
         flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
       flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
-      flightAirportAirlineAirplane
+      (streamsBuilder, config.kafka.topology.flightReceivedTopic)
     }
 
-    def buildFlightReceivedList(): StreamsBuilder = {
+    def flightReceivedListStreamsBuilder: (StreamsBuilder, String) = {
       val streamsBuilder = new StreamsBuilder
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
@@ -89,13 +89,15 @@ object Streams {
         .toStream
         .map((k, v) => (k.window.start.toString, v))
         .to(config.kafka.topology.flightReceivedListTopic)
-      streamsBuilder
+      (streamsBuilder, config.kafka.topology.flightReceivedListTopic)
     }
 
-    def buildTopArrival(flightEnriched: KStream[String, FlightReceived]): Unit = {
+    def buildTopArrivalStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder              = new StreamsBuilder
       val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
 
-      flightEnriched
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
         .groupBy((_, v) => v.airportArrival.codeAirport)
         .windowedBy(
           TimeWindows
@@ -108,12 +110,15 @@ object Streams {
         .aggregate(topArrivalAirportAggregator.initializer)(topArrivalAirportAggregator.adder, topArrivalAirportAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topArrivalAirportTopic)
+      (streamsBuilder, config.kafka.topology.topArrivalAirportTopic)
     }
 
-    def buildTopDeparture(flightEnriched: KStream[String, FlightReceived]): Unit = {
+    def buildTopDepartureStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder                = new StreamsBuilder
       val topDepartureAirportAggregator = new TopDepartureAirportAggregator(config.topElementsAmount)
 
-      flightEnriched
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
         .groupBy((_, v) => v.airportDeparture.codeAirport)
         .windowedBy(
           TimeWindows
@@ -126,12 +131,16 @@ object Streams {
         .aggregate(topDepartureAirportAggregator.initializer)(topDepartureAirportAggregator.adder, topDepartureAirportAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topDepartureAirportTopic)
+      (streamsBuilder, config.kafka.topology.topDepartureAirportTopic)
     }
 
-    def buildTopFlightSpeed(flightEnriched: KStream[String, FlightReceived]): Unit = {
+    def buildTopFlightSpeedStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder           = new StreamsBuilder
       val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
 
-      flightEnriched.groupByKey
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .groupByKey
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
@@ -143,12 +152,15 @@ object Streams {
         .aggregate(topSpeedFlightAggregator.initializer)(topSpeedFlightAggregator.adder, topSpeedFlightAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topSpeedTopic)
+      (streamsBuilder, config.kafka.topology.topSpeedTopic)
     }
 
-    def buildTopAirline(flightEnriched: KStream[String, FlightReceived]): Unit = {
+    def buildTopAirlineStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder       = new StreamsBuilder
       val topAirlineAggregator = new TopAirlineAggregator(config.topElementsAmount)
 
-      flightEnriched
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
         .groupBy((_, v) => v.airline.nameAirline)
         .windowedBy(
           TimeWindows
@@ -161,10 +173,14 @@ object Streams {
         .aggregate(topAirlineAggregator.initializer)(topAirlineAggregator.adder, topAirlineAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topAirlineTopic)
+      (streamsBuilder, config.kafka.topology.topAirlineTopic)
     }
 
-    def buildTotalFlights(flightEnriched: KStream[String, FlightReceived]): Unit =
-      flightEnriched
+    def buildTotalFlightsStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder = new StreamsBuilder
+
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
           TimeWindows
@@ -176,9 +192,14 @@ object Streams {
         .toStream
         .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v)))
         .to(config.kafka.topology.totalFlightTopic)
+      (streamsBuilder, config.kafka.topology.totalFlightTopic)
+    }
 
-    def buildTotalAirlines(flightEnriched: KStream[String, FlightReceived]): Unit =
-      flightEnriched
+    def buildTotalAirlinesStreamsBuilder: (StreamsBuilder, String) = {
+      val streamsBuilder = new StreamsBuilder
+
+      streamsBuilder
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
           TimeWindows
@@ -190,24 +211,26 @@ object Streams {
         .toStream
         .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v.elements.distinct.size)))
         .to(config.kafka.topology.totalAirlineTopic)
-
-    val streamsBuilder   = new StreamsBuilder
-    val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.flightRawTopic)
-    val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
-    val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
-    val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
-
-    val flightReceivedStream = buildFlightReceived(flightRawStream, airportRawTable, airlineRawTable, airplaneRawTable)
-    buildTopArrival(flightReceivedStream)
-    buildTopDeparture(flightReceivedStream)
-    buildTopAirline(flightReceivedStream)
-    buildTopFlightSpeed(flightReceivedStream)
-    buildTotalFlights(flightReceivedStream)
-    buildTotalAirlines(flightReceivedStream)
+      (streamsBuilder, config.kafka.topology.totalAirlineTopic)
+    }
 
     val props = new Properties()
     props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
-    List(streamsBuilder.build(props), buildFlightReceivedList().build(props))
+    List(
+      buildFlightReceivedStreamsBuilder,
+      flightReceivedListStreamsBuilder,
+      buildTopArrivalStreamsBuilder,
+      buildTopDepartureStreamsBuilder,
+      buildTopAirlineStreamsBuilder,
+      buildTopFlightSpeedStreamsBuilder,
+      buildTotalFlightsStreamsBuilder,
+      buildTotalAirlinesStreamsBuilder
+    ).map {
+      case (stream, name) =>
+        val kafkaStreamsProperties = streamProperties(config.kafka)
+        kafkaStreamsProperties.put(StreamsConfig.APPLICATION_ID_CONFIG, s"${config.kafka.applicationId}-$name")
+        (stream.build(props), kafkaStreamsProperties)
+    }
   }
 
   private def flightRawToAirportEnrichment(
