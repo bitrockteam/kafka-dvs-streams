@@ -389,7 +389,7 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
       val appConfig: AppConfig = {
         val conf         = AppConfig.load
-        val topologyConf = conf.kafka.topology.copy(aggregationTimeWindowSize = 5.seconds)
+        val topologyConf = conf.kafka.topology.copy(aggregationTimeWindowSize = 5.seconds, aggregationTotalTimeWindowSize = 5.seconds)
         conf.copy(kafka = conf.kafka.copy(topology = topologyConf))
       }
 

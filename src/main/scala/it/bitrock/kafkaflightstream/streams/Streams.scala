@@ -184,7 +184,7 @@ object Streams {
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
           TimeWindows
-            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTotalTimeWindowSize))
             .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .count
@@ -203,7 +203,7 @@ object Streams {
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
           TimeWindows
-            .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+            .of(duration2JavaDuration(config.kafka.topology.aggregationTotalTimeWindowSize))
             .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
         .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.codeAirline))
