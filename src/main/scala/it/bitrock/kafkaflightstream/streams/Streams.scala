@@ -59,6 +59,7 @@ object Streams {
     implicit val countFlightSerde: Serde[CountFlight]                         = kafkaStreamsOptions.countFlightEventSerde
     implicit val countAirlineSerde: Serde[CountAirline]                       = kafkaStreamsOptions.countAirlineEventSerde
     implicit val codeAirlineListSerde: Serde[CodeAirlineList]                 = kafkaStreamsOptions.codeAirlineListEventSerde
+    implicit val flightNumberListSerde: Serde[FlightNumberList]               = kafkaStreamsOptions.flightNumberListEventSerde
 
     def buildFlightReceivedStreamsBuilder: (StreamsBuilder, String) = {
       val streamsBuilder   = new StreamsBuilder
@@ -187,10 +188,10 @@ object Streams {
             .of(duration2JavaDuration(config.kafka.topology.aggregationTotalTimeWindowSize))
             .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
-        .count
+        .aggregate(FlightNumberList())((_, v, agg) => FlightNumberList(agg.elements :+ v.icaoNumber))
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
-        .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v)))
+        .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v.elements.distinct.size)))
         .to(config.kafka.topology.totalFlightTopic)
       (streamsBuilder, config.kafka.topology.totalFlightTopic)
     }

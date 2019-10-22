@@ -415,7 +415,8 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         specificAvroValueSerde[Airline],
         specificAvroValueSerde[CountFlight],
         specificAvroValueSerde[CountAirline],
-        specificAvroValueSerde[CodeAirlineList]
+        specificAvroValueSerde[CodeAirlineList],
+        specificAvroValueSerde[FlightNumberList]
       )
       val topologies = Streams.buildTopology(appConfig, kafkaStreamsOptions)
 

@@ -41,7 +41,8 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[Airline],
     avroSerdes.serdeFrom[CountFlight],
     avroSerdes.serdeFrom[CountAirline],
-    avroSerdes.serdeFrom[CodeAirlineList]
+    avroSerdes.serdeFrom[CodeAirlineList],
+    avroSerdes.serdeFrom[FlightNumberList]
   )
 
   val topologies = Streams.buildTopology(config, kafkaStreamsOptions)
