@@ -38,22 +38,14 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
     // test's timeout (5 secs) to ensure we observe the expected processing results.
     StreamsConfig.COMMIT_INTERVAL_MS_CONFIG -> 3.seconds.toMillis.toString
   )
-  final val ConsumerPollTimeout: FiniteDuration = 60.seconds
-
-  def dummyFlightForcingSuppression(topic: String) = new ProducerRecord(
-    topic,
-    null,
-    java.lang.System.currentTimeMillis + 1.minute.toMillis,
-    "",
-    EuropeanFlightEvent
-  )
+  final val ConsumerPollTimeout: FiniteDuration = 20.seconds
 
   def dummyFlightReceivedForcingSuppression(topic: String) = new ProducerRecord(
     topic,
     null,
     java.lang.System.currentTimeMillis + 1.minute.toMillis,
     "",
-    ExpectedEuropeanFlightEnrichedEvent
+    FlightReceivedEvent
   )
 
   "Streams" should {
@@ -64,12 +56,12 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
         val receivedRecords = runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, EuropeanFlightEvent.flight.icaoNumber, EuropeanFlightEvent)
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic,
             List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
+              AirportEvent1.codeIataAirport -> AirportEvent1,
+              AirportEvent2.codeIataAirport -> AirportEvent2
             )
           )
           publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
@@ -81,7 +73,32 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
           )
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
         }
-        receivedRecords shouldBe (ExpectedEuropeanFlightEnrichedEvent.icaoNumber, ExpectedEuropeanFlightEnrichedEvent)
+        receivedRecords shouldBe (FlightReceivedEvent.icaoNumber, FlightReceivedEvent)
+    }
+
+    "be joined successfully with default airplane info" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies, topicsToCreate) =>
+        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+
+        val receivedRecords = runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
+          publishToKafka(appConfig.kafka.topology.flightRawTopic, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
+          publishToKafka(
+            appConfig.kafka.topology.airportRawTopic,
+            List(
+              AirportEvent1.codeIataAirport -> AirportEvent1,
+              AirportEvent2.codeIataAirport -> AirportEvent2
+            )
+          )
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
+            topics = Set(appConfig.kafka.topology.flightReceivedTopic),
+            number = 1,
+            timeout = ConsumerPollTimeout
+          )
+          messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
+        }
+        receivedRecords shouldBe (ExpectedFlightReceivedWithDefaultAirplane.icaoNumber, ExpectedFlightReceivedWithDefaultAirplane)
     }
 
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
@@ -91,10 +108,9 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = runStreams(topicsToCreate, topologies(1), TopologyTestExtraConf) {
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
-              icaoNumber = key.toString,
-              airplane = AirplaneInfo(key.toString, ProductionLineArray(key), "")
+              icaoNumber = key.toString
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
@@ -117,34 +133,20 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => EuropeanAirport1.codeIataAirport
-              case x if x >= 4 && x <= 9   => EuropeanAirport2.codeIataAirport
-              case x if x >= 10 && x <= 18 => EuropeanAirport3.codeIataAirport
-              case x if x >= 19 && x <= 20 => EuropeanAirport4.codeIataAirport
-              case x if x >= 21 && x <= 24 => EuropeanAirport5.codeIataAirport
-              case x if x >= 25 && x <= 29 => EuropeanAirport6.codeIataAirport
-              case x if x >= 30 && x <= 40 => EuropeanAirport7.codeIataAirport
+              case x if x >= 1 && x <= 3   => AirportEvent1.codeIataAirport
+              case x if x >= 4 && x <= 9   => AirportEvent2.codeIataAirport
+              case x if x >= 10 && x <= 18 => AirportEvent3.codeIataAirport
+              case x if x >= 19 && x <= 20 => AirportEvent4.codeIataAirport
+              case x if x >= 21 && x <= 24 => AirportEvent5.codeIataAirport
+              case x if x >= 25 && x <= 29 => AirportEvent6.codeIataAirport
+              case x if x >= 30 && x <= 40 => AirportEvent7.codeIataAirport
             }
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
               airportArrival = AirportInfo(codeIataAirport, "", "", "", "", "")
             )
           }
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2,
-              EuropeanAirport3.codeIataAirport -> EuropeanAirport3,
-              EuropeanAirport4.codeIataAirport -> EuropeanAirport4,
-              EuropeanAirport5.codeIataAirport -> EuropeanAirport5,
-              EuropeanAirport6.codeIataAirport -> EuropeanAirport6,
-              EuropeanAirport7.codeIataAirport -> EuropeanAirport7
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopArrivalAirportList](
@@ -166,34 +168,20 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
         val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => EuropeanAirport1.codeIataAirport
-              case x if x >= 4 && x <= 9   => EuropeanAirport2.codeIataAirport
-              case x if x >= 10 && x <= 18 => EuropeanAirport3.codeIataAirport
-              case x if x >= 19 && x <= 20 => EuropeanAirport4.codeIataAirport
-              case x if x >= 21 && x <= 24 => EuropeanAirport5.codeIataAirport
-              case x if x >= 25 && x <= 29 => EuropeanAirport6.codeIataAirport
-              case x if x >= 30 && x <= 40 => EuropeanAirport7.codeIataAirport
+              case x if x >= 1 && x <= 3   => AirportEvent1.codeIataAirport
+              case x if x >= 4 && x <= 9   => AirportEvent2.codeIataAirport
+              case x if x >= 10 && x <= 18 => AirportEvent3.codeIataAirport
+              case x if x >= 19 && x <= 20 => AirportEvent4.codeIataAirport
+              case x if x >= 21 && x <= 24 => AirportEvent5.codeIataAirport
+              case x if x >= 25 && x <= 29 => AirportEvent6.codeIataAirport
+              case x if x >= 30 && x <= 40 => AirportEvent7.codeIataAirport
             }
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
               airportDeparture = AirportInfo(codeIataAirport, "", "", "", "", "")
             )
           }
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2,
-              EuropeanAirport3.codeIataAirport -> EuropeanAirport3,
-              EuropeanAirport4.codeIataAirport -> EuropeanAirport4,
-              EuropeanAirport5.codeIataAirport -> EuropeanAirport5,
-              EuropeanAirport6.codeIataAirport -> EuropeanAirport6,
-              EuropeanAirport7.codeIataAirport -> EuropeanAirport7
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopDepartureAirportList](
@@ -214,21 +202,12 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
               speed = SpeedArray(key)
             )
           }
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopSpeedList](
@@ -249,50 +228,21 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 1 to 40 map { key =>
-            val codeAirline = key match {
-              case x if x >= 1 && x <= 3   => AirlineEvent1.codeIcaoAirline
-              case x if x >= 4 && x <= 9   => AirlineEvent2.codeIcaoAirline
-              case x if x >= 10 && x <= 18 => AirlineEvent3.codeIcaoAirline
-              case x if x >= 19 && x <= 20 => AirlineEvent4.codeIcaoAirline
-              case x if x >= 21 && x <= 24 => AirlineEvent5.codeIcaoAirline
-              case x if x >= 25 && x <= 29 => AirlineEvent6.codeIcaoAirline
-              case x if x >= 30 && x <= 40 => AirlineEvent7.codeIcaoAirline
+            val (codeAirline, nameAirline) = key match {
+              case x if x >= 1 && x <= 3   => (AirlineEvent1.codeIcaoAirline, AirlineEvent1.nameAirline)
+              case x if x >= 4 && x <= 9   => (AirlineEvent2.codeIcaoAirline, AirlineEvent2.nameAirline)
+              case x if x >= 10 && x <= 18 => (AirlineEvent3.codeIcaoAirline, AirlineEvent3.nameAirline)
+              case x if x >= 19 && x <= 20 => (AirlineEvent4.codeIcaoAirline, AirlineEvent4.nameAirline)
+              case x if x >= 21 && x <= 24 => (AirlineEvent5.codeIcaoAirline, AirlineEvent5.nameAirline)
+              case x if x >= 25 && x <= 29 => (AirlineEvent6.codeIcaoAirline, AirlineEvent6.nameAirline)
+              case x if x >= 30 && x <= 40 => (AirlineEvent7.codeIcaoAirline, AirlineEvent7.nameAirline)
             }
-            val nameAirline = key match {
-              case x if x >= 1 && x <= 3   => AirlineEvent1.nameAirline
-              case x if x >= 4 && x <= 9   => AirlineEvent2.nameAirline
-              case x if x >= 10 && x <= 18 => AirlineEvent3.nameAirline
-              case x if x >= 19 && x <= 20 => AirlineEvent4.nameAirline
-              case x if x >= 21 && x <= 24 => AirlineEvent5.nameAirline
-              case x if x >= 25 && x <= 29 => AirlineEvent6.nameAirline
-              case x if x >= 30 && x <= 40 => AirlineEvent7.nameAirline
-            }
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
               airline = AirlineInfo(codeAirline, nameAirline, "")
             )
           }
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-            )
-          )
-          publishToKafka(
-            appConfig.kafka.topology.airlineRawTopic,
-            List(
-              AirlineEvent1.codeIcaoAirline -> AirlineEvent1,
-              AirlineEvent2.codeIcaoAirline -> AirlineEvent2,
-              AirlineEvent3.codeIcaoAirline -> AirlineEvent3,
-              AirlineEvent4.codeIcaoAirline -> AirlineEvent4,
-              AirlineEvent5.codeIcaoAirline -> AirlineEvent5,
-              AirlineEvent6.codeIcaoAirline -> AirlineEvent6,
-              AirlineEvent7.codeIcaoAirline -> AirlineEvent7
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopAirlineList](
@@ -313,20 +263,11 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString
             )
           }
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlight](
@@ -346,30 +287,12 @@ class StreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with
 
         val receivedRecords = ResourceLoaner.runAll(topicsToCreate, topologies) { _ =>
           val flightMessages = 0 to 9 map { key =>
-            key.toString -> ExpectedEuropeanFlightEnrichedEvent.copy(
+            key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
               airline = AirlineInfo(CodeAirlineArray(key), "", "")
             )
           }
-          publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
-            List(
-              EuropeanAirport1.codeIataAirport -> EuropeanAirport1,
-              EuropeanAirport2.codeIataAirport -> EuropeanAirport2
-            )
-          )
-          publishToKafka(
-            appConfig.kafka.topology.airlineRawTopic,
-            List(
-              AirlineEvent1.codeIcaoAirline -> AirlineEvent1,
-              AirlineEvent2.codeIcaoAirline -> AirlineEvent2,
-              AirlineEvent3.codeIcaoAirline -> AirlineEvent3,
-              AirlineEvent4.codeIcaoAirline -> AirlineEvent4,
-              AirlineEvent5.codeIcaoAirline -> AirlineEvent5
-            )
-          )
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountAirline](

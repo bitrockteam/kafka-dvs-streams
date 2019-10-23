@@ -318,7 +318,7 @@ object Streams {
       airplaneRawTable: GlobalKTable[String, AirplaneRaw]
   ): KStream[String, FlightReceived] =
     flightWithAirline
-      .join(airplaneRawTable)(
+      .leftJoin(airplaneRawTable)(
         (_, v) => v.airplaneRegNumber,
         (flightAndAirline, airplaneRaw) =>
           FlightReceived(
@@ -329,10 +329,15 @@ object Streams {
             flightAndAirline.airportDeparture,
             flightAndAirline.airportArrival,
             flightAndAirline.airline,
-            AirplaneInfo(airplaneRaw.numberRegistration, airplaneRaw.productionLine, airplaneRaw.modelCode),
+            airplaneInfoOrDefault(airplaneRaw),
             flightAndAirline.status,
             flightAndAirline.updated
           )
       )
+
+  private def airplaneInfoOrDefault(airplaneRaw: AirplaneRaw): AirplaneInfo =
+    Option(airplaneRaw)
+      .map(airplane => AirplaneInfo(airplane.numberRegistration, airplane.productionLine, airplane.modelCode))
+      .getOrElse(AirplaneInfo("N/A", "N/A", "N/A"))
 
 }
