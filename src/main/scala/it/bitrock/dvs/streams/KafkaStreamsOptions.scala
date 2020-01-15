@@ -10,11 +10,9 @@ final case class KafkaStreamsOptions(
     airlineRawSerde: Serde[AirlineRaw],
     cityRawSerde: Serde[CityRaw],
     airplaneRawSerde: Serde[AirplaneRaw],
-    //output
     flightWithDepartureAirportInfo: Serde[FlightWithDepartureAirportInfo],
     flightWithAllAirportInfo: Serde[FlightWithAllAirportInfo],
     flightWithAirline: Serde[FlightWithAirline],
-    //final output
     flightReceivedEventSerde: Serde[FlightReceived],
     flightReceivedListEventSerde: Serde[FlightReceivedList],
     topAggregationKeySerde: Serde[Long],

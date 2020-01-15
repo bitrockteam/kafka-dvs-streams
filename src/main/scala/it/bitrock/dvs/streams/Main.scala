@@ -3,9 +3,10 @@ package it.bitrock.dvs.streams
 import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
-import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.model.avro.{System => _, _}
+import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.kafkacommons.serialization.AvroSerdes
+import it.bitrock.dvs.streams.topologies._
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.scala.Serdes
 
@@ -45,7 +46,12 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[FlightNumberList]
   )
 
-  val topologies = Streams.buildTopology(config, kafkaStreamsOptions)
+  val flightReceivedTopology = FlightReceivedStream.buildTopology(config, kafkaStreamsOptions)
+  val flightListTopology     = FlightListStream.buildTopology(config, kafkaStreamsOptions)
+  val topsTopology           = TopStreams.buildTopology(config, kafkaStreamsOptions)
+  val totalsTopology         = TotalStreams.buildTopology(config, kafkaStreamsOptions)
+
+  val topologies = flightReceivedTopology ++ flightListTopology ++ topsTopology ++ totalsTopology
 
   val streams = topologies.map {
     case (topology, props) =>
@@ -58,15 +64,12 @@ object Main extends App with LazyLogging {
   streams.foreach(stream => {
     sys.addShutdownHook {
       logger.info("Shutting down")
-
       if (stream.state.isRunning) {
         val shutdownTimeout = 1.second
         stream.close(duration2JavaDuration(shutdownTimeout))
       }
-
       latch.countDown()
     }
-
     stream.setUncaughtExceptionHandler((_: Thread, e: Throwable) => {
       logger.error("Uncaught exception while running streams", e)
       System.exit(0)
