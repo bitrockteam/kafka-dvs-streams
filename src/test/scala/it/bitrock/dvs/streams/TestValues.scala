@@ -1,8 +1,10 @@
 package it.bitrock.dvs.streams
 
+import org.apache.kafka.clients.producer.ProducerRecord
+import scala.concurrent.duration._
 import it.bitrock.dvs.model.avro._
 
-trait Events {
+trait TestValues {
 
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
@@ -148,5 +150,13 @@ trait Events {
       System(Updated, ""),
       StatusEnRoute
     )
+
+  def dummyFlightReceivedForcingSuppression(topic: String) = new ProducerRecord(
+    topic,
+    null,
+    java.lang.System.currentTimeMillis + 1.minute.toMillis,
+    "",
+    FlightReceivedEvent
+  )
 
 }
