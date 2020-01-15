@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'eu-west-1'
         GITHUB_CREDENTIALS = 'BitrockCI token'
         GITHUB_ACCOUNT = 'bitrockteam'
-        GITHUB_REPO = 'kafka-flightstream-streams'
+        GITHUB_REPO = 'kafka-dvs-streams'
         GITHUB_SSH = "centos"
         RELEASE_BRANCH = "master"
         SBT_OPTS="-Xmx2048M"
@@ -98,7 +98,7 @@ pipeline {
                         sh "docker push ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
 			sh "docker rmi ${DOCKER_REPOSITORY}/${GITHUB_REPO}:latest"
 			sh "docker rmi ${DOCKER_REPOSITORY}/${GITHUB_REPO}:${tagAfter}"
-                        sh "printf '[{\"name\":\"kafka-flightstream-streams\",\"imageUri\":\"%s\"}]' \$(git describe --tags --abbrev=0 | sed 's/^v//') > imagedefinitions.json"
+                        sh "printf '[{\"name\":\"kafka-dvs-streams\",\"imageUri\":\"%s\"}]' \$(git describe --tags --abbrev=0 | sed 's/^v//') > imagedefinitions.json"
                     }
                 }
             }
@@ -113,7 +113,7 @@ pipeline {
                 }
             }
             steps {
-               build job: 'kafka-flightstream-cd/master',
+               build job: 'kafka-dvs-cd/master',
                             parameters: [[$class: 'StringParameterValue', name: 'deployment', value: "${GITHUB_REPO}@${tagAfter}"]],
                             wait: false
 	    }

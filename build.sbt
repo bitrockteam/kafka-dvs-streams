@@ -24,7 +24,7 @@ lazy val compileSettings = Seq(
 lazy val dependenciesSettings = Seq(
   credentials ++= Seq(
     baseDirectory.value / ".sbt" / ".credentials",
-    Path.userHome / ".sbt" / ".credentials.flightstream"
+    Path.userHome / ".sbt" / ".credentials.bitrock"
   ).collect {
     case c if c.exists => Credentials(c)
   },
@@ -57,8 +57,8 @@ lazy val testSettings = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "kafka-flightstream-streams",
-    organization := "it.bitrock.kafkaflightstream"
+    name := "kafka-dvs-streams",
+    organization := "it.bitrock.dvs"
   )
   .settings(compileSettings: _*)
   .settings(dependenciesSettings: _*)

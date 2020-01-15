@@ -20,7 +20,7 @@ COPY .scalafmt.conf .
 RUN sbt compile && \
   sbt test && \
   sbt universal:packageBin && \
-  mv "target/universal/kafka-flightstream-streams-$(sbt -no-colors version | tail -1 | cut -d ' ' -f 2).zip" /app.zip
+  mv "target/universal/kafka-dvs-streams-$(sbt -no-colors version | tail -1 | cut -d ' ' -f 2).zip" /app.zip
 
 # end of build stage
 
@@ -34,6 +34,6 @@ COPY --from=sbt-build /app.zip .
 RUN unzip app.zip
 
 COPY entrypoint.sh ./
-RUN chmod u+x entrypoint.sh bin/kafka-flightstream-streams
+RUN chmod u+x entrypoint.sh bin/kafka-dvs-streams
 
 ENTRYPOINT ["./entrypoint.sh"]

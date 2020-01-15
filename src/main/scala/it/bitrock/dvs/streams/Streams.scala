@@ -1,10 +1,10 @@
-package it.bitrock.kafkaflightstream.streams
+package it.bitrock.dvs.streams
 
 import java.util.Properties
 
 import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializerConfig}
-import it.bitrock.kafkaflightstream.model._
-import it.bitrock.kafkaflightstream.streams.config.{AppConfig, KafkaConfig}
+import it.bitrock.dvs.streams.config.{AppConfig, KafkaConfig}
+import it.bitrock.dvs.model.avro._
 import org.apache.kafka.clients.consumer.{ConsumerConfig, OffsetResetStrategy}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Serde

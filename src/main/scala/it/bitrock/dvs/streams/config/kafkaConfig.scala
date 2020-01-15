@@ -1,4 +1,4 @@
-package it.bitrock.kafkaflightstream.streams.config
+package it.bitrock.dvs.streams.config
 
 import java.net.URI
 

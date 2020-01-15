@@ -1,4 +1,4 @@
-package it.bitrock.kafkaflightstream
+package it.bitrock.dvs
 
 import scala.concurrent.duration.FiniteDuration
 

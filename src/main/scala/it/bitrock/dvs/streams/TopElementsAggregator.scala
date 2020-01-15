@@ -1,6 +1,6 @@
-package it.bitrock.kafkaflightstream.streams
+package it.bitrock.dvs.streams
 
-import it.bitrock.kafkaflightstream.model.{
+import it.bitrock.dvs.model.avro.{
   Airline,
   Airport,
   SpeedFlight,

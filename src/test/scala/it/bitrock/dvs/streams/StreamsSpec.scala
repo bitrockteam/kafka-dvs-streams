@@ -1,11 +1,11 @@
-package it.bitrock.kafkaflightstream.streams
+package it.bitrock.dvs.streams
 
 import java.util.Properties
 
-import it.bitrock.kafkaflightstream.model._
-import it.bitrock.kafkaflightstream.streams.config.AppConfig
-import it.bitrock.kafkageostream.kafkacommons.serialization.ImplicitConversions._
-import it.bitrock.kafkageostream.testcommons.{FixtureLoanerAnyResult, Suite}
+import it.bitrock.dvs.streams.config.AppConfig
+import it.bitrock.dvs.model.avro._
+import it.bitrock.kafkacommons.serialization.ImplicitConversions._
+import it.bitrock.testcommons.{FixtureLoanerAnyResult, Suite}
 import net.manub.embeddedkafka.UUIDs
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
