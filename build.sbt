@@ -1,6 +1,9 @@
 import Dependencies._
 import ReleaseTransformations._
 
+addCommandAlias("fix", "all compile:scalafix test:scalafix")
+addCommandAlias("fixCheck", "; compile:scalafix --check ; test:scalafix --check")
+
 lazy val compileSettings = Seq(
   Compile / compile := (Compile / compile)
     .dependsOn(
@@ -8,6 +11,8 @@ lazy val compileSettings = Seq(
       Compile / scalafmtAll
     )
     .value,
+  addCompilerPlugin(scalafixSemanticdb),
+  scalafixDependencies in ThisBuild += "org.scalatest" %% "autofix" % Versions.ScalaTestAutofix,
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
@@ -18,6 +23,7 @@ lazy val compileSettings = Seq(
     "-Ywarn-dead-code",
     "-Ywarn-unused"
   ),
+  scalacOptions -= "-Xfatal-warnings",
   scalaVersion := Versions.Scala
 )
 
