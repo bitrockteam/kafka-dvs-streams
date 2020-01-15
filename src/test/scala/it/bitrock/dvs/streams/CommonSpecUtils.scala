@@ -8,7 +8,7 @@ import it.bitrock.dvs.streams.topologies._
 import it.bitrock.testcommons.FixtureLoanerAnyResult
 import net.manub.embeddedkafka.UUIDs
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
-import net.manub.embeddedkafka.schemaregistry.{EmbeddedKafkaConfig, specificAvroValueSerde}
+import net.manub.embeddedkafka.schemaregistry.{specificAvroValueSerde, EmbeddedKafkaConfig}
 import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 import org.apache.kafka.streams.scala.Serdes
 
