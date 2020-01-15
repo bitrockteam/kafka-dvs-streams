@@ -1,6 +1,6 @@
-package it.bitrock.kafkaflightstream.streams
+package it.bitrock.dvs.streams
 
-import it.bitrock.kafkaflightstream.model._
+import it.bitrock.dvs.model.avro._
 
 trait Events {
 

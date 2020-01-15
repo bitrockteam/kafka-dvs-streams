@@ -7,4 +7,4 @@ if [[ $STARTUP_SLEEP_TIMEOUT ]]; then
   sleep $STARTUP_SLEEP_TIMEOUT
 fi
 
-exec ./bin/kafka-flightstream-streams
+exec ./bin/kafka-dvs-streams
