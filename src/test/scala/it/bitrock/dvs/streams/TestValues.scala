@@ -151,6 +151,7 @@ trait TestValues {
       StatusEnRoute
     )
 
+  @SuppressWarnings(Array("DisableSyntax.null"))
   def dummyFlightReceivedForcingSuppression(topic: String) = new ProducerRecord(
     topic,
     null,

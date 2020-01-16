@@ -37,7 +37,7 @@ class FlightReceivedStreamSpec extends Suite with WordSpecLike with EmbeddedKafk
           )
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
         }
-        receivedRecords shouldBe (FlightReceivedEvent.icaoNumber, FlightReceivedEvent)
+        receivedRecords shouldBe ((FlightReceivedEvent.icaoNumber, FlightReceivedEvent))
     }
 
     "be joined successfully with default airplane info" in ResourceLoaner.withFixture {
@@ -62,7 +62,7 @@ class FlightReceivedStreamSpec extends Suite with WordSpecLike with EmbeddedKafk
           )
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
         }
-        receivedRecords shouldBe (ExpectedFlightReceivedWithDefaultAirplane.icaoNumber, ExpectedFlightReceivedWithDefaultAirplane)
+        receivedRecords shouldBe ((ExpectedFlightReceivedWithDefaultAirplane.icaoNumber, ExpectedFlightReceivedWithDefaultAirplane))
     }
 
   }
