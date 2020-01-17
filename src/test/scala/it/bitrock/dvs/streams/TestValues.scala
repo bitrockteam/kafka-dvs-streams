@@ -1,6 +1,9 @@
 package it.bitrock.dvs.streams
 
+import java.time.Instant
+
 import org.apache.kafka.clients.producer.ProducerRecord
+
 import scala.concurrent.duration._
 import it.bitrock.dvs.model.avro._
 
@@ -8,7 +11,7 @@ trait TestValues {
 
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
-  final val Updated        = "12345"
+  final val Updated        = Instant.now()
   final val StatusEnRoute  = "en-route"
 
   final val ParamsAirport1 = AirportParams("ZRH", "CH")
@@ -83,7 +86,7 @@ trait TestValues {
     0,
     AirportInfo(ParamsAirport1.iataCode, "", "", ParamsAirport1.codeCountry, "", ""),
     AirportInfo(ParamsAirport2.iataCode, "", "", ParamsAirport2.codeCountry, "", ""),
-    AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, ""),
+    AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, 0),
     AirplaneInfo(ParamsAirplane.numberRegistration, "", ""),
     StatusEnRoute,
     Updated
@@ -135,8 +138,8 @@ trait TestValues {
   case class AirplaneParams(numberRegistration: String)
   case class FlightParams(departureAirportCode: String, arrivalAirportCode: String, airlineCode: String, airplaneCode: String)
 
-  private def buildAirportRaw(params: AirportParams)   = AirportRaw("", "", params.iataCode, "", "", "", params.codeCountry, "", "", "")
-  private def buildAirlineRaw(params: AirlineParams)   = AirlineRaw("", params.nameAirline, "", params.icaoCode, "", "", "", "", "")
+  private def buildAirportRaw(params: AirportParams)   = AirportRaw(0, "", params.iataCode, 0, 0, "", params.codeCountry, "", "", "")
+  private def buildAirlineRaw(params: AirlineParams)   = AirlineRaw(0, params.nameAirline, "", params.icaoCode, "", "", 0, "", "")
   private def buildAirplaneRaw(params: AirplaneParams) = AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
   private def buildFlightRaw(params: FlightParams) =
     FlightRaw(
@@ -147,7 +150,7 @@ trait TestValues {
       Aircraft(params.airplaneCode, "", "", ""),
       CommonCode("", params.airlineCode),
       Flight(FlightIataCode, FlightIcaoCode, ""),
-      System(Updated, ""),
+      System(Updated),
       StatusEnRoute
     )
 

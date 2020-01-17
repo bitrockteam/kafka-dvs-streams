@@ -129,7 +129,7 @@ class TopStreamsSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams w
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              airline = AirlineInfo(codeAirline, nameAirline, "")
+              airline = AirlineInfo(codeAirline, nameAirline, 0)
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
