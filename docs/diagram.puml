@@ -1,0 +1,43 @@
+@startuml
+title kafka-dvs-streams architecture
+
+node FlightReceivedStream
+node FlightListStream
+node TopStreams
+node TotalStreams
+
+node Kafka {
+    database "total_airline\ntopic" as TotalAirlineTopic
+    database "total_flight\ntopic" as TotalFlightTopic
+    database "top_airline\ntopic" as TopAirlineTopic
+    database "top_speed\ntopic" as TopSpeedTopic
+    database "top_departure_airport\ntopic" as TopDepartureAirportTopic
+    database "top_arrival_airport\ntopic" as TopArrivalAirportTopic
+    database "flight_raw\ntopic" as RawFlightTopic
+    database "airport_raw\ntopic" as RawAirportTopic
+    database "airplane_raw\ntopic" as RawAirplaneTopic
+    database "airline_raw\ntopic" as RawAirlineTopic
+    database "flight_received_list\ntopic" as FlightReceivedListTopic
+    database "flight_received\ntopic" as FlightReceivedTopic
+}
+
+RawFlightTopic ..> FlightReceivedStream
+RawAirportTopic ..> FlightReceivedStream
+RawAirlineTopic ..> FlightReceivedStream
+RawAirplaneTopic ..> FlightReceivedStream
+FlightReceivedStream ..> FlightReceivedTopic
+
+FlightReceivedTopic ..> FlightListStream
+FlightListStream ..> FlightReceivedListTopic
+
+FlightReceivedTopic ..> TopStreams
+TopStreams ..> TopArrivalAirportTopic
+TopStreams ..> TopDepartureAirportTopic
+TopStreams ..> TopSpeedTopic
+TopStreams ..> TopAirlineTopic
+
+FlightReceivedTopic ..> TotalStreams
+TotalStreams ..> TotalFlightTopic
+TotalStreams ..> TotalAirlineTopic
+
+@enduml

@@ -23,11 +23,6 @@ user=<your-username>
 password=<your-password>
 ```
 
-### Kafka topics
-
-The application references the following Kafka topics:
-
-
 ## How to test
 
 Execute unit tests running the following command:
@@ -45,3 +40,9 @@ sbt docker:publish
 ```
 
 ## Architectural diagram
+
+Architectural diagram is available [here](docs/diagram.puml). It can be rendered using [PlantText](https://www.planttext.com).
+
+## Contribution
+
+If you'd like to contribute to the project, make sure to review our [recommendations](CONTRIBUTING.md).
