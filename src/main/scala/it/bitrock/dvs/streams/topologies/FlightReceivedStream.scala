@@ -12,7 +12,6 @@ import org.apache.kafka.streams.kstream.GlobalKTable
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.KStream
-import it.bitrock.dvs.streams.mapper.FlightReceivedMapper._
 
 object FlightReceivedStream {
 
@@ -53,11 +52,11 @@ object FlightReceivedStream {
     flightRawStream
       .join(airportRawTable)(
         (_, v) => v.departure.iataCode,
-        (flightRaw, airportRaw) => flightRaw.toFlightWithDepartureAirportInfo(airportRaw)
+        flightRawToFlightWithDepartureAirportInfo
       )
       .join(airportRawTable)(
         (_, v) => v.codeAirportArrival,
-        (flightReceivedOnlyDeparture, airportRaw) => flightReceivedOnlyDeparture.toFlightWithAllAirportInfo(airportRaw)
+        flightWithDepartureAirportInfoToFlightWithAllAirportInfo
       )
 
   private def flightWithAirportToAirlineEnrichment(
@@ -67,7 +66,7 @@ object FlightReceivedStream {
     flightWithAllAirportStream
       .join(airlineRawTable)(
         (_, v) => v.airlineCode,
-        (flightAndAirport, airlineRaw) => flightAndAirport.toFlightWithAirline(airlineRaw)
+        flightWithAllAirportInfoToFlightWithAirline
       )
 
   private def flightWithAirportAndAirlineToAirplaneEnrichment(
@@ -77,7 +76,92 @@ object FlightReceivedStream {
     flightWithAirline
       .leftJoin(airplaneRawTable)(
         (_, v) => v.airplaneRegNumber,
-        (flightAndAirline, airplaneRaw) => flightAndAirline.toFlightReceived(airplaneRaw)
+        flightWithAirlineToFlightReceived
       )
 
+  private def flightRawToFlightWithDepartureAirportInfo(flightRaw: FlightRaw, airportRaw: AirportRaw): FlightWithDepartureAirportInfo =
+    FlightWithDepartureAirportInfo(
+      flightRaw.flight.iataNumber,
+      flightRaw.flight.icaoNumber,
+      GeographyInfo(
+        flightRaw.geography.latitude,
+        flightRaw.geography.longitude,
+        flightRaw.geography.altitude,
+        flightRaw.geography.direction
+      ),
+      flightRaw.speed.horizontal,
+      AirportInfo(
+        airportRaw.codeIataAirport,
+        airportRaw.nameAirport,
+        airportRaw.nameCountry,
+        airportRaw.codeIso2Country,
+        airportRaw.timezone,
+        airportRaw.gmt
+      ),
+      flightRaw.arrival.iataCode,
+      flightRaw.airline.icaoCode,
+      flightRaw.aircraft.regNumber,
+      flightRaw.status,
+      flightRaw.system.updated
+    )
+
+  private def flightWithDepartureAirportInfoToFlightWithAllAirportInfo(
+      flightWithDepartureAirportInfo: FlightWithDepartureAirportInfo,
+      airportRaw: AirportRaw
+  ): FlightWithAllAirportInfo =
+    FlightWithAllAirportInfo(
+      flightWithDepartureAirportInfo.iataNumber,
+      flightWithDepartureAirportInfo.icaoNumber,
+      flightWithDepartureAirportInfo.geography,
+      flightWithDepartureAirportInfo.speed,
+      flightWithDepartureAirportInfo.airportDeparture,
+      AirportInfo(
+        airportRaw.codeIataAirport,
+        airportRaw.nameAirport,
+        airportRaw.nameCountry,
+        airportRaw.codeIso2Country,
+        airportRaw.timezone,
+        airportRaw.gmt
+      ),
+      flightWithDepartureAirportInfo.airlineCode,
+      flightWithDepartureAirportInfo.airplaneRegNumber,
+      flightWithDepartureAirportInfo.status,
+      flightWithDepartureAirportInfo.updated
+    )
+
+  private def flightWithAllAirportInfoToFlightWithAirline(
+      flightWithAllAirportInfo: FlightWithAllAirportInfo,
+      airlineRaw: AirlineRaw
+  ): FlightWithAirline =
+    FlightWithAirline(
+      flightWithAllAirportInfo.iataNumber,
+      flightWithAllAirportInfo.icaoNumber,
+      flightWithAllAirportInfo.geography,
+      flightWithAllAirportInfo.speed,
+      flightWithAllAirportInfo.airportDeparture,
+      flightWithAllAirportInfo.airportArrival,
+      AirlineInfo(airlineRaw.codeIcaoAirline, airlineRaw.nameAirline, airlineRaw.sizeAirline),
+      flightWithAllAirportInfo.airplaneRegNumber,
+      flightWithAllAirportInfo.status,
+      flightWithAllAirportInfo.updated
+    )
+
+  private def flightWithAirlineToFlightReceived(flightWithAirline: FlightWithAirline, airplaneRaw: AirplaneRaw): FlightReceived =
+    FlightReceived(
+      flightWithAirline.iataNumber,
+      flightWithAirline.icaoNumber,
+      flightWithAirline.geography,
+      flightWithAirline.speed,
+      flightWithAirline.airportDeparture,
+      flightWithAirline.airportArrival,
+      flightWithAirline.airline,
+      airplaneInfoOrDefault(airplaneRaw),
+      flightWithAirline.status,
+      flightWithAirline.updated
+    )
+
+  private def airplaneInfoOrDefault(airplaneRaw: AirplaneRaw): AirplaneInfo =
+    Option(airplaneRaw)
+      .map(airplane => AirplaneInfo(airplane.numberRegistration, airplane.productionLine, airplane.modelCode))
+      .getOrElse(AirplaneInfo("N/A", "N/A", "N/A"))
 }
