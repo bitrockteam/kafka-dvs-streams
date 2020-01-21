@@ -35,7 +35,7 @@ class FlightListStreamSpec extends Suite with WordSpecLike with EmbeddedKafkaStr
           )
           messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2).head
         }
-        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedFlightReceivedList
+        receivedRecords.elements should contain theSameElementsAs ExpectedFlightReceivedList
     }
 
   }
