@@ -29,7 +29,8 @@ object FlightReceivedStream {
     val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
     val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
 
-    val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] = flightRawToAirportEnrichment(flightRawStream, airportRawTable)
+    val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] =
+      flightRawToAirportEnrichment(flightRawStream, airportRawTable)
 
     val flightAirportAirline: KStream[String, FlightWithAirline] =
       flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)

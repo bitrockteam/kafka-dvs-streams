@@ -138,9 +138,11 @@ trait TestValues {
   case class AirplaneParams(numberRegistration: String)
   case class FlightParams(departureAirportCode: String, arrivalAirportCode: String, airlineCode: String, airplaneCode: String)
 
-  private def buildAirportRaw(params: AirportParams)   = AirportRaw(0, "", params.iataCode, 0, 0, "", params.codeCountry, "", "", "")
-  private def buildAirlineRaw(params: AirlineParams)   = AirlineRaw(0, params.nameAirline, "", params.icaoCode, "", "", 0, "", "")
-  private def buildAirplaneRaw(params: AirplaneParams) = AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
+  private def buildAirportRaw(params: AirportParams) =
+    AirportRaw(0, "", params.iataCode, 0, 0, "", params.codeCountry, "", "", "")
+  private def buildAirlineRaw(params: AirlineParams) = AirlineRaw(0, params.nameAirline, "", params.icaoCode, "", "", 0, "", "")
+  private def buildAirplaneRaw(params: AirplaneParams) =
+    AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
   private def buildFlightRaw(params: FlightParams) =
     FlightRaw(
       Geography(0, 0, 0, 0),

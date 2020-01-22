@@ -62,7 +62,12 @@ class FlightReceivedStreamSpec extends Suite with WordSpecLike with EmbeddedKafk
           )
           messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
         }
-        receivedRecords shouldBe ((ExpectedFlightReceivedWithDefaultAirplane.icaoNumber, ExpectedFlightReceivedWithDefaultAirplane))
+        receivedRecords shouldBe (
+          (
+            ExpectedFlightReceivedWithDefaultAirplane.icaoNumber,
+            ExpectedFlightReceivedWithDefaultAirplane
+          )
+        )
     }
 
   }
