@@ -42,7 +42,8 @@ trait TopElementsAggregator[A, E, K] {
 
 }
 
-final class TopArrivalAirportAggregator(override val topAmount: Int) extends TopElementsAggregator[TopArrivalAirportList, Airport, String] {
+final class TopArrivalAirportAggregator(override val topAmount: Int)
+    extends TopElementsAggregator[TopArrivalAirportList, Airport, String] {
 
   override lazy val element2OrderingTypes: Airport => (Double, String) =
     // Note: Long comparison is reversed!
@@ -75,7 +76,8 @@ final class TopDepartureAirportAggregator(override val topAmount: Int)
 
 }
 
-final class TopSpeedFlightAggregator(override val topAmount: Int) extends TopElementsAggregator[TopSpeedList, SpeedFlight, String] {
+final class TopSpeedFlightAggregator(override val topAmount: Int)
+    extends TopElementsAggregator[TopSpeedList, SpeedFlight, String] {
 
   override lazy val element2OrderingTypes: SpeedFlight => (Double, String) =
     // Note: Long comparison is reversed!
