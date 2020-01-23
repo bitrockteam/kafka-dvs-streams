@@ -105,4 +105,5 @@ project/plugins/project/
 
 ### Begin custom section ###
 .sbt/
+.DS_Store
 ### End custom section ###
