@@ -28,12 +28,6 @@ lazy val compileSettings = Seq(
 )
 
 lazy val dependenciesSettings = Seq(
-  credentials ++= Seq(
-    baseDirectory.value / ".sbt" / ".credentials",
-    Path.userHome / ".sbt" / ".credentials.bitrock"
-  ).collect {
-    case c if c.exists => Credentials(c)
-  },
   excludeDependencies ++= excludeDeps,
   libraryDependencies ++= prodDeps ++ testDeps,
   resolvers ++= CustomResolvers.resolvers
