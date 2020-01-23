@@ -11,7 +11,7 @@ trait TestValues {
 
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
-  final val Updated        = Instant.now()
+  final val Updated        = Instant.now
   final val StatusEnRoute  = "en-route"
 
   final val ParamsAirport1 = AirportParams("ZRH", "CH")
