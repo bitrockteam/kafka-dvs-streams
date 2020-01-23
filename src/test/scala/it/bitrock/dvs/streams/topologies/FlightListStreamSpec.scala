@@ -8,9 +8,10 @@ import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.common.serialization.Serde
-import org.scalatest.{OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.wordspec.AnyWordSpecLike
 
-class FlightListStreamSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
 
   "FlightListStream" should {
 
