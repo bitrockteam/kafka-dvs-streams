@@ -36,8 +36,9 @@ object CommonSpecUtils {
       implicit lazy val embeddedKafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig()
 
       val config: AppConfig = {
-        val conf         = AppConfig.load
-        val topologyConf = conf.kafka.topology.copy(aggregationTimeWindowSize = 5.seconds, aggregationTotalTimeWindowSize = 5.seconds)
+        val conf = AppConfig.load
+        val topologyConf =
+          conf.kafka.topology.copy(aggregationTimeWindowSize = 5.seconds, aggregationTotalTimeWindowSize = 5.seconds)
         conf.copy(kafka = conf.kafka.copy(topology = topologyConf))
       }
 

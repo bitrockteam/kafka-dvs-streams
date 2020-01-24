@@ -3,14 +3,15 @@ package it.bitrock.dvs.streams.topologies
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.CommonSpecUtils._
 import it.bitrock.dvs.streams.TestValues
-import it.bitrock.testcommons.Suite
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
+import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.common.serialization.Serde
-import org.scalatest.{OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.wordspec.AnyWordSpecLike
 
-class FlightListStreamSpec extends Suite with WordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
 
   "FlightListStream" should {
 
@@ -33,9 +34,10 @@ class FlightListStreamSpec extends Suite with WordSpecLike with EmbeddedKafkaStr
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2).head
+          messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2)
         }
-        receivedRecords.elements should contain theSameElementsInOrderAs ExpectedFlightReceivedList
+        receivedRecords should have size 1
+        receivedRecords.head.elements should contain theSameElementsAs ExpectedFlightReceivedList
     }
 
   }
