@@ -17,16 +17,17 @@ import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 object TopStreams {
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                                      = kafkaStreamsOptions.keySerde
-    implicit val flightReceivedEventSerde: Serde[FlightReceived]              = kafkaStreamsOptions.flightReceivedEventSerde
-    implicit val topAggregationKeySerde: Serde[Long]                          = kafkaStreamsOptions.topAggregationKeySerde
-    implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList]     = kafkaStreamsOptions.topArrivalAirportListEventSerde
-    implicit val topDepartureAirportListSerde: Serde[TopDepartureAirportList] = kafkaStreamsOptions.topDepartureAirportListEventSerde
-    implicit val topSpeedListSerde: Serde[TopSpeedList]                       = kafkaStreamsOptions.topSpeedListEventSerde
-    implicit val topAirlineListSerde: Serde[TopAirlineList]                   = kafkaStreamsOptions.topAirlineListEventSerde
-    implicit val topAirportSerde: Serde[Airport]                              = kafkaStreamsOptions.topAirportEventSerde
-    implicit val topSpeedSerde: Serde[SpeedFlight]                            = kafkaStreamsOptions.topSpeedFlightEventSerde
-    implicit val topAirlineSerde: Serde[Airline]                              = kafkaStreamsOptions.topAirlineEventSerde
+    implicit val KeySerde: Serde[String]                                  = kafkaStreamsOptions.keySerde
+    implicit val flightReceivedEventSerde: Serde[FlightReceived]          = kafkaStreamsOptions.flightReceivedEventSerde
+    implicit val topAggregationKeySerde: Serde[Long]                      = kafkaStreamsOptions.topAggregationKeySerde
+    implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList] = kafkaStreamsOptions.topArrivalAirportListEventSerde
+    implicit val topDepartureAirportListSerde: Serde[TopDepartureAirportList] =
+      kafkaStreamsOptions.topDepartureAirportListEventSerde
+    implicit val topSpeedListSerde: Serde[TopSpeedList]     = kafkaStreamsOptions.topSpeedListEventSerde
+    implicit val topAirlineListSerde: Serde[TopAirlineList] = kafkaStreamsOptions.topAirlineListEventSerde
+    implicit val topAirportSerde: Serde[Airport]            = kafkaStreamsOptions.topAirportEventSerde
+    implicit val topSpeedSerde: Serde[SpeedFlight]          = kafkaStreamsOptions.topSpeedFlightEventSerde
+    implicit val topAirlineSerde: Serde[Airline]            = kafkaStreamsOptions.topAirlineEventSerde
 
     def buildTopArrivalStreamsBuilder: (StreamsBuilder, String) = {
       val streamsBuilder              = new StreamsBuilder
@@ -43,7 +44,10 @@ object TopStreams {
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
-        .aggregate(topArrivalAirportAggregator.initializer)(topArrivalAirportAggregator.adder, topArrivalAirportAggregator.subtractor)
+        .aggregate(topArrivalAirportAggregator.initializer)(
+          topArrivalAirportAggregator.adder,
+          topArrivalAirportAggregator.subtractor
+        )
         .toStream
         .to(config.kafka.topology.topArrivalAirportTopic)
       (streamsBuilder, config.kafka.topology.topArrivalAirportTopic)
@@ -64,7 +68,10 @@ object TopStreams {
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
-        .aggregate(topDepartureAirportAggregator.initializer)(topDepartureAirportAggregator.adder, topDepartureAirportAggregator.subtractor)
+        .aggregate(topDepartureAirportAggregator.initializer)(
+          topDepartureAirportAggregator.adder,
+          topDepartureAirportAggregator.subtractor
+        )
         .toStream
         .to(config.kafka.topology.topDepartureAirportTopic)
       (streamsBuilder, config.kafka.topology.topDepartureAirportTopic)
