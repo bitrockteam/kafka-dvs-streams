@@ -33,7 +33,7 @@ RUN apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-
     apt-get update &&\
     apt-get install -y docker-ce docker-ce-cli containerd.io
 
-RUN adduser --home /var/lib/jenkins --disabled-password --gecos '' --uid 997 jenkins
+RUN adduser --home /var/lib/jenkins --disabled-password --gecos '' --uid 1000 jenkins
 
 RUN mkdir /var/lib/jenkins/.ssh/ && \
     ssh-keyscan github.com >> /var/lib/jenkins/.ssh/known_hosts && \

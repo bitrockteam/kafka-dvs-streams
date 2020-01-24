@@ -1,4 +1,3 @@
-
 # Created by https://www.gitignore.io/api/sbt,scala,intellij+all
 # Edit at https://www.gitignore.io/?templates=sbt,scala,intellij+all
 
@@ -104,6 +103,7 @@ project/plugins/project/
 # End of https://www.gitignore.io/api/sbt,scala,intellij+all
 
 ### Begin custom section ###
+.ivy2/
 .sbt/
 .DS_Store
 ### End custom section ###

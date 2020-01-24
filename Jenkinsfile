@@ -106,6 +106,7 @@ pipeline {
                             account: GITHUB_ACCOUNT,
                             repo: GITHUB_REPO,
                             sha: GIT_COMMIT
+
                     script {
                         tagAfter = sh(
                                 script: "git describe --tags --abbrev=0 | sed 's/^v//'",
