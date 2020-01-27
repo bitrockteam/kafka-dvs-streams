@@ -8,7 +8,8 @@ final case class KafkaConfig(
     applicationId: String,
     bootstrapServers: String,
     schemaRegistryUrl: URI,
-    topology: TopologyConfig
+    topology: TopologyConfig,
+    enableInterceptors: Boolean
 )
 
 final case class TopologyConfig(

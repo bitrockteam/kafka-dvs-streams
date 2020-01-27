@@ -10,8 +10,8 @@ import org.apache.kafka.streams.StreamsConfig
 
 object StreamProps {
 
-  final val UseSpecificAvroReader   = true
-  final val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
+  final private val UseSpecificAvroReader   = true
+  final private val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
 
   def streamProperties(config: KafkaConfig, applicationId: String): Properties = {
     val props = new Properties
@@ -25,6 +25,16 @@ object StreamProps {
     props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, config.schemaRegistryUrl.toString)
     props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, UseSpecificAvroReader.toString)
     props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
+    if (config.enableInterceptors) {
+      props.put(
+        StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
+        "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      )
+      props.put(
+        StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+        "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      )
+    }
     props
   }
 
