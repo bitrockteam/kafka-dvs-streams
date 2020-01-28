@@ -12,7 +12,8 @@ lazy val compileSettings = Seq(
     )
     .value,
   addCompilerPlugin(scalafixSemanticdb),
-  scalafixDependencies in ThisBuild += "org.scalatest" %% "autofix" % Versions.ScalaTestAutofix,
+  scalafixDependencies in ThisBuild += "org.scalatest"   %% "autofix"      % Versions.ScalaTestAutofix,
+  scalafixDependencies in ThisBuild += "com.nequissimus" %% "sort-imports" % Versions.ScalafixSortImports,
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",

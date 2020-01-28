@@ -2,10 +2,10 @@ package it.bitrock.dvs.streams.topologies
 
 import java.util.Properties
 
-import it.bitrock.dvs.streams._
-import it.bitrock.dvs.streams.StreamProps.streamProperties
-import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.streams.StreamProps.streamProperties
+import it.bitrock.dvs.streams._
+import it.bitrock.dvs.streams.config.AppConfig
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.GlobalKTable

@@ -3,8 +3,8 @@ package it.bitrock.dvs.streams.topologies
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.CommonSpecUtils._
 import it.bitrock.dvs.streams.TestValues
-import it.bitrock.testcommons.Suite
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
+import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.common.serialization.Serde
