@@ -5,8 +5,8 @@ import java.util.concurrent.CountDownLatch
 import com.typesafe.scalalogging.LazyLogging
 import it.bitrock.dvs.model.avro.{System => _, _}
 import it.bitrock.dvs.streams.config.AppConfig
-import it.bitrock.kafkacommons.serialization.AvroSerdes
 import it.bitrock.dvs.streams.topologies._
+import it.bitrock.kafkacommons.serialization.AvroSerdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.scala.Serdes
 

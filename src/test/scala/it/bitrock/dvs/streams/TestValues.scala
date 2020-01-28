@@ -2,10 +2,10 @@ package it.bitrock.dvs.streams
 
 import java.time.Instant
 
+import it.bitrock.dvs.model.avro._
 import org.apache.kafka.clients.producer.ProducerRecord
 
 import scala.concurrent.duration._
-import it.bitrock.dvs.model.avro._
 
 trait TestValues {
 
