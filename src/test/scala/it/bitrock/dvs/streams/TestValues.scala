@@ -96,38 +96,38 @@ trait TestValues {
     (0 to 9).map(key => FlightReceivedEvent.copy(iataNumber = key.toString, icaoNumber = key.toString))
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
-      Airport(ParamsAirport7.iataCode, 11),
-      Airport(ParamsAirport3.iataCode, 9),
-      Airport(ParamsAirport2.iataCode, 6),
-      Airport(ParamsAirport6.iataCode, 5),
-      Airport(ParamsAirport5.iataCode, 4)
+      TopAirport(ParamsAirport7.iataCode, 11),
+      TopAirport(ParamsAirport3.iataCode, 9),
+      TopAirport(ParamsAirport2.iataCode, 6),
+      TopAirport(ParamsAirport6.iataCode, 5),
+      TopAirport(ParamsAirport5.iataCode, 4)
     )
   )
   final val ExpectedTopDepartureResult = TopDepartureAirportList(
     List(
-      Airport(ParamsAirport7.iataCode, 11),
-      Airport(ParamsAirport3.iataCode, 9),
-      Airport(ParamsAirport2.iataCode, 6),
-      Airport(ParamsAirport6.iataCode, 5),
-      Airport(ParamsAirport5.iataCode, 4)
+      TopAirport(ParamsAirport7.iataCode, 11),
+      TopAirport(ParamsAirport3.iataCode, 9),
+      TopAirport(ParamsAirport2.iataCode, 6),
+      TopAirport(ParamsAirport6.iataCode, 5),
+      TopAirport(ParamsAirport5.iataCode, 4)
     )
   )
   final val ExpectedTopSpeedResult = TopSpeedList(
     Seq(
-      SpeedFlight("3", SpeedArray(3)),
-      SpeedFlight("8", SpeedArray(8)),
-      SpeedFlight("5", SpeedArray(5)),
-      SpeedFlight("2", SpeedArray(2)),
-      SpeedFlight("7", SpeedArray(7))
+      TopSpeed("3", SpeedArray(3)),
+      TopSpeed("8", SpeedArray(8)),
+      TopSpeed("5", SpeedArray(5)),
+      TopSpeed("2", SpeedArray(2)),
+      TopSpeed("7", SpeedArray(7))
     )
   )
   final val ExpectedTopAirlineResult = TopAirlineList(
     Seq(
-      Airline(ParamsAirline7.nameAirline, 11),
-      Airline(ParamsAirline3.nameAirline, 9),
-      Airline(ParamsAirline2.nameAirline, 6),
-      Airline(ParamsAirline6.nameAirline, 5),
-      Airline(ParamsAirline5.nameAirline, 4)
+      TopAirline(ParamsAirline7.nameAirline, 11),
+      TopAirline(ParamsAirline3.nameAirline, 9),
+      TopAirline(ParamsAirline2.nameAirline, 6),
+      TopAirline(ParamsAirline6.nameAirline, 5),
+      TopAirline(ParamsAirline5.nameAirline, 4)
     )
   )
   final val ExpectedTotalFlightResult  = 10
@@ -147,10 +147,10 @@ trait TestValues {
     FlightRaw(
       Geography(0, 0, 0, 0),
       Speed(0, 0),
-      CommonCode(params.departureAirportCode, ""),
-      CommonCode(params.arrivalAirportCode, ""),
+      Departure(params.departureAirportCode, ""),
+      Arrival(params.arrivalAirportCode, ""),
       Aircraft(params.airplaneCode, "", "", ""),
-      CommonCode("", params.airlineCode),
+      Airline("", params.airlineCode),
       Flight(FlightIataCode, FlightIcaoCode, ""),
       System(Updated),
       StatusEnRoute
