@@ -65,7 +65,8 @@ object CommonSpecUtils {
         specificAvroValueSerde[CountFlight],
         specificAvroValueSerde[CountAirline],
         specificAvroValueSerde[CodeAirlineList],
-        specificAvroValueSerde[FlightNumberList]
+        specificAvroValueSerde[FlightNumberList],
+        specificAvroValueSerde[ComputationStatus]
       )
 
       val topologies = Map(

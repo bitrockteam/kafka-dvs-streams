@@ -26,6 +26,7 @@ final case class TopologyConfig(
     topAirlineTopic: String,
     totalFlightTopic: String,
     totalAirlineTopic: String,
+    computationStatusTopic: String,
     aggregationTimeWindowSize: FiniteDuration,
     aggregationTotalTimeWindowSize: FiniteDuration,
     aggregationTimeWindowGrace: FiniteDuration,
