@@ -9,7 +9,8 @@ final case class KafkaConfig(
     bootstrapServers: String,
     schemaRegistryUrl: URI,
     topology: TopologyConfig,
-    enableInterceptors: Boolean
+    enableInterceptors: Boolean,
+    monitoring: Monitoring
 )
 
 final case class TopologyConfig(
@@ -26,7 +27,6 @@ final case class TopologyConfig(
     topAirlineTopic: String,
     totalFlightTopic: String,
     totalAirlineTopic: String,
-    computationStatusTopic: String,
     aggregationTimeWindowSize: FiniteDuration,
     aggregationTotalTimeWindowSize: FiniteDuration,
     aggregationTimeWindowGrace: FiniteDuration,
@@ -35,3 +35,6 @@ final case class TopologyConfig(
     maxRequestSize: Long,
     threadsAmount: Int
 )
+
+final case class Monitoring(flightReceivedList: MonitoringConf)
+final case class MonitoringConf(allowedDelay: FiniteDuration, topic: String, delayTopic: String)

@@ -1,9 +1,9 @@
 /** MACHINE-GENERATED FROM AVRO SCHEMA. DO NOT EDIT DIRECTLY */
-package it.bitrock.dvs.model.avro
+package it.bitrock.dvs.model.avro.monitoring
 
 import scala.annotation.switch
 
-case class ComputationStatus(
+case class FlightReceivedListComputationStatus(
     var windowTime: java.time.Instant,
     var emissionTime: java.time.Instant,
     var minUpdated: java.time.Instant,
@@ -64,11 +64,11 @@ case class ComputationStatus(
     }
     ()
   }
-  def getSchema: org.apache.avro.Schema = ComputationStatus.SCHEMA$
+  def getSchema: org.apache.avro.Schema = FlightReceivedListComputationStatus.SCHEMA$
 }
 
-object ComputationStatus {
+object FlightReceivedListComputationStatus {
   val SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
-    "{\"type\":\"record\",\"name\":\"ComputationStatus\",\"namespace\":\"it.bitrock.dvs.model.avro\",\"fields\":[{\"name\":\"windowTime\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"emissionTime\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"minUpdated\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"maxUpdated\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}}]}"
+    "{\"type\":\"record\",\"name\":\"FlightReceivedListComputationStatus\",\"namespace\":\"it.bitrock.dvs.model.avro.monitoring\",\"fields\":[{\"name\":\"windowTime\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"emissionTime\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"minUpdated\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"maxUpdated\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}}]}"
   )
 }

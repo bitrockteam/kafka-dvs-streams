@@ -1,6 +1,7 @@
 package it.bitrock.dvs.streams
 
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import org.apache.kafka.common.serialization.Serde
 
 final case class KafkaStreamsOptions(
@@ -27,5 +28,5 @@ final case class KafkaStreamsOptions(
     countAirlineEventSerde: Serde[CountAirline],
     codeAirlineListEventSerde: Serde[CodeAirlineList],
     flightNumberListEventSerde: Serde[FlightNumberList],
-    computationStatusSerde: Serde[ComputationStatus]
+    flightReceivedListComputationStatusSerde: Serde[FlightReceivedListComputationStatus]
 )

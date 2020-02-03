@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.CommonSpecUtils._
 import it.bitrock.dvs.streams.TestValues
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
@@ -55,15 +56,15 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
             timeout = ConsumerPollTimeout
           )
 
-          val computationStatusMessagesMap = consumeNumberKeyedMessagesFromTopics[String, ComputationStatus](
-            topics = Set(appConfig.kafka.topology.computationStatusTopic),
+          val computationStatusMessagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedListComputationStatus](
+            topics = Set(appConfig.kafka.monitoring.flightReceivedList.topic),
             number = 1,
             timeout = ConsumerPollTimeout
           )
 
           (
             messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2),
-            computationStatusMessagesMap(appConfig.kafka.topology.computationStatusTopic).map(_._2)
+            computationStatusMessagesMap(appConfig.kafka.monitoring.flightReceivedList.topic).map(_._2)
           )
         }
 
