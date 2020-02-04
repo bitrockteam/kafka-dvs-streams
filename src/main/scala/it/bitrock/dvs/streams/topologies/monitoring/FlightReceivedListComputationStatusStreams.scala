@@ -11,7 +11,7 @@ import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.StreamsBuilder
 
-import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.duration._
 
 object FlightReceivedListComputationStatusStreams {
 
