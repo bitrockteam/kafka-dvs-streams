@@ -3,14 +3,15 @@ package it.bitrock.dvs.streams
 import java.util.Properties
 
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.streams.topologies._
 import it.bitrock.testcommons.FixtureLoanerAnyResult
 import net.manub.embeddedkafka.UUIDs
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import net.manub.embeddedkafka.schemaregistry.{specificAvroValueSerde, EmbeddedKafkaConfig}
-import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 import org.apache.kafka.streams.scala.Serdes
+import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 
 import scala.concurrent.duration._
 
@@ -39,7 +40,7 @@ object CommonSpecUtils {
         val conf = AppConfig.load
         val topologyConf =
           conf.kafka.topology.copy(aggregationTimeWindowSize = 5.seconds, aggregationTotalTimeWindowSize = 5.seconds)
-        conf.copy(kafka = conf.kafka.copy(topology = topologyConf))
+        conf.copy(kafka = conf.kafka.copy(topology = topologyConf, enableInterceptors = false))
       }
 
       val kafkaStreamsOptions = KafkaStreamsOptions(
@@ -57,15 +58,16 @@ object CommonSpecUtils {
         Serdes.Long,
         specificAvroValueSerde[TopArrivalAirportList],
         specificAvroValueSerde[TopDepartureAirportList],
-        specificAvroValueSerde[Airport],
+        specificAvroValueSerde[TopAirport],
         specificAvroValueSerde[TopSpeedList],
-        specificAvroValueSerde[SpeedFlight],
+        specificAvroValueSerde[TopSpeed],
         specificAvroValueSerde[TopAirlineList],
-        specificAvroValueSerde[Airline],
+        specificAvroValueSerde[TopAirline],
         specificAvroValueSerde[CountFlight],
         specificAvroValueSerde[CountAirline],
         specificAvroValueSerde[CodeAirlineList],
-        specificAvroValueSerde[FlightNumberList]
+        specificAvroValueSerde[FlightNumberList],
+        specificAvroValueSerde[FlightReceivedListComputationStatus]
       )
 
       val topologies = Map(

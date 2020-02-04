@@ -3,10 +3,11 @@ package it.bitrock.dvs.streams
 import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.model.avro.{System => _, _}
 import it.bitrock.dvs.streams.config.AppConfig
-import it.bitrock.kafkacommons.serialization.AvroSerdes
 import it.bitrock.dvs.streams.topologies._
+import it.bitrock.kafkacommons.serialization.AvroSerdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.scala.Serdes
 
@@ -35,15 +36,16 @@ object Main extends App with LazyLogging {
     Serdes.Long,
     avroSerdes.serdeFrom[TopArrivalAirportList],
     avroSerdes.serdeFrom[TopDepartureAirportList],
-    avroSerdes.serdeFrom[Airport],
+    avroSerdes.serdeFrom[TopAirport],
     avroSerdes.serdeFrom[TopSpeedList],
-    avroSerdes.serdeFrom[SpeedFlight],
+    avroSerdes.serdeFrom[TopSpeed],
     avroSerdes.serdeFrom[TopAirlineList],
-    avroSerdes.serdeFrom[Airline],
+    avroSerdes.serdeFrom[TopAirline],
     avroSerdes.serdeFrom[CountFlight],
     avroSerdes.serdeFrom[CountAirline],
     avroSerdes.serdeFrom[CodeAirlineList],
-    avroSerdes.serdeFrom[FlightNumberList]
+    avroSerdes.serdeFrom[FlightNumberList],
+    avroSerdes.serdeFrom[FlightReceivedListComputationStatus]
   )
 
   val flightReceivedTopology = FlightReceivedStream.buildTopology(config, kafkaStreamsOptions)

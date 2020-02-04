@@ -1,8 +1,10 @@
 package it.bitrock.dvs.streams.topologies
 
-import java.util.Properties
+import java.time.Instant
+import java.util.{Properties, UUID}
 
-import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
+import it.bitrock.dvs.model.avro.{FlightReceived, FlightReceivedList}
 import it.bitrock.dvs.streams.StreamProps.streamProperties
 import it.bitrock.dvs.streams._
 import it.bitrock.dvs.streams.config.AppConfig
@@ -22,6 +24,8 @@ object FlightListStream {
     implicit val KeySerde: Serde[String]                                 = kafkaStreamsOptions.keySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived]         = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
+    implicit val computationStatusSerde: Serde[FlightReceivedListComputationStatus] =
+      kafkaStreamsOptions.flightReceivedListComputationStatusSerde
 
     val streamsBuilder = new StreamsBuilder
     streamsBuilder
@@ -36,11 +40,21 @@ object FlightListStream {
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream
       .map((k, v) => (k.window.start.toString, v))
-      .to(config.kafka.topology.flightReceivedListTopic)
+      .through(config.kafka.topology.flightReceivedListTopic)
+      .map((k, v) => (UUID.randomUUID().toString, computationStatus(k, v)))
+      .to(config.kafka.monitoring.flightReceivedList.topic)
 
     val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedListTopic)
     List((streamsBuilder.build(props), props))
 
   }
+
+  private def computationStatus(windowStart: String, v: FlightReceivedList): FlightReceivedListComputationStatus =
+    FlightReceivedListComputationStatus(
+      Instant.ofEpochMilli(windowStart.toLong),
+      Instant.now(),
+      v.elements.minBy(_.updated).updated,
+      v.elements.maxBy(_.updated).updated
+    )
 
 }

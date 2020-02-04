@@ -1,6 +1,7 @@
 package it.bitrock.dvs.streams
 
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import org.apache.kafka.common.serialization.Serde
 
 final case class KafkaStreamsOptions(
@@ -18,13 +19,14 @@ final case class KafkaStreamsOptions(
     topAggregationKeySerde: Serde[Long],
     topArrivalAirportListEventSerde: Serde[TopArrivalAirportList],
     topDepartureAirportListEventSerde: Serde[TopDepartureAirportList],
-    topAirportEventSerde: Serde[Airport],
+    topAirportEventSerde: Serde[TopAirport],
     topSpeedListEventSerde: Serde[TopSpeedList],
-    topSpeedFlightEventSerde: Serde[SpeedFlight],
+    topSpeedFlightEventSerde: Serde[TopSpeed],
     topAirlineListEventSerde: Serde[TopAirlineList],
-    topAirlineEventSerde: Serde[Airline],
+    topAirlineEventSerde: Serde[TopAirline],
     countFlightEventSerde: Serde[CountFlight],
     countAirlineEventSerde: Serde[CountAirline],
     codeAirlineListEventSerde: Serde[CodeAirlineList],
-    flightNumberListEventSerde: Serde[FlightNumberList]
+    flightNumberListEventSerde: Serde[FlightNumberList],
+    flightReceivedListComputationStatusSerde: Serde[FlightReceivedListComputationStatus]
 )

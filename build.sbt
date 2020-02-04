@@ -12,7 +12,8 @@ lazy val compileSettings = Seq(
     )
     .value,
   addCompilerPlugin(scalafixSemanticdb),
-  scalafixDependencies in ThisBuild += "org.scalatest" %% "autofix" % Versions.ScalaTestAutofix,
+  scalafixDependencies in ThisBuild += "org.scalatest"   %% "autofix"      % Versions.ScalaTestAutofix,
+  scalafixDependencies in ThisBuild += "com.nequissimus" %% "sort-imports" % Versions.ScalafixSortImports,
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
@@ -72,7 +73,7 @@ enablePlugins(JavaAppPackaging, DockerPlugin) // Add AshScriptPlugin if base ima
 
 dockerBaseImage := "openjdk:8-jre-slim"
 dockerRepository := Option(sys.env.getOrElse("DOCKER_REPOSITORY", "local"))
-maintainer in Docker := "Daniele Marenco"
+maintainer in Docker := "Bitrock DVS team dvs@bitrock.it"
 
 // Remove the top level directory for universal package
 topLevelDirectory := None

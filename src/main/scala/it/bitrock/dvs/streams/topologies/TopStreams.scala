@@ -2,10 +2,10 @@ package it.bitrock.dvs.streams.topologies
 
 import java.util.Properties
 
-import it.bitrock.dvs.streams._
-import it.bitrock.dvs.streams.StreamProps.streamProperties
-import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.streams.StreamProps.streamProperties
+import it.bitrock.dvs.streams._
+import it.bitrock.dvs.streams.config.AppConfig
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.TimeWindows
@@ -25,9 +25,9 @@ object TopStreams {
       kafkaStreamsOptions.topDepartureAirportListEventSerde
     implicit val topSpeedListSerde: Serde[TopSpeedList]     = kafkaStreamsOptions.topSpeedListEventSerde
     implicit val topAirlineListSerde: Serde[TopAirlineList] = kafkaStreamsOptions.topAirlineListEventSerde
-    implicit val topAirportSerde: Serde[Airport]            = kafkaStreamsOptions.topAirportEventSerde
-    implicit val topSpeedSerde: Serde[SpeedFlight]          = kafkaStreamsOptions.topSpeedFlightEventSerde
-    implicit val topAirlineSerde: Serde[Airline]            = kafkaStreamsOptions.topAirlineEventSerde
+    implicit val topAirportSerde: Serde[TopAirport]         = kafkaStreamsOptions.topAirportEventSerde
+    implicit val topSpeedSerde: Serde[TopSpeed]             = kafkaStreamsOptions.topSpeedFlightEventSerde
+    implicit val topAirlineSerde: Serde[TopAirline]         = kafkaStreamsOptions.topAirlineEventSerde
 
     def buildTopArrivalStreamsBuilder: (StreamsBuilder, String) = {
       val streamsBuilder              = new StreamsBuilder
@@ -43,7 +43,7 @@ object TopStreams {
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
-        .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
+        .groupBy((k, v) => (k.window.start.toString, TopAirport(k.key, v)))
         .aggregate(topArrivalAirportAggregator.initializer)(
           topArrivalAirportAggregator.adder,
           topArrivalAirportAggregator.subtractor
@@ -67,7 +67,7 @@ object TopStreams {
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
-        .groupBy((k, v) => (k.window.start.toString, Airport(k.key, v)))
+        .groupBy((k, v) => (k.window.start.toString, TopAirport(k.key, v)))
         .aggregate(topDepartureAirportAggregator.initializer)(
           topDepartureAirportAggregator.adder,
           topDepartureAirportAggregator.subtractor
@@ -91,7 +91,7 @@ object TopStreams {
         )
         .reduce((_, v2) => v2)
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
-        .groupBy((k, v) => (k.window.start.toString, SpeedFlight(k.key, v.speed)))
+        .groupBy((k, v) => (k.window.start.toString, TopSpeed(k.key, v.speed)))
         .aggregate(topSpeedFlightAggregator.initializer)(topSpeedFlightAggregator.adder, topSpeedFlightAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topSpeedTopic)
@@ -112,7 +112,7 @@ object TopStreams {
         )
         .count
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
-        .groupBy((k, v) => (k.window.start.toString, Airline(k.key, v)))
+        .groupBy((k, v) => (k.window.start.toString, TopAirline(k.key, v)))
         .aggregate(topAirlineAggregator.initializer)(topAirlineAggregator.adder, topAirlineAggregator.subtractor)
         .toStream
         .to(config.kafka.topology.topAirlineTopic)
