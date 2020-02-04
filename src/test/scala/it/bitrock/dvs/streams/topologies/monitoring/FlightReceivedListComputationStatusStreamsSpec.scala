@@ -1,7 +1,6 @@
 package it.bitrock.dvs.streams.topologies.monitoring
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.CommonSpecUtils._
