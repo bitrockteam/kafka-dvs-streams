@@ -92,8 +92,6 @@ trait TestValues {
     Updated
   )
   final val ExpectedFlightReceivedWithDefaultAirplane = FlightReceivedEvent.copy(airplane = AirplaneInfo("N/A", "N/A", "N/A"))
-  final val ExpectedFlightReceivedList =
-    (0 to 9).map(key => FlightReceivedEvent.copy(iataNumber = key.toString, icaoNumber = key.toString))
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
       TopAirport(ParamsAirport7.iataCode, 11),

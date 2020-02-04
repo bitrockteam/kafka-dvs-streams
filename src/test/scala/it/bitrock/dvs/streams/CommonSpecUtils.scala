@@ -3,6 +3,7 @@ package it.bitrock.dvs.streams
 import java.util.Properties
 
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.streams.topologies._
 import it.bitrock.testcommons.FixtureLoanerAnyResult
@@ -65,7 +66,8 @@ object CommonSpecUtils {
         specificAvroValueSerde[CountFlight],
         specificAvroValueSerde[CountAirline],
         specificAvroValueSerde[CodeAirlineList],
-        specificAvroValueSerde[FlightNumberList]
+        specificAvroValueSerde[FlightNumberList],
+        specificAvroValueSerde[FlightReceivedListComputationStatus]
       )
 
       val topologies = Map(

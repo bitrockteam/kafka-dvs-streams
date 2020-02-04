@@ -1,6 +1,10 @@
 package it.bitrock.dvs.streams.topologies
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.CommonSpecUtils._
 import it.bitrock.dvs.streams.TestValues
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
@@ -20,24 +24,59 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
 
+        val key1 = "a"
+        val firstMessage = key1 -> FlightReceivedEvent.copy(
+          iataNumber = key1,
+          icaoNumber = key1,
+          updated = Instant.now().minus(1, ChronoUnit.SECONDS)
+        )
+
+        val key2 = "b"
+        val secondMessage = key2 -> FlightReceivedEvent.copy(
+          iataNumber = key2,
+          icaoNumber = key2
+        )
+
+        val key3 = "c"
+        val thirdMessage = key3 -> FlightReceivedEvent.copy(
+          iataNumber = key3,
+          icaoNumber = key3,
+          updated = Instant.now().plus(1, ChronoUnit.SECONDS)
+        )
+
+        val flightMessages = List(firstMessage, secondMessage, thirdMessage)
+
         val receivedRecords = ResourceLoaner.runAll(topologies(FlightListTopology)) { _ =>
-          val flightMessages = 0 to 9 map { key =>
-            key.toString -> FlightReceivedEvent.copy(
-              iataNumber = key.toString,
-              icaoNumber = key.toString
-            )
-          }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
             topics = Set(appConfig.kafka.topology.flightReceivedListTopic),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2)
+
+          val computationStatusMessagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedListComputationStatus](
+            topics = Set(appConfig.kafka.monitoring.flightReceivedList.topic),
+            number = 1,
+            timeout = ConsumerPollTimeout
+          )
+
+          (
+            messagesMap(appConfig.kafka.topology.flightReceivedListTopic).map(_._2),
+            computationStatusMessagesMap(appConfig.kafka.monitoring.flightReceivedList.topic).map(_._2)
+          )
         }
-        receivedRecords should have size 1
-        receivedRecords.head.elements should contain theSameElementsAs ExpectedFlightReceivedList
+
+        val (flightsReceived, computationStatus) = receivedRecords
+
+        flightsReceived should have size 1
+        flightsReceived.head.elements should contain theSameElementsAs flightMessages.map(_._2)
+
+        computationStatus should have size 1
+        val cs = computationStatus.head
+        cs.minUpdated shouldBe firstMessage._2.updated
+        cs.maxUpdated shouldBe thirdMessage._2.updated
     }
 
   }
