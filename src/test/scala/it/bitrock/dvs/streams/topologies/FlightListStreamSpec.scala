@@ -77,6 +77,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
         val cs = computationStatus.head
         cs.minUpdated shouldBe firstMessage._2.updated
         cs.maxUpdated shouldBe thirdMessage._2.updated
+        cs.windowElements shouldBe 3
     }
 
   }

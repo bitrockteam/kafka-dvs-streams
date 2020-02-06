@@ -54,7 +54,8 @@ object FlightListStream {
       Instant.ofEpochMilli(windowStart.toLong),
       Instant.now(),
       v.elements.minBy(_.updated).updated,
-      v.elements.maxBy(_.updated).updated
+      v.elements.maxBy(_.updated).updated,
+      v.elements.size
     )
 
 }
