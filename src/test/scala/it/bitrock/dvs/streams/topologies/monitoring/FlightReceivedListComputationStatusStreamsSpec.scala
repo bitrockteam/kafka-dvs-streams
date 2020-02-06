@@ -30,7 +30,7 @@ class FlightReceivedListComputationStatusStreamsSpec
         val now = Instant.now()
         val delayedWindowTime =
           now.minusMillis(appConfig.kafka.monitoring.flightReceivedList.allowedDelay.toMillis + 1000)
-        val delayedComputationStatus = FlightReceivedListComputationStatus(delayedWindowTime, now, now, now)
+        val delayedComputationStatus = FlightReceivedListComputationStatus(delayedWindowTime, now, now, now, 10)
 
         val topology = FlightReceivedListComputationStatusStreams.buildTopology(appConfig, kafkaStreamsOptions).map(_._1)
         val receivedRecords =
