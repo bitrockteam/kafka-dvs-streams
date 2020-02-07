@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 object FlightReceivedListComputationStatusStreams {
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val keySerde: Serde[String] = kafkaStreamsOptions.keySerde
+    implicit val keySerde: Serde[String] = kafkaStreamsOptions.stringKeySerde
     implicit val computationStatusSerde: Serde[FlightReceivedListComputationStatus] =
       kafkaStreamsOptions.flightReceivedListComputationStatusSerde
 

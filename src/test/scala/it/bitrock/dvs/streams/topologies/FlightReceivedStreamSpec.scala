@@ -18,25 +18,25 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
     "be joined successfully with consistent data" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(FlightReceivedTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
+          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
           publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
+            appConfig.kafka.topology.airportRawTopic.name,
             List(
               AirportEvent1.codeIataAirport -> AirportEvent1,
               AirportEvent2.codeIataAirport -> AirportEvent2
             )
           )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic, AirplaneEvent.numberRegistration, AirplaneEvent)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic.name, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic.name, AirplaneEvent.numberRegistration, AirplaneEvent)
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
-            topics = Set(appConfig.kafka.topology.flightReceivedTopic),
+            topics = Set(appConfig.kafka.topology.flightReceivedTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
+          messagesMap(appConfig.kafka.topology.flightReceivedTopic.name).head
         }
         receivedRecords shouldBe ((FlightReceivedEvent.icaoNumber, FlightReceivedEvent))
     }
@@ -44,24 +44,24 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
     "be joined successfully with default airplane info" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(FlightReceivedTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightRawTopic, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
+          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
           publishToKafka(
-            appConfig.kafka.topology.airportRawTopic,
+            appConfig.kafka.topology.airportRawTopic.name,
             List(
               AirportEvent1.codeIataAirport -> AirportEvent1,
               AirportEvent2.codeIataAirport -> AirportEvent2
             )
           )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic.name, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
-            topics = Set(appConfig.kafka.topology.flightReceivedTopic),
+            topics = Set(appConfig.kafka.topology.flightReceivedTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.flightReceivedTopic).head
+          messagesMap(appConfig.kafka.topology.flightReceivedTopic.name).head
         }
         receivedRecords shouldBe (
           (

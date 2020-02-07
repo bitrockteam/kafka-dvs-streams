@@ -45,6 +45,7 @@ object CommonSpecUtils {
 
       val kafkaStreamsOptions = KafkaStreamsOptions(
         Serdes.String,
+        Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
         specificAvroValueSerde[AirportRaw],
         specificAvroValueSerde[AirlineRaw],

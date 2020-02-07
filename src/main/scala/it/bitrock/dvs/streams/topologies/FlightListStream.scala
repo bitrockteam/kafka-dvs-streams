@@ -12,37 +12,37 @@ import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.TimeWindows
 import org.apache.kafka.streams.scala.ImplicitConversions._
-import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
+import org.apache.kafka.streams.scala.{Serdes, StreamsBuilder}
 
 object FlightListStream {
 
   final val AllRecordsKey: String = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                                 = kafkaStreamsOptions.keySerde
+    implicit val KeySerde: Serde[String]                                 = kafkaStreamsOptions.stringKeySerde
+    implicit val IntKeySerde: Serde[Int]                                 = Serdes.Integer
     implicit val flightReceivedEventSerde: Serde[FlightReceived]         = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
     implicit val computationStatusSerde: Serde[FlightReceivedListComputationStatus] =
       kafkaStreamsOptions.flightReceivedListComputationStatusSerde
 
-    def partitioner(key: String): String =
-      (key.hashCode % config.kafka.topology.flightListAggregatorMaxParallelism).toString
+    def partitioner(key: String): Int =
+      Math.abs(key.hashCode % config.kafka.topology.flightReceivedPartitionerTopic.partitions)
 
-    val fixedPartitioner = Produced.`with`[String, FlightReceived](
-      (_: String, key: String, _: FlightReceived, numPartitions: Int) =>
-        Some(Integer.valueOf(key.toInt)).filter(_ < numPartitions).orNull
+    val fixedPartitioner = Produced.`with`[Int, FlightReceived](
+      (_: String, key: Int, _: FlightReceived, numPartitions: Int) => Some(Integer.valueOf(key)).filter(_ < numPartitions).orNull
     )
 
     val streamsBuilder = new StreamsBuilder
     streamsBuilder
-      .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+      .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
       .selectKey((k, _) => partitioner(k))
-      .to(config.kafka.topology.flightReceivedPartitioner)(fixedPartitioner)
+      .to(config.kafka.topology.flightReceivedPartitionerTopic.name)(fixedPartitioner)
 
     streamsBuilder
-      .stream[String, FlightReceived](config.kafka.topology.flightReceivedPartitioner)
+      .stream[String, FlightReceived](config.kafka.topology.flightReceivedPartitionerTopic.name)
       .groupByKey
       .windowedBy(
         TimeWindows
@@ -53,10 +53,10 @@ object FlightListStream {
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream
       .map((k, v) => (k.window.start.toString, v))
-      .to(config.kafka.topology.flightReceivedPartialList)
+      .to(config.kafka.topology.flightReceivedPartialListTopic.name)
 
     streamsBuilder
-      .stream[String, FlightReceivedList](config.kafka.topology.flightReceivedPartialList)
+      .stream[String, FlightReceivedList](config.kafka.topology.flightReceivedPartialListTopic.name)
       .groupBy((_, _) => AllRecordsKey)
       .windowedBy(
         TimeWindows
@@ -67,11 +67,11 @@ object FlightListStream {
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream
       .map((k, v) => (k.window.start.toString, v))
-      .through(config.kafka.topology.flightReceivedListTopic)
+      .through(config.kafka.topology.flightReceivedListTopic.name)
       .map((k, v) => (UUID.randomUUID().toString, computationStatus(k, v)))
       .to(config.kafka.monitoring.flightReceivedList.topic)
 
-    val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedListTopic)
+    val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedListTopic.name)
     List((streamsBuilder.build(props), props))
 
   }

@@ -24,6 +24,7 @@ object Main extends App with LazyLogging {
 
   val kafkaStreamsOptions = KafkaStreamsOptions(
     Serdes.String,
+    Serdes.Integer,
     avroSerdes.serdeFrom[FlightRaw],
     avroSerdes.serdeFrom[AirportRaw],
     avroSerdes.serdeFrom[AirlineRaw],
