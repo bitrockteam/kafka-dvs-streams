@@ -87,13 +87,13 @@ object CommonSpecUtils {
       )
     }
 
-    def runAll[A](topologies: List[Topology])(body: List[KafkaStreams] => A): A = {
+    def runAll[A](topologies: List[Topology], topicsToCreate: List[String] = List.empty)(body: List[KafkaStreams] => A): A = {
       val TopologyTestExtraConf = Map(
         // The commit interval for flushing records to state stores and downstream must be lower than
         // test's timeout (5 secs) to ensure we observe the expected processing results.
         StreamsConfig.COMMIT_INTERVAL_MS_CONFIG -> 3.seconds.toMillis.toString
       )
-      runStreams(Nil, topologies.head, TopologyTestExtraConf) {
+      runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
         import scala.collection.JavaConverters._
         val streams = topologies.tail.map(topology => {
           val streamsConf = streamsConfig.config(UUIDs.newUuid().toString, TopologyTestExtraConf)

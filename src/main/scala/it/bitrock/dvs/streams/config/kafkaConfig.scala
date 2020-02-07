@@ -20,6 +20,8 @@ final case class TopologyConfig(
     cityRawTopic: String,
     airplaneRawTopic: String,
     flightReceivedTopic: String,
+    flightReceivedPartitioner: String,
+    flightReceivedPartialList: String,
     flightReceivedListTopic: String,
     topArrivalAirportTopic: String,
     topDepartureAirportTopic: String,
@@ -33,7 +35,8 @@ final case class TopologyConfig(
     commitInterval: FiniteDuration,
     cacheMaxSizeBytes: Long,
     maxRequestSize: Long,
-    threadsAmount: Int
+    threadsAmount: Int,
+    flightListAggregatorMaxParallelism: Int
 )
 
 final case class Monitoring(flightReceivedList: MonitoringConf)
