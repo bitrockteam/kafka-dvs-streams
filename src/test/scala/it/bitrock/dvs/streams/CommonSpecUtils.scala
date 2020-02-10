@@ -21,6 +21,7 @@ object CommonSpecUtils {
   final val FlightListTopology                  = 2
   final val TopsTopologies                      = 3
   final val TotalTopologies                     = 4
+  final val FlightListV2Topology                = 5
   final val ConsumerPollTimeout: FiniteDuration = 20.seconds
 
   final case class Resource(
@@ -45,6 +46,7 @@ object CommonSpecUtils {
 
       val kafkaStreamsOptions = KafkaStreamsOptions(
         Serdes.String,
+        Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
         specificAvroValueSerde[AirportRaw],
         specificAvroValueSerde[AirlineRaw],
@@ -74,7 +76,8 @@ object CommonSpecUtils {
         (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1))
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
+        (FlightListV2Topology, FlightListV2Stream.buildTopology(config, kafkaStreamsOptions).map(_._1))
       )
 
       body(
@@ -87,13 +90,13 @@ object CommonSpecUtils {
       )
     }
 
-    def runAll[A](topologies: List[Topology])(body: List[KafkaStreams] => A): A = {
+    def runAll[A](topologies: List[Topology], topicsToCreate: List[String] = List.empty)(body: List[KafkaStreams] => A): A = {
       val TopologyTestExtraConf = Map(
         // The commit interval for flushing records to state stores and downstream must be lower than
         // test's timeout (5 secs) to ensure we observe the expected processing results.
         StreamsConfig.COMMIT_INTERVAL_MS_CONFIG -> 3.seconds.toMillis.toString
       )
-      runStreams(Nil, topologies.head, TopologyTestExtraConf) {
+      runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
         import scala.collection.JavaConverters._
         val streams = topologies.tail.map(topology => {
           val streamsConf = streamsConfig.config(UUIDs.newUuid().toString, TopologyTestExtraConf)

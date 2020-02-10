@@ -23,7 +23,7 @@ class FlightReceivedListComputationStatusStreamsSpec
     "produce record in delay topic for too old records" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, _) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
         implicit val valueSerde: Serde[FlightReceivedListComputationStatus] =
           kafkaStreamsOptions.flightReceivedListComputationStatusSerde
 

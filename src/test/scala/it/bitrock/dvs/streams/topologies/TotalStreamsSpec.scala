@@ -18,7 +18,7 @@ class TotalStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStre
     "produce TotalFlight elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TotalTopologies)) { _ =>
           val flightMessages = 0 to 9 map { key =>
@@ -27,14 +27,14 @@ class TotalStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStre
               icaoNumber = key.toString
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
-          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountFlight](
-            topics = Set(appConfig.kafka.topology.totalFlightTopic),
+            topics = Set(appConfig.kafka.topology.totalFlightTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.totalFlightTopic).map(_._2).head
+          messagesMap(appConfig.kafka.topology.totalFlightTopic.name).map(_._2).head
         }
         receivedRecords.eventCount shouldBe ExpectedTotalFlightResult
     }
@@ -42,7 +42,7 @@ class TotalStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStre
     "produce TotalAirline elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TotalTopologies)) { _ =>
           val flightMessages = 0 to 9 map { key =>
@@ -52,14 +52,14 @@ class TotalStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStre
               airline = AirlineInfo(CodeAirlineArray(key), "", 0)
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
-          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, CountAirline](
-            topics = Set(appConfig.kafka.topology.totalAirlineTopic),
+            topics = Set(appConfig.kafka.topology.totalAirlineTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.totalAirlineTopic).map(_._2).head
+          messagesMap(appConfig.kafka.topology.totalAirlineTopic.name).map(_._2).head
         }
         receivedRecords.eventCount shouldBe ExpectedTotalAirlineResult
     }

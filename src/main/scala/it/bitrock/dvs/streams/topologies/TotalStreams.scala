@@ -19,7 +19,7 @@ object TotalStreams {
   final val AllRecordsKey: String = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.keySerde
+    implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived] = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val countFlightSerde: Serde[CountFlight]            = kafkaStreamsOptions.countFlightEventSerde
     implicit val countAirlineSerde: Serde[CountAirline]          = kafkaStreamsOptions.countAirlineEventSerde
@@ -29,7 +29,7 @@ object TotalStreams {
     def buildTotalFlightsStreamsBuilder: (StreamsBuilder, String) = {
       val streamsBuilder = new StreamsBuilder
       streamsBuilder
-        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
           TimeWindows
@@ -40,14 +40,14 @@ object TotalStreams {
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, CountFlight(k.window.start.toString, v.elements.distinct.size)))
-        .to(config.kafka.topology.totalFlightTopic)
-      (streamsBuilder, config.kafka.topology.totalFlightTopic)
+        .to(config.kafka.topology.totalFlightTopic.name)
+      (streamsBuilder, config.kafka.topology.totalFlightTopic.name)
     }
 
     def buildTotalAirlinesStreamsBuilder: (StreamsBuilder, String) = {
       val streamsBuilder = new StreamsBuilder
       streamsBuilder
-        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, _) => AllRecordsKey)
         .windowedBy(
           TimeWindows
@@ -58,8 +58,8 @@ object TotalStreams {
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v.elements.distinct.size)))
-        .to(config.kafka.topology.totalAirlineTopic)
-      (streamsBuilder, config.kafka.topology.totalAirlineTopic)
+        .to(config.kafka.topology.totalAirlineTopic.name)
+      (streamsBuilder, config.kafka.topology.totalAirlineTopic.name)
     }
 
     val builders = List(

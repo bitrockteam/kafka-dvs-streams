@@ -155,10 +155,10 @@ trait TestValues {
     )
 
   @SuppressWarnings(Array("DisableSyntax.null"))
-  def dummyFlightReceivedForcingSuppression(topic: String) = new ProducerRecord(
+  def dummyFlightReceivedForcingSuppression(topic: String, delay: FiniteDuration = 1.minute) = new ProducerRecord(
     topic,
     null,
-    java.lang.System.currentTimeMillis + 1.minute.toMillis,
+    java.lang.System.currentTimeMillis + delay.toMillis,
     "",
     FlightReceivedEvent
   )
