@@ -12,9 +12,9 @@ import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.TimeWindows
 import org.apache.kafka.streams.scala.ImplicitConversions._
+import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
-import org.apache.kafka.streams.scala.StreamsBuilder
 
 object FlightListV2Stream {
 
