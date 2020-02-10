@@ -23,14 +23,14 @@ class FlightReceivedListComputationStatusStreamsSpec
     "produce record in delay topic for too old records" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, _) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
         implicit val valueSerde: Serde[FlightReceivedListComputationStatus] =
           kafkaStreamsOptions.flightReceivedListComputationStatusSerde
 
         val now = Instant.now()
         val delayedWindowTime =
           now.minusMillis(appConfig.kafka.monitoring.flightReceivedList.allowedDelay.toMillis + 1000)
-        val delayedComputationStatus = FlightReceivedListComputationStatus(delayedWindowTime, now, now, now)
+        val delayedComputationStatus = FlightReceivedListComputationStatus(delayedWindowTime, now, now, now, 10)
 
         val topology = FlightReceivedListComputationStatusStreams.buildTopology(appConfig, kafkaStreamsOptions).map(_._1)
         val receivedRecords =

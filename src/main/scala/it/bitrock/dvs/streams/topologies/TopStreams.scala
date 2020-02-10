@@ -17,7 +17,7 @@ import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 object TopStreams {
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                                  = kafkaStreamsOptions.keySerde
+    implicit val KeySerde: Serde[String]                                  = kafkaStreamsOptions.stringKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived]          = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val topAggregationKeySerde: Serde[Long]                      = kafkaStreamsOptions.topAggregationKeySerde
     implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList] = kafkaStreamsOptions.topArrivalAirportListEventSerde
@@ -34,7 +34,7 @@ object TopStreams {
       val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
 
       streamsBuilder
-        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, v) => v.airportArrival.codeAirport)
         .windowedBy(
           TimeWindows
@@ -49,8 +49,8 @@ object TopStreams {
           topArrivalAirportAggregator.subtractor
         )
         .toStream
-        .to(config.kafka.topology.topArrivalAirportTopic)
-      (streamsBuilder, config.kafka.topology.topArrivalAirportTopic)
+        .to(config.kafka.topology.topArrivalAirportTopic.name)
+      (streamsBuilder, config.kafka.topology.topArrivalAirportTopic.name)
     }
 
     def buildTopDepartureStreamsBuilder: (StreamsBuilder, String) = {
@@ -58,7 +58,7 @@ object TopStreams {
       val topDepartureAirportAggregator = new TopDepartureAirportAggregator(config.topElementsAmount)
 
       streamsBuilder
-        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, v) => v.airportDeparture.codeAirport)
         .windowedBy(
           TimeWindows
@@ -73,8 +73,8 @@ object TopStreams {
           topDepartureAirportAggregator.subtractor
         )
         .toStream
-        .to(config.kafka.topology.topDepartureAirportTopic)
-      (streamsBuilder, config.kafka.topology.topDepartureAirportTopic)
+        .to(config.kafka.topology.topDepartureAirportTopic.name)
+      (streamsBuilder, config.kafka.topology.topDepartureAirportTopic.name)
     }
 
     def buildTopFlightSpeedStreamsBuilder: (StreamsBuilder, String) = {
@@ -82,7 +82,7 @@ object TopStreams {
       val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
 
       streamsBuilder
-        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupByKey
         .windowedBy(
           TimeWindows
@@ -94,8 +94,8 @@ object TopStreams {
         .groupBy((k, v) => (k.window.start.toString, TopSpeed(k.key, v.speed)))
         .aggregate(topSpeedFlightAggregator.initializer)(topSpeedFlightAggregator.adder, topSpeedFlightAggregator.subtractor)
         .toStream
-        .to(config.kafka.topology.topSpeedTopic)
-      (streamsBuilder, config.kafka.topology.topSpeedTopic)
+        .to(config.kafka.topology.topSpeedTopic.name)
+      (streamsBuilder, config.kafka.topology.topSpeedTopic.name)
     }
 
     def buildTopAirlineStreamsBuilder: (StreamsBuilder, String) = {
@@ -103,7 +103,7 @@ object TopStreams {
       val topAirlineAggregator = new TopAirlineAggregator(config.topElementsAmount)
 
       streamsBuilder
-        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic)
+        .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, v) => v.airline.nameAirline)
         .windowedBy(
           TimeWindows
@@ -115,8 +115,8 @@ object TopStreams {
         .groupBy((k, v) => (k.window.start.toString, TopAirline(k.key, v)))
         .aggregate(topAirlineAggregator.initializer)(topAirlineAggregator.adder, topAirlineAggregator.subtractor)
         .toStream
-        .to(config.kafka.topology.topAirlineTopic)
-      (streamsBuilder, config.kafka.topology.topAirlineTopic)
+        .to(config.kafka.topology.topAirlineTopic.name)
+      (streamsBuilder, config.kafka.topology.topAirlineTopic.name)
     }
 
     val builders = List(

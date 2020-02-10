@@ -14,19 +14,21 @@ final case class KafkaConfig(
 )
 
 final case class TopologyConfig(
-    flightRawTopic: String,
-    airportRawTopic: String,
-    airlineRawTopic: String,
-    cityRawTopic: String,
-    airplaneRawTopic: String,
-    flightReceivedTopic: String,
-    flightReceivedListTopic: String,
-    topArrivalAirportTopic: String,
-    topDepartureAirportTopic: String,
-    topSpeedTopic: String,
-    topAirlineTopic: String,
-    totalFlightTopic: String,
-    totalAirlineTopic: String,
+    flightRawTopic: TopicMetadata,
+    airportRawTopic: TopicMetadata,
+    airlineRawTopic: TopicMetadata,
+    cityRawTopic: TopicMetadata,
+    airplaneRawTopic: TopicMetadata,
+    flightReceivedTopic: TopicMetadata,
+    flightReceivedPartitionerTopic: TopicMetadata,
+    flightReceivedListTopic: TopicMetadata,
+    flightReceivedListV2Topic: TopicMetadata,
+    topArrivalAirportTopic: TopicMetadata,
+    topDepartureAirportTopic: TopicMetadata,
+    topSpeedTopic: TopicMetadata,
+    topAirlineTopic: TopicMetadata,
+    totalFlightTopic: TopicMetadata,
+    totalAirlineTopic: TopicMetadata,
     aggregationTimeWindowSize: FiniteDuration,
     aggregationTotalTimeWindowSize: FiniteDuration,
     aggregationTimeWindowGrace: FiniteDuration,
@@ -36,5 +38,7 @@ final case class TopologyConfig(
     threadsAmount: Int
 )
 
-final case class Monitoring(flightReceivedList: MonitoringConf)
+final case class TopicMetadata(name: String, partitions: Int)
+
+final case class Monitoring(flightReceivedList: MonitoringConf, flightReceivedListV2: String)
 final case class MonitoringConf(allowedDelay: FiniteDuration, topic: String, delayTopic: String)

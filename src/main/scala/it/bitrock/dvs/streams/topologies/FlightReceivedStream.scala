@@ -16,7 +16,7 @@ import org.apache.kafka.streams.scala.kstream.KStream
 object FlightReceivedStream {
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.keySerde
+    implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
     implicit val flightRawSerde: Serde[FlightRaw]                = kafkaStreamsOptions.flightRawSerde
     implicit val airportRawSerde: Serde[AirportRaw]              = kafkaStreamsOptions.airportRawSerde
     implicit val airlineRawSerde: Serde[AirlineRaw]              = kafkaStreamsOptions.airlineRawSerde
@@ -24,10 +24,10 @@ object FlightReceivedStream {
     implicit val flightReceivedEventSerde: Serde[FlightReceived] = kafkaStreamsOptions.flightReceivedEventSerde
 
     val streamsBuilder   = new StreamsBuilder
-    val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.flightRawTopic)
-    val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic)
-    val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic)
-    val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic)
+    val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.flightRawTopic.name)
+    val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic.name)
+    val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic.name)
+    val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic.name)
 
     val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] =
       flightRawToAirportEnrichment(flightRawStream, airportRawTable)
@@ -38,9 +38,9 @@ object FlightReceivedStream {
     val flightAirportAirlineAirplane: KStream[String, FlightReceived] =
       flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
 
-    flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic)
+    flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic.name)
 
-    val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedTopic)
+    val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedTopic.name)
     List((streamsBuilder.build(props), props))
 
   }

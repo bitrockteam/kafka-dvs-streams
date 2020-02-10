@@ -18,7 +18,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
@@ -37,14 +37,14 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
               airportArrival = AirportInfo(codeIataAirport, "", "", "", "", "")
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
-          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopArrivalAirportList](
-            topics = Set(appConfig.kafka.topology.topArrivalAirportTopic),
+            topics = Set(appConfig.kafka.topology.topArrivalAirportTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.topArrivalAirportTopic).head._2
+          messagesMap(appConfig.kafka.topology.topArrivalAirportTopic.name).head._2
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopArrivalResult.elements
@@ -53,7 +53,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
     "produce TopDepartureAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
@@ -72,14 +72,14 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
               airportDeparture = AirportInfo(codeIataAirport, "", "", "", "", "")
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
-          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopDepartureAirportList](
-            topics = Set(appConfig.kafka.topology.topDepartureAirportTopic),
+            topics = Set(appConfig.kafka.topology.topDepartureAirportTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.topDepartureAirportTopic).head._2
+          messagesMap(appConfig.kafka.topology.topDepartureAirportTopic.name).head._2
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopDepartureResult.elements
@@ -88,7 +88,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
     "produce TopSpeedList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 0 to 9 map { key =>
@@ -98,14 +98,14 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
               speed = SpeedArray(key)
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
-          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopSpeedList](
-            topics = Set(appConfig.kafka.topology.topSpeedTopic),
+            topics = Set(appConfig.kafka.topology.topSpeedTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.topSpeedTopic).head._2
+          messagesMap(appConfig.kafka.topology.topSpeedTopic.name).head._2
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopSpeedResult.elements
@@ -114,7 +114,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
     "produce TopAirlineList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.keySerde
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
@@ -133,14 +133,14 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
               airline = AirlineInfo(codeAirline, nameAirline, 0)
             )
           }
-          publishToKafka(appConfig.kafka.topology.flightReceivedTopic, flightMessages)
-          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic))
+          publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
+          publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, TopAirlineList](
-            topics = Set(appConfig.kafka.topology.topAirlineTopic),
+            topics = Set(appConfig.kafka.topology.topAirlineTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
-          messagesMap(appConfig.kafka.topology.topAirlineTopic).head._2
+          messagesMap(appConfig.kafka.topology.topAirlineTopic.name).head._2
         }
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopAirlineResult.elements

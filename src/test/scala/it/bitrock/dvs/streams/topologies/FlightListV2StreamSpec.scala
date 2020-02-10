@@ -15,9 +15,11 @@ import org.apache.kafka.common.serialization.Serde
 import org.scalatest.OptionValues
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+import scala.concurrent.duration._
 
-  "FlightListStream" should {
+class FlightListV2StreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+
+  "FlightListV2Stream" should {
 
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
@@ -34,7 +36,8 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
         val key2 = "b"
         val secondMessage = key2 -> FlightReceivedEvent.copy(
           iataNumber = key2,
-          icaoNumber = key2
+          icaoNumber = key2,
+          updated = Instant.now()
         )
 
         val key3 = "c"
@@ -46,25 +49,36 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
 
         val flightMessages = List(firstMessage, secondMessage, thirdMessage)
 
-        val receivedRecords = ResourceLoaner.runAll(topologies(FlightListTopology)) { _ =>
+        val topicsToCreate =
+          List(
+            appConfig.kafka.topology.flightReceivedTopic.name,
+            appConfig.kafka.topology.flightReceivedPartitionerTopic.name,
+            appConfig.kafka.topology.flightReceivedListV2Topic.name,
+            appConfig.kafka.monitoring.flightReceivedListV2
+          )
+
+        val receivedRecords = ResourceLoaner.runAll(topologies(FlightListV2Topology), topicsToCreate) { _ =>
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
           publishToKafka(dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name))
+          publishToKafka(
+            dummyFlightReceivedForcingSuppression(appConfig.kafka.topology.flightReceivedTopic.name, 2.minutes)
+          )
 
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
-            topics = Set(appConfig.kafka.topology.flightReceivedListTopic.name),
+            topics = Set(appConfig.kafka.topology.flightReceivedListV2Topic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
 
           val computationStatusMessagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedListComputationStatus](
-            topics = Set(appConfig.kafka.monitoring.flightReceivedList.topic),
+            topics = Set(appConfig.kafka.monitoring.flightReceivedListV2),
             number = 1,
             timeout = ConsumerPollTimeout
           )
 
           (
-            messagesMap(appConfig.kafka.topology.flightReceivedListTopic.name).map(_._2),
-            computationStatusMessagesMap(appConfig.kafka.monitoring.flightReceivedList.topic).map(_._2)
+            messagesMap(appConfig.kafka.topology.flightReceivedListV2Topic.name).map(_._2),
+            computationStatusMessagesMap(appConfig.kafka.monitoring.flightReceivedListV2).map(_._2)
           )
         }
 
