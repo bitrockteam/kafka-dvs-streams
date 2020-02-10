@@ -21,8 +21,8 @@ final case class TopologyConfig(
     airplaneRawTopic: TopicMetadata,
     flightReceivedTopic: TopicMetadata,
     flightReceivedPartitionerTopic: TopicMetadata,
-    flightReceivedPartialListTopic: TopicMetadata,
     flightReceivedListTopic: TopicMetadata,
+    flightReceivedListV2Topic: TopicMetadata,
     topArrivalAirportTopic: TopicMetadata,
     topDepartureAirportTopic: TopicMetadata,
     topSpeedTopic: TopicMetadata,
@@ -40,5 +40,5 @@ final case class TopologyConfig(
 
 final case class TopicMetadata(name: String, partitions: Int)
 
-final case class Monitoring(flightReceivedList: MonitoringConf)
+final case class Monitoring(flightReceivedList: MonitoringConf, flightReceivedListV2: String)
 final case class MonitoringConf(allowedDelay: FiniteDuration, topic: String, delayTopic: String)

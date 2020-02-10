@@ -14,7 +14,7 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <root level="OFF">
+    <root level="ERROR">
         <appender-ref ref="ASYNCSTDOUT"/>
     </root>
 </configuration>
