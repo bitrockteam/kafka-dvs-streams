@@ -13,30 +13,49 @@ import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.TimeWindows
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.StreamsBuilder
-import org.apache.kafka.streams.scala.kstream.Suppressed
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
+import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
 
 object FlightListStream {
 
   final val AllRecordsKey: String = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                                 = kafkaStreamsOptions.stringKeySerde
+    implicit val StringKeySerde: Serde[String]                           = kafkaStreamsOptions.stringKeySerde
+    implicit val IntKeySerde: Serde[Int]                                 = kafkaStreamsOptions.intKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived]         = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
     implicit val computationStatusSerde: Serde[FlightReceivedListComputationStatus] =
       kafkaStreamsOptions.flightReceivedListComputationStatusSerde
 
+    def partitioner(key: String): Int =
+      Math.abs(key.hashCode % config.kafka.topology.flightReceivedPartitionerTopic.partitions)
+
+    val fixedPartitioner: Produced[Int, FlightReceived] = Produced.`with`[Int, FlightReceived](
+      (_: String, key: Int, _: FlightReceived, numPartitions: Int) => Some(Integer.valueOf(key)).filter(_ < numPartitions).orNull
+    )
+
     val streamsBuilder = new StreamsBuilder
     streamsBuilder
       .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
-      .groupBy((_, _) => AllRecordsKey)
+      .selectKey((k, _) => partitioner(k))
+      .through(config.kafka.topology.flightReceivedPartitionerTopic.name)(fixedPartitioner)
+      .groupByKey
       .windowedBy(
         TimeWindows
           .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
           .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
       )
       .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(v +: agg.elements))
+      .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
+      .toStream
+      .groupBy((_, _) => AllRecordsKey)
+      .windowedBy(
+        TimeWindows
+          .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
+          .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
+      )
+      .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(v.elements ++ agg.elements))
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream
       .map((k, v) => (k.window.start.toString, v))
