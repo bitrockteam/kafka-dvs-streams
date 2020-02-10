@@ -70,11 +70,11 @@ object FlightListV2Stream {
 
   private def computationStatus(windowStart: String, v: FlightReceivedList): FlightReceivedListComputationStatus =
     FlightReceivedListComputationStatus(
-      Instant.ofEpochMilli(windowStart.toLong),
-      Instant.now(),
-      v.elements.minBy(_.updated).updated,
-      v.elements.maxBy(_.updated).updated,
-      v.elements.size
+      windowTime = Instant.ofEpochMilli(windowStart.toLong),
+      emissionTime = Instant.now(),
+      minUpdated = v.elements.minBy(_.updated).updated,
+      maxUpdated = v.elements.maxBy(_.updated).updated,
+      windowElements = v.elements.size
     )
 
 }
