@@ -26,25 +26,27 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
+        val now = Instant.now()
+
         val key1 = "a"
         val firstMessage = key1 -> FlightReceivedEvent.copy(
           iataNumber = key1,
           icaoNumber = key1,
-          updated = Instant.now().minus(1, ChronoUnit.SECONDS)
+          updated = now.minus(1, ChronoUnit.SECONDS)
         )
 
         val key2 = "b"
         val secondMessage = key2 -> FlightReceivedEvent.copy(
           iataNumber = key2,
           icaoNumber = key2,
-          updated = Instant.now()
+          updated = now
         )
 
         val key3 = "c"
         val thirdMessage = key3 -> FlightReceivedEvent.copy(
           iataNumber = key3,
           icaoNumber = key3,
-          updated = Instant.now().plus(1, ChronoUnit.SECONDS)
+          updated = now.plus(1, ChronoUnit.SECONDS)
         )
 
         val flightMessages = List(firstMessage, secondMessage, thirdMessage)
@@ -91,6 +93,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
         val cs = computationStatus.head
         cs.minUpdated shouldBe firstMessage._2.updated
         cs.maxUpdated shouldBe thirdMessage._2.updated
+        cs.averageUpdated shouldBe now
         cs.windowElements shouldBe 3
     }
 
