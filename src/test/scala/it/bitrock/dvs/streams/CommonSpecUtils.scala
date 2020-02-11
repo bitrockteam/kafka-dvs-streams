@@ -21,7 +21,6 @@ object CommonSpecUtils {
   final val FlightListTopology                  = 2
   final val TopsTopologies                      = 3
   final val TotalTopologies                     = 4
-  final val FlightListV2Topology                = 5
   final val ConsumerPollTimeout: FiniteDuration = 20.seconds
 
   final case class Resource(
@@ -77,7 +76,6 @@ object CommonSpecUtils {
         (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (FlightListV2Topology, FlightListV2Stream.buildTopology(config, kafkaStreamsOptions).map(_._1))
       )
 
       body(

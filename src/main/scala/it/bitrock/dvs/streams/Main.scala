@@ -52,7 +52,6 @@ object Main extends App with LazyLogging {
 
   val flightReceivedTopology = FlightReceivedStream.buildTopology(config, kafkaStreamsOptions)
   val flightListTopology     = FlightListStream.buildTopology(config, kafkaStreamsOptions)
-  val flightListV2Topology   = FlightListV2Stream.buildTopology(config, kafkaStreamsOptions)
   val topsTopology           = TopStreams.buildTopology(config, kafkaStreamsOptions)
   val totalsTopology         = TotalStreams.buildTopology(config, kafkaStreamsOptions)
   val flightReceivedListComputationStatusStreamsTopology =
@@ -62,8 +61,7 @@ object Main extends App with LazyLogging {
     flightListTopology ++
     topsTopology ++
     totalsTopology ++
-    flightReceivedListComputationStatusStreamsTopology ++
-    flightListV2Topology
+    flightReceivedListComputationStatusStreamsTopology
 
   val streams = topologies.map {
     case (topology, props) =>
