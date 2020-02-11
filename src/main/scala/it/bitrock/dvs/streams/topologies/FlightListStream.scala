@@ -70,7 +70,7 @@ object FlightListStream {
 
   private def computationStatus(windowStart: String, v: FlightReceivedList): FlightReceivedListComputationStatus = {
     val elements = v.elements.size
-    val average  = v.elements.foldLeft(0L)((tot, fr) => tot + fr.updated.toEpochMilli) / elements
+    val average  = v.elements.map(_.updated.toEpochMilli).sum / elements
     FlightReceivedListComputationStatus(
       windowTime = Instant.ofEpochMilli(windowStart.toLong),
       emissionTime = Instant.now(),
