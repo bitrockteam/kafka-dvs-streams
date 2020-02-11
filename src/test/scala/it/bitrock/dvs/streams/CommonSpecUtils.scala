@@ -75,7 +75,7 @@ object CommonSpecUtils {
         (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1))
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
       )
 
       body(
