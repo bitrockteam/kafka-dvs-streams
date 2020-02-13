@@ -52,11 +52,11 @@ object FlightReceivedStream {
     flightRawStream
       .join(airportRawTable)(
         (_, v) => v.departure.iataCode,
-        flightRawToFlightWithDepartureAirportInfo
+        flightRaw2FlightWithDepartureAirportInfo
       )
       .join(airportRawTable)(
         (_, v) => v.codeAirportArrival,
-        flightWithDepartureAirportInfoToFlightWithAllAirportInfo
+        flightWithDepartureAirportInfo2FlightWithAllAirportInfo
       )
 
   private def flightWithAirportToAirlineEnrichment(
@@ -66,7 +66,7 @@ object FlightReceivedStream {
     flightWithAllAirportStream
       .join(airlineRawTable)(
         (_, v) => v.airlineCode,
-        flightWithAllAirportInfoToFlightWithAirline
+        flightWithAllAirportInfo2FlightWithAirline
       )
 
   private def flightWithAirportAndAirlineToAirplaneEnrichment(
@@ -76,10 +76,13 @@ object FlightReceivedStream {
     flightWithAirline
       .leftJoin(airplaneRawTable)(
         (_, v) => v.airplaneRegNumber,
-        flightWithAirlineToFlightReceived
+        flightWithAirline2FlightReceived
       )
 
-  private def flightRawToFlightWithDepartureAirportInfo(flightRaw: FlightRaw, airportRaw: AirportRaw): FlightWithDepartureAirportInfo =
+  private def flightRaw2FlightWithDepartureAirportInfo(
+      flightRaw: FlightRaw,
+      airportRaw: AirportRaw
+  ): FlightWithDepartureAirportInfo =
     FlightWithDepartureAirportInfo(
       flightRaw.flight.iataNumber,
       flightRaw.flight.icaoNumber,
@@ -105,7 +108,7 @@ object FlightReceivedStream {
       flightRaw.system.updated
     )
 
-  private def flightWithDepartureAirportInfoToFlightWithAllAirportInfo(
+  private def flightWithDepartureAirportInfo2FlightWithAllAirportInfo(
       flightWithDepartureAirportInfo: FlightWithDepartureAirportInfo,
       airportRaw: AirportRaw
   ): FlightWithAllAirportInfo =
@@ -129,7 +132,7 @@ object FlightReceivedStream {
       flightWithDepartureAirportInfo.updated
     )
 
-  private def flightWithAllAirportInfoToFlightWithAirline(
+  private def flightWithAllAirportInfo2FlightWithAirline(
       flightWithAllAirportInfo: FlightWithAllAirportInfo,
       airlineRaw: AirlineRaw
   ): FlightWithAirline =
@@ -146,7 +149,7 @@ object FlightReceivedStream {
       flightWithAllAirportInfo.updated
     )
 
-  private def flightWithAirlineToFlightReceived(flightWithAirline: FlightWithAirline, airplaneRaw: AirplaneRaw): FlightReceived =
+  private def flightWithAirline2FlightReceived(flightWithAirline: FlightWithAirline, airplaneRaw: AirplaneRaw): FlightReceived =
     FlightReceived(
       flightWithAirline.iataNumber,
       flightWithAirline.icaoNumber,
