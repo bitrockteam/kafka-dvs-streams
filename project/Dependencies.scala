@@ -1,24 +1,21 @@
 import sbt._
 
 object Dependencies {
-
   object CustomResolvers {
-
     lazy val BitrockNexus = "Bitrock Nexus" at "https://nexus.reactive-labs.io/repository/maven-bitrock-public/"
     lazy val Confluent    = "confluent" at "https://packages.confluent.io/maven/"
 
     lazy val resolvers: Seq[Resolver] = Seq(BitrockNexus, Confluent)
-
   }
 
   object Versions {
-
     lazy val Scala               = "2.12.10"
     lazy val ConfluentPlatform   = "5.4.0"
+    lazy val Diffx               = "0.3.17"
     lazy val JakartaWsRs         = "2.1.6"
     lazy val Kafka               = "2.4.0"
     lazy val KafkaCommons        = "0.0.8"
-    lazy val KafkaDVS            = "1.0.6"
+    lazy val KafkaDVS            = "1.0.13"
     lazy val LogbackClassic      = "1.2.3"
     lazy val PureConfig          = "0.12.2"
     lazy val ScalafixSortImports = "0.3.2"
@@ -26,11 +23,9 @@ object Dependencies {
     lazy val ScalaTestAutofix    = "3.1.0.0"
     lazy val Slf4j               = "1.7.30"
     lazy val TestCommons         = "0.0.8"
-
   }
 
   object Logging {
-
     lazy val prodDeps: Seq[ModuleID] = Seq(
       "ch.qos.logback"             % "logback-classic"  % Versions.LogbackClassic, // required by scala-logging
       "com.typesafe.scala-logging" %% "scala-logging"   % Versions.ScalaLogging,
@@ -41,7 +36,6 @@ object Dependencies {
       ExclusionRule("org.slf4j", "slf4j-log4j12"),
       ExclusionRule("log4j", "log4j")
     )
-
   }
 
   lazy val prodDeps: Seq[ModuleID] = Seq(
@@ -55,6 +49,7 @@ object Dependencies {
   ) ++ Logging.prodDeps
 
   lazy val testDeps: Seq[ModuleID] = Seq(
+    "com.softwaremill.diffx"  %% "diffx-scalatest"                % Versions.Diffx,
     "io.github.embeddedkafka" %% "embedded-kafka-schema-registry" % Versions.ConfluentPlatform,
     "it.bitrock"              %% "test-commons"                   % Versions.TestCommons
   ).map(_ % Test)
@@ -62,5 +57,4 @@ object Dependencies {
   lazy val excludeDeps: Seq[ExclusionRule] = Seq(
     ExclusionRule("javax.ws.rs", "javax.ws.rs-api")
   ) ++ Logging.excludeDeps
-
 }

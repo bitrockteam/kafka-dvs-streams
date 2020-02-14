@@ -18,9 +18,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import scala.concurrent.duration._
 
 class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
-
   "FlightListStream" should {
-
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -96,7 +94,5 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
         cs.averageUpdated shouldBe now
         cs.windowElements shouldBe 3
     }
-
   }
-
 }

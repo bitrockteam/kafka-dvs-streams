@@ -14,7 +14,6 @@ import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.KStream
 
 object FlightReceivedStream {
-
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
     implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
     implicit val flightRawSerde: Serde[FlightRaw]                = kafkaStreamsOptions.flightRawSerde
@@ -42,7 +41,6 @@ object FlightReceivedStream {
 
     val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedTopic.name)
     List((streamsBuilder.build(props), props))
-
   }
 
   private def flightRawToAirportEnrichment(
@@ -55,7 +53,7 @@ object FlightReceivedStream {
         flightRaw2FlightWithDepartureAirportInfo
       )
       .join(airportRawTable)(
-        (_, v) => v.codeAirportArrival,
+        (_, v) => v.arrivalAirportCode,
         flightWithDepartureAirportInfo2FlightWithAllAirportInfo
       )
 
@@ -94,10 +92,12 @@ object FlightReceivedStream {
       ),
       flightRaw.speed.horizontal,
       AirportInfo(
-        airportRaw.codeIataAirport,
-        airportRaw.nameAirport,
-        airportRaw.nameCountry,
-        airportRaw.codeIso2Country,
+        airportRaw.iataCode,
+        airportRaw.name,
+        airportRaw.latitude,
+        airportRaw.longitude,
+        airportRaw.countryName,
+        airportRaw.countryIsoCode2,
         airportRaw.timezone,
         airportRaw.gmt
       ),
@@ -117,12 +117,14 @@ object FlightReceivedStream {
       flightWithDepartureAirportInfo.icaoNumber,
       flightWithDepartureAirportInfo.geography,
       flightWithDepartureAirportInfo.speed,
-      flightWithDepartureAirportInfo.airportDeparture,
+      flightWithDepartureAirportInfo.departureAirport,
       AirportInfo(
-        airportRaw.codeIataAirport,
-        airportRaw.nameAirport,
-        airportRaw.nameCountry,
-        airportRaw.codeIso2Country,
+        airportRaw.iataCode,
+        airportRaw.name,
+        airportRaw.latitude,
+        airportRaw.longitude,
+        airportRaw.countryName,
+        airportRaw.countryIsoCode2,
         airportRaw.timezone,
         airportRaw.gmt
       ),
@@ -141,9 +143,9 @@ object FlightReceivedStream {
       flightWithAllAirportInfo.icaoNumber,
       flightWithAllAirportInfo.geography,
       flightWithAllAirportInfo.speed,
-      flightWithAllAirportInfo.airportDeparture,
-      flightWithAllAirportInfo.airportArrival,
-      AirlineInfo(airlineRaw.codeIcaoAirline, airlineRaw.nameAirline, airlineRaw.sizeAirline),
+      flightWithAllAirportInfo.departureAirport,
+      flightWithAllAirportInfo.arrivalAirport,
+      AirlineInfo(airlineRaw.icaoCode, airlineRaw.name, airlineRaw.size),
       flightWithAllAirportInfo.airplaneRegNumber,
       flightWithAllAirportInfo.status,
       flightWithAllAirportInfo.updated
@@ -155,8 +157,8 @@ object FlightReceivedStream {
       flightWithAirline.icaoNumber,
       flightWithAirline.geography,
       flightWithAirline.speed,
-      flightWithAirline.airportDeparture,
-      flightWithAirline.airportArrival,
+      flightWithAirline.departureAirport,
+      flightWithAirline.arrivalAirport,
       flightWithAirline.airline,
       airplaneInfoOrDefault(airplaneRaw),
       flightWithAirline.status,
@@ -165,6 +167,6 @@ object FlightReceivedStream {
 
   private def airplaneInfoOrDefault(airplaneRaw: AirplaneRaw): AirplaneInfo =
     Option(airplaneRaw)
-      .map(airplane => AirplaneInfo(airplane.numberRegistration, airplane.productionLine, airplane.modelCode))
+      .map(airplane => AirplaneInfo(airplane.registrationNumber, airplane.productionLine, airplane.modelCode))
       .getOrElse(AirplaneInfo("N/A", "N/A", "N/A"))
 }

@@ -8,11 +8,13 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import scala.concurrent.duration._
 
 trait TestValues {
-
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
   final val Updated        = Instant.now
   final val StatusEnRoute  = "en-route"
+
+  final val Latitude  = 45.0
+  final val Longitude = 9.0
 
   final val ParamsAirport1 = AirportParams("ZRH", "CH")
   final val ParamsAirport2 = AirportParams("MXP", "IT")
@@ -84,8 +86,8 @@ trait TestValues {
     FlightIcaoCode,
     GeographyInfo(0, 0, 0, 0),
     0,
-    AirportInfo(ParamsAirport1.iataCode, "", "", ParamsAirport1.codeCountry, "", ""),
-    AirportInfo(ParamsAirport2.iataCode, "", "", ParamsAirport2.codeCountry, "", ""),
+    AirportInfo(ParamsAirport1.iataCode, "", Latitude, Longitude, "", ParamsAirport1.codeCountry, "", ""),
+    AirportInfo(ParamsAirport2.iataCode, "", Latitude, Longitude, "", ParamsAirport2.codeCountry, "", ""),
     AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, 0),
     AirplaneInfo(ParamsAirplane.numberRegistration, "", ""),
     StatusEnRoute,
@@ -137,7 +139,7 @@ trait TestValues {
   case class FlightParams(departureAirportCode: String, arrivalAirportCode: String, airlineCode: String, airplaneCode: String)
 
   private def buildAirportRaw(params: AirportParams) =
-    AirportRaw(0, "", params.iataCode, 0, 0, "", params.codeCountry, "", "", "")
+    AirportRaw(0, "", params.iataCode, Latitude, Longitude, "", params.codeCountry, "", "", "")
   private def buildAirlineRaw(params: AirlineParams) = AirlineRaw(0, params.nameAirline, "", params.icaoCode, "", "", 0, "", "")
   private def buildAirplaneRaw(params: AirplaneParams) =
     AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
@@ -145,10 +147,10 @@ trait TestValues {
     FlightRaw(
       Geography(0, 0, 0, 0),
       Speed(0, 0),
-      Departure(params.departureAirportCode, ""),
-      Arrival(params.arrivalAirportCode, ""),
+      Departure(params.departureAirportCode, None),
+      Arrival(params.arrivalAirportCode, None),
       Aircraft(params.airplaneCode, "", "", ""),
-      Airline("", params.airlineCode),
+      Airline(None, params.airlineCode),
       Flight(FlightIataCode, FlightIcaoCode, ""),
       System(Updated),
       StatusEnRoute
@@ -162,5 +164,4 @@ trait TestValues {
     "",
     FlightReceivedEvent
   )
-
 }

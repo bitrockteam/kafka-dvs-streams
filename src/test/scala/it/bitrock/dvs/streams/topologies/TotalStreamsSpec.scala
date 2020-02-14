@@ -12,9 +12,7 @@ import org.scalatest.OptionValues
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class TotalStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
-
   "TotalStreams" should {
-
     "produce TotalFlight elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -63,7 +61,5 @@ class TotalStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStre
         }
         receivedRecords.eventCount shouldBe ExpectedTotalAirlineResult
     }
-
   }
-
 }

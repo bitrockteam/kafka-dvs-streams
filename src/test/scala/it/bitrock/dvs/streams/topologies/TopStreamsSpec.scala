@@ -12,9 +12,7 @@ import org.scalatest.OptionValues
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
-
   "TopStreams" should {
-
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -23,18 +21,18 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => AirportEvent1.codeIataAirport
-              case x if x >= 4 && x <= 9   => AirportEvent2.codeIataAirport
-              case x if x >= 10 && x <= 18 => AirportEvent3.codeIataAirport
-              case x if x >= 19 && x <= 20 => AirportEvent4.codeIataAirport
-              case x if x >= 21 && x <= 24 => AirportEvent5.codeIataAirport
-              case x if x >= 25 && x <= 29 => AirportEvent6.codeIataAirport
-              case x if x >= 30 && x <= 40 => AirportEvent7.codeIataAirport
+              case x if x >= 1 && x <= 3   => AirportEvent1.iataCode
+              case x if x >= 4 && x <= 9   => AirportEvent2.iataCode
+              case x if x >= 10 && x <= 18 => AirportEvent3.iataCode
+              case x if x >= 19 && x <= 20 => AirportEvent4.iataCode
+              case x if x >= 21 && x <= 24 => AirportEvent5.iataCode
+              case x if x >= 25 && x <= 29 => AirportEvent6.iataCode
+              case x if x >= 30 && x <= 40 => AirportEvent7.iataCode
             }
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              airportArrival = AirportInfo(codeIataAirport, "", "", "", "", "")
+              arrivalAirport = AirportInfo(codeIataAirport, "", Latitude, Longitude, "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
@@ -58,18 +56,18 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => AirportEvent1.codeIataAirport
-              case x if x >= 4 && x <= 9   => AirportEvent2.codeIataAirport
-              case x if x >= 10 && x <= 18 => AirportEvent3.codeIataAirport
-              case x if x >= 19 && x <= 20 => AirportEvent4.codeIataAirport
-              case x if x >= 21 && x <= 24 => AirportEvent5.codeIataAirport
-              case x if x >= 25 && x <= 29 => AirportEvent6.codeIataAirport
-              case x if x >= 30 && x <= 40 => AirportEvent7.codeIataAirport
+              case x if x >= 1 && x <= 3   => AirportEvent1.iataCode
+              case x if x >= 4 && x <= 9   => AirportEvent2.iataCode
+              case x if x >= 10 && x <= 18 => AirportEvent3.iataCode
+              case x if x >= 19 && x <= 20 => AirportEvent4.iataCode
+              case x if x >= 21 && x <= 24 => AirportEvent5.iataCode
+              case x if x >= 25 && x <= 29 => AirportEvent6.iataCode
+              case x if x >= 30 && x <= 40 => AirportEvent7.iataCode
             }
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              airportDeparture = AirportInfo(codeIataAirport, "", "", "", "", "")
+              departureAirport = AirportInfo(codeIataAirport, "", Latitude, Longitude, "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
@@ -119,13 +117,13 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
             val (codeAirline, nameAirline) = key match {
-              case x if x >= 1 && x <= 3   => (AirlineEvent1.codeIcaoAirline, AirlineEvent1.nameAirline)
-              case x if x >= 4 && x <= 9   => (AirlineEvent2.codeIcaoAirline, AirlineEvent2.nameAirline)
-              case x if x >= 10 && x <= 18 => (AirlineEvent3.codeIcaoAirline, AirlineEvent3.nameAirline)
-              case x if x >= 19 && x <= 20 => (AirlineEvent4.codeIcaoAirline, AirlineEvent4.nameAirline)
-              case x if x >= 21 && x <= 24 => (AirlineEvent5.codeIcaoAirline, AirlineEvent5.nameAirline)
-              case x if x >= 25 && x <= 29 => (AirlineEvent6.codeIcaoAirline, AirlineEvent6.nameAirline)
-              case x if x >= 30 && x <= 40 => (AirlineEvent7.codeIcaoAirline, AirlineEvent7.nameAirline)
+              case x if x >= 1 && x <= 3   => (AirlineEvent1.icaoCode, AirlineEvent1.name)
+              case x if x >= 4 && x <= 9   => (AirlineEvent2.icaoCode, AirlineEvent2.name)
+              case x if x >= 10 && x <= 18 => (AirlineEvent3.icaoCode, AirlineEvent3.name)
+              case x if x >= 19 && x <= 20 => (AirlineEvent4.icaoCode, AirlineEvent4.name)
+              case x if x >= 21 && x <= 24 => (AirlineEvent5.icaoCode, AirlineEvent5.name)
+              case x if x >= 25 && x <= 29 => (AirlineEvent6.icaoCode, AirlineEvent6.name)
+              case x if x >= 30 && x <= 40 => (AirlineEvent7.icaoCode, AirlineEvent7.name)
             }
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
@@ -145,7 +143,5 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
         receivedRecords.elements.size shouldBe 5
         receivedRecords.elements should contain theSameElementsInOrderAs ExpectedTopAirlineResult.elements
     }
-
   }
-
 }

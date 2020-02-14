@@ -71,7 +71,7 @@ object Main extends App with LazyLogging {
   }
   val latch = new CountDownLatch(streams.size)
 
-  streams.foreach(stream => {
+  streams.foreach { stream =>
     sys.addShutdownHook {
       logger.info("Shutting down")
       if (stream.state.isRunning) {
@@ -80,11 +80,11 @@ object Main extends App with LazyLogging {
       }
       latch.countDown()
     }
-    stream.setUncaughtExceptionHandler((_: Thread, e: Throwable) => {
+    stream.setUncaughtExceptionHandler { (_: Thread, e: Throwable) =>
       logger.error("Uncaught exception while running streams", e)
       System.exit(0)
-    })
-  })
+    }
+  }
 
   try {
     logger.info("Starting streams")

@@ -9,7 +9,6 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.streams.StreamsConfig
 
 object StreamProps {
-
   final private val UseSpecificAvroReader   = true
   final private val AutoOffsetResetStrategy = OffsetResetStrategy.EARLIEST
 
@@ -37,5 +36,4 @@ object StreamProps {
     }
     props
   }
-
 }
