@@ -20,19 +20,19 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
-            val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => AirportEvent1.iataCode
-              case x if x >= 4 && x <= 9   => AirportEvent2.iataCode
-              case x if x >= 10 && x <= 18 => AirportEvent3.iataCode
-              case x if x >= 19 && x <= 20 => AirportEvent4.iataCode
-              case x if x >= 21 && x <= 24 => AirportEvent5.iataCode
-              case x if x >= 25 && x <= 29 => AirportEvent6.iataCode
-              case x if x >= 30 && x <= 40 => AirportEvent7.iataCode
+            val airportName = key match {
+              case x if x >= 1 && x <= 3   => AirportEvent1.name
+              case x if x >= 4 && x <= 9   => AirportEvent2.name
+              case x if x >= 10 && x <= 18 => AirportEvent3.name
+              case x if x >= 19 && x <= 20 => AirportEvent4.name
+              case x if x >= 21 && x <= 24 => AirportEvent5.name
+              case x if x >= 25 && x <= 29 => AirportEvent6.name
+              case x if x >= 30 && x <= 40 => AirportEvent7.name
             }
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              arrivalAirport = AirportInfo(codeIataAirport, "", Latitude, Longitude, "", "", "", "")
+              arrivalAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
@@ -55,19 +55,19 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
 
         val receivedRecords = ResourceLoaner.runAll(topologies(TopsTopologies)) { _ =>
           val flightMessages = 1 to 40 map { key =>
-            val codeIataAirport = key match {
-              case x if x >= 1 && x <= 3   => AirportEvent1.iataCode
-              case x if x >= 4 && x <= 9   => AirportEvent2.iataCode
-              case x if x >= 10 && x <= 18 => AirportEvent3.iataCode
-              case x if x >= 19 && x <= 20 => AirportEvent4.iataCode
-              case x if x >= 21 && x <= 24 => AirportEvent5.iataCode
-              case x if x >= 25 && x <= 29 => AirportEvent6.iataCode
-              case x if x >= 30 && x <= 40 => AirportEvent7.iataCode
+            val airportName = key match {
+              case x if x >= 1 && x <= 3   => AirportEvent1.name
+              case x if x >= 4 && x <= 9   => AirportEvent2.name
+              case x if x >= 10 && x <= 18 => AirportEvent3.name
+              case x if x >= 19 && x <= 20 => AirportEvent4.name
+              case x if x >= 21 && x <= 24 => AirportEvent5.name
+              case x if x >= 25 && x <= 29 => AirportEvent6.name
+              case x if x >= 30 && x <= 40 => AirportEvent7.name
             }
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              departureAirport = AirportInfo(codeIataAirport, "", Latitude, Longitude, "", "", "", "")
+              departureAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)

@@ -34,7 +34,7 @@ object TopStreams {
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
-        .groupBy((_, v) => v.arrivalAirport.code)
+        .groupBy((_, v) => v.arrivalAirport.name)
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
@@ -58,7 +58,7 @@ object TopStreams {
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
-        .groupBy((_, v) => v.departureAirport.code)
+        .groupBy((_, v) => v.departureAirport.name)
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
