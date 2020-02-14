@@ -12,9 +12,7 @@ import org.scalatest.OptionValues
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
-
   "FlightReceivedStream" should {
-
     "be joined successfully with consistent data" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -25,12 +23,12 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic.name,
             List(
-              AirportEvent1.codeIataAirport -> AirportEvent1,
-              AirportEvent2.codeIataAirport -> AirportEvent2
+              AirportEvent1.iataCode -> AirportEvent1,
+              AirportEvent2.iataCode -> AirportEvent2
             )
           )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic.name, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
-          publishToKafka(appConfig.kafka.topology.airplaneRawTopic.name, AirplaneEvent.numberRegistration, AirplaneEvent)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic.name, AirlineEvent1.icaoCode, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airplaneRawTopic.name, AirplaneEvent.registrationNumber, AirplaneEvent)
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
             topics = Set(appConfig.kafka.topology.flightReceivedTopic.name),
             number = 1,
@@ -51,11 +49,11 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic.name,
             List(
-              AirportEvent1.codeIataAirport -> AirportEvent1,
-              AirportEvent2.codeIataAirport -> AirportEvent2
+              AirportEvent1.iataCode -> AirportEvent1,
+              AirportEvent2.iataCode -> AirportEvent2
             )
           )
-          publishToKafka(appConfig.kafka.topology.airlineRawTopic.name, AirlineEvent1.codeIcaoAirline, AirlineEvent1)
+          publishToKafka(appConfig.kafka.topology.airlineRawTopic.name, AirlineEvent1.icaoCode, AirlineEvent1)
           val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceived](
             topics = Set(appConfig.kafka.topology.flightReceivedTopic.name),
             number = 1,
@@ -70,7 +68,5 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
           )
         )
     }
-
   }
-
 }

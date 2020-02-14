@@ -8,7 +8,5 @@ final case class AppConfig(
 )
 
 object AppConfig {
-
   def load: AppConfig = pureconfig.loadConfigOrThrow[AppConfig]
-
 }

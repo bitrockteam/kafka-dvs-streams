@@ -17,9 +17,7 @@ class FlightReceivedListComputationStatusStreamsSpec
     with AnyWordSpecLike
     with EmbeddedKafkaStreams
     with OptionValues {
-
   "FlightReceivedListComputationStatusStreams" should {
-
     "produce record in delay topic for too old records" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, _) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
@@ -55,7 +53,5 @@ class FlightReceivedListComputationStatusStreamsSpec
         receivedRecords should have size 1
         receivedRecords.head shouldBe delayedComputationStatus
     }
-
   }
-
 }

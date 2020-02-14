@@ -15,7 +15,6 @@ import org.apache.kafka.streams.scala.kstream.Suppressed
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 
 object TotalStreams {
-
   final val AllRecordsKey: String = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
@@ -54,7 +53,7 @@ object TotalStreams {
             .of(duration2JavaDuration(config.kafka.topology.aggregationTotalTimeWindowSize))
             .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
         )
-        .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.codeAirline))
+        .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.code))
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
         .map((k, v) => (k.window.start.toString, CountAirline(k.window.start.toString, v.elements.distinct.size)))
@@ -72,6 +71,5 @@ object TotalStreams {
         val props = streamProperties(config.kafka, topic)
         (builder.build(props), props)
     }
-
   }
 }
