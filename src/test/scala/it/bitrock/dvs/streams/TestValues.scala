@@ -8,19 +8,21 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import scala.concurrent.duration._
 
 trait TestValues {
-
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
   final val Updated        = Instant.now
   final val StatusEnRoute  = "en-route"
 
-  final val ParamsAirport1 = AirportParams("ZRH", "CH")
-  final val ParamsAirport2 = AirportParams("MXP", "IT")
-  final val ParamsAirport3 = AirportParams("MXR", "UA")
-  final val ParamsAirport4 = AirportParams("NAP", "IT")
-  final val ParamsAirport5 = AirportParams("NCE", "FR")
-  final val ParamsAirport6 = AirportParams("AEI", "ES")
-  final val ParamsAirport7 = AirportParams("BVG", "NO")
+  final val Latitude  = 45.0
+  final val Longitude = 9.0
+
+  final val ParamsAirport1 = AirportParams("ZRH", "Zurich", "CH")
+  final val ParamsAirport2 = AirportParams("MXP", "Malpensa", "IT")
+  final val ParamsAirport3 = AirportParams("MXR", "Moussoro", "UA")
+  final val ParamsAirport4 = AirportParams("NAP", "Napoli Capodichino", "IT")
+  final val ParamsAirport5 = AirportParams("NCE", "Nice", "FR")
+  final val ParamsAirport6 = AirportParams("AEI", "Algeciras", "ES")
+  final val ParamsAirport7 = AirportParams("BVG", "Berlevåg", "NO")
   final val ParamsAirline1 = AirlineParams("SWR", "SWISS")
   final val ParamsAirline2 = AirlineParams("ESQ", "Europ Star Aircraft")
   final val ParamsAirline3 = AirlineParams("FFI", "Infinit Air")
@@ -84,8 +86,8 @@ trait TestValues {
     FlightIcaoCode,
     GeographyInfo(0, 0, 0, 0),
     0,
-    AirportInfo(ParamsAirport1.iataCode, "", "", ParamsAirport1.codeCountry, "", ""),
-    AirportInfo(ParamsAirport2.iataCode, "", "", ParamsAirport2.codeCountry, "", ""),
+    AirportInfo(ParamsAirport1.iataCode, ParamsAirport1.name, Latitude, Longitude, "", ParamsAirport1.codeCountry, "", ""),
+    AirportInfo(ParamsAirport2.iataCode, ParamsAirport2.name, Latitude, Longitude, "", ParamsAirport2.codeCountry, "", ""),
     AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, 0),
     AirplaneInfo(ParamsAirplane.numberRegistration, "", ""),
     StatusEnRoute,
@@ -94,20 +96,20 @@ trait TestValues {
   final val ExpectedFlightReceivedWithDefaultAirplane = FlightReceivedEvent.copy(airplane = AirplaneInfo("N/A", "N/A", "N/A"))
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
-      TopAirport(ParamsAirport7.iataCode, 11),
-      TopAirport(ParamsAirport3.iataCode, 9),
-      TopAirport(ParamsAirport2.iataCode, 6),
-      TopAirport(ParamsAirport6.iataCode, 5),
-      TopAirport(ParamsAirport5.iataCode, 4)
+      TopAirport(ParamsAirport7.name, 11),
+      TopAirport(ParamsAirport3.name, 9),
+      TopAirport(ParamsAirport2.name, 6),
+      TopAirport(ParamsAirport6.name, 5),
+      TopAirport(ParamsAirport5.name, 4)
     )
   )
   final val ExpectedTopDepartureResult = TopDepartureAirportList(
     List(
-      TopAirport(ParamsAirport7.iataCode, 11),
-      TopAirport(ParamsAirport3.iataCode, 9),
-      TopAirport(ParamsAirport2.iataCode, 6),
-      TopAirport(ParamsAirport6.iataCode, 5),
-      TopAirport(ParamsAirport5.iataCode, 4)
+      TopAirport(ParamsAirport7.name, 11),
+      TopAirport(ParamsAirport3.name, 9),
+      TopAirport(ParamsAirport2.name, 6),
+      TopAirport(ParamsAirport6.name, 5),
+      TopAirport(ParamsAirport5.name, 4)
     )
   )
   final val ExpectedTopSpeedResult = TopSpeedList(
@@ -131,13 +133,13 @@ trait TestValues {
   final val ExpectedTotalFlightResult  = 10
   final val ExpectedTotalAirlineResult = 5
 
-  case class AirportParams(iataCode: String, codeCountry: String)
+  case class AirportParams(iataCode: String, name: String, codeCountry: String)
   case class AirlineParams(icaoCode: String, nameAirline: String)
   case class AirplaneParams(numberRegistration: String)
   case class FlightParams(departureAirportCode: String, arrivalAirportCode: String, airlineCode: String, airplaneCode: String)
 
   private def buildAirportRaw(params: AirportParams) =
-    AirportRaw(0, "", params.iataCode, 0, 0, "", params.codeCountry, "", "", "")
+    AirportRaw(0, params.name, params.iataCode, Latitude, Longitude, "", params.codeCountry, "", "", "")
   private def buildAirlineRaw(params: AirlineParams) = AirlineRaw(0, params.nameAirline, "", params.icaoCode, "", "", 0, "", "")
   private def buildAirplaneRaw(params: AirplaneParams) =
     AirplaneRaw(params.numberRegistration, "", "", "", "", "", "", "", "", "", "")
@@ -145,10 +147,10 @@ trait TestValues {
     FlightRaw(
       Geography(0, 0, 0, 0),
       Speed(0, 0),
-      Departure(params.departureAirportCode, ""),
-      Arrival(params.arrivalAirportCode, ""),
+      Departure(params.departureAirportCode, None),
+      Arrival(params.arrivalAirportCode, None),
       Aircraft(params.airplaneCode, "", "", ""),
-      Airline("", params.airlineCode),
+      Airline(None, params.airlineCode),
       Flight(FlightIataCode, FlightIcaoCode, ""),
       System(Updated),
       StatusEnRoute
@@ -162,5 +164,4 @@ trait TestValues {
     "",
     FlightReceivedEvent
   )
-
 }

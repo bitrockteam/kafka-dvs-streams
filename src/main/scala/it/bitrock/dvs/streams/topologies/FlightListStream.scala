@@ -17,7 +17,6 @@ import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
 
 object FlightListStream {
-
   final val AllRecordsKey: String = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
@@ -31,9 +30,10 @@ object FlightListStream {
     def partitioner(key: String): Int =
       Math.abs(key.hashCode % config.kafka.topology.flightReceivedPartitionerTopic.partitions)
 
-    val fixedPartitioner: Produced[Int, FlightReceived] = Produced.`with`[Int, FlightReceived](
-      (_: String, key: Int, _: FlightReceived, numPartitions: Int) => Some(Integer.valueOf(key)).filter(_ < numPartitions).orNull
-    )
+    val fixedPartitioner: Produced[Int, FlightReceived] =
+      Produced.`with`[Int, FlightReceived]((_: String, key: Int, _: FlightReceived, numPartitions: Int) =>
+        Some(Integer.valueOf(key)).filter(_ < numPartitions).orNull
+      )
 
     val streamsBuilder = new StreamsBuilder
     streamsBuilder
@@ -65,7 +65,6 @@ object FlightListStream {
 
     val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedListTopic.name)
     List((streamsBuilder.build(props), props))
-
   }
 
   private def computationStatus(windowStart: String, v: FlightReceivedList): FlightReceivedListComputationStatus = {
@@ -80,5 +79,4 @@ object FlightListStream {
       windowElements = elements
     )
   }
-
 }

@@ -16,7 +16,6 @@ import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 import scala.concurrent.duration._
 
 object CommonSpecUtils {
-
   final val FlightReceivedTopology              = 1
   final val FlightListTopology                  = 2
   final val TopsTopologies                      = 3
@@ -31,9 +30,7 @@ object CommonSpecUtils {
   )
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] with EmbeddedKafkaStreams {
-
     override def withFixture(body: Resource => Any): Any = {
-
       implicit lazy val embeddedKafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig()
 
       val config: AppConfig = {
@@ -75,7 +72,7 @@ object CommonSpecUtils {
         (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1))
       )
 
       body(
@@ -96,20 +93,18 @@ object CommonSpecUtils {
       )
       runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
         import scala.collection.JavaConverters._
-        val streams = topologies.tail.map(topology => {
+        val streams = topologies.tail.map { topology =>
           val streamsConf = streamsConfig.config(UUIDs.newUuid().toString, TopologyTestExtraConf)
           val props       = new Properties
           props.putAll(streamsConf.asJava)
           val otherStream = new KafkaStreams(topology, props)
           otherStream.start()
           otherStream
-        })
+        }
         val result = body(streams)
         streams.foreach(_.close())
         result
       }
     }
-
   }
-
 }

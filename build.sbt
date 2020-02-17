@@ -2,7 +2,7 @@ import Dependencies._
 import ReleaseTransformations._
 
 addCommandAlias("fix", "all compile:scalafix test:scalafix")
-addCommandAlias("fixCheck", "; compile:scalafix --check ; test:scalafix --check")
+addCommandAlias("fixCheck", "; scalafmtCheckAll ; compile:scalafix --check ; test:scalafix --check")
 
 lazy val compileSettings = Seq(
   Compile / compile := (Compile / compile)

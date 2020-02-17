@@ -15,7 +15,6 @@ import org.apache.kafka.streams.scala.kstream.Suppressed
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 
 object TopStreams {
-
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
     implicit val KeySerde: Serde[String]                                  = kafkaStreamsOptions.stringKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived]          = kafkaStreamsOptions.flightReceivedEventSerde
@@ -35,7 +34,7 @@ object TopStreams {
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
-        .groupBy((_, v) => v.airportArrival.codeAirport)
+        .groupBy((_, v) => v.arrivalAirport.name)
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
@@ -59,7 +58,7 @@ object TopStreams {
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
-        .groupBy((_, v) => v.airportDeparture.codeAirport)
+        .groupBy((_, v) => v.departureAirport.name)
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
@@ -104,7 +103,7 @@ object TopStreams {
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
-        .groupBy((_, v) => v.airline.nameAirline)
+        .groupBy((_, v) => v.airline.name)
         .windowedBy(
           TimeWindows
             .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
@@ -131,6 +130,5 @@ object TopStreams {
         val props = streamProperties(config.kafka, topic)
         (builder.build(props), props)
     }
-
   }
 }
