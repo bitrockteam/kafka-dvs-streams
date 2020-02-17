@@ -9,10 +9,10 @@ trait PositionCalculator {
 }
 
 object EarthPositionCalculator extends PositionCalculator {
-  private val EarthRadius: Double = 6378d
+  private val EarthRadius: Double = 6371e3d
 
-  private val degrees2radians: Double => Double = _ * PI / 180
-  private val radians2degrees: Double => Double = _ * 180 / PI
+  private val degrees2radians: Double => Double = _ / 180d * PI
+  private val radians2degrees: Double => Double = _ * 180d / PI
 
   override def position(latitude: Double, longitude: Double, distance: Double, direction: Double): Position = {
     val distanceRatio = distance / EarthRadius
@@ -21,13 +21,14 @@ object EarthPositionCalculator extends PositionCalculator {
 
     val startLatitudeRad  = degrees2radians(latitude)
     val startLongitudeRad = degrees2radians(longitude)
+    val angleRadHeading   = degrees2radians(direction)
 
     val startLatitudeCos = cos(startLatitudeRad)
     val startLatitudeSin = sin(startLatitudeRad)
 
-    val endLatitudeRad = asin(startLatitudeRad * distanceCos + startLatitudeCos * distanceCos * cos(direction))
+    val endLatitudeRad = asin(startLatitudeSin * distanceCos + startLatitudeCos * distanceSin * cos(angleRadHeading))
     val endLongitudeRad = startLongitudeRad + atan2(
-      sin(direction) * distanceSin * startLatitudeCos,
+      sin(angleRadHeading) * distanceSin * startLatitudeCos,
       distanceCos - startLatitudeSin * sin(endLatitudeRad)
     )
 
