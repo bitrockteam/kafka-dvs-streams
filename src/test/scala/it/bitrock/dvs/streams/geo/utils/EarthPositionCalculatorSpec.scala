@@ -1,9 +1,9 @@
 package it.bitrock.dvs.streams.geo.utils
 
+import EarthPositionCalculatorSpec._
 import org.scalatest.ParallelTestExecution
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import EarthPositionCalculatorSpec._
 
 class EarthPositionCalculatorSpec extends AnyWordSpecLike with Matchers with ParallelTestExecution {
 
