@@ -6,6 +6,7 @@ import it.bitrock.dvs.model.avro.{FlightReceived, FlightReceivedList}
 import it.bitrock.dvs.streams.StreamProps.streamProperties
 import it.bitrock.dvs.streams._
 import it.bitrock.dvs.streams.config.AppConfig
+import it.bitrock.dvs.streams.topologies.StreamOps._
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.TimeWindows
@@ -13,7 +14,6 @@ import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
-import it.bitrock.dvs.streams.topologies.StreamOps._
 
 object FlightListStream {
   final val AllRecordsKey: String            = "all"
