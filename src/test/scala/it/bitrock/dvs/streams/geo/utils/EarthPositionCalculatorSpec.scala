@@ -14,14 +14,14 @@ class EarthPositionCalculatorSpec extends AnyWordSpecLike with Matchers with Par
     }
 
     "return the opposite Position with half world trip" in {
-      val newPosition = EarthPositionCalculator.position(0d, 0d, EarthHalfRound, 180)
+      val newPosition = EarthPositionCalculator.position(0d, 0d, EarthHalfRound, 180 + 360)
 
       newPosition.longitude should equal(180d +- 1)
       newPosition.latitude should equal(0d +- 1)
     }
 
     "return the Position with the same longitude with world trip" in {
-      val newPosition = EarthPositionCalculator.position(0d, 0d, EarthRound, 180)
+      val newPosition = EarthPositionCalculator.position(0d, 0d, EarthRound, -180)
 
       newPosition.longitude should equal(0d +- 2)
       newPosition.latitude should equal(0d +- 2)
