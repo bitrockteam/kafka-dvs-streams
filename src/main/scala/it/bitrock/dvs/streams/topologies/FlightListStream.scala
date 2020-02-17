@@ -16,9 +16,9 @@ import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
 
 object FlightListStream {
-  final val AllRecordsKey: String            = "all"
-  final val EarthRadius: Double              = 6371.01
-  final val MaxDepartureAirportDistance: Int = 10
+  final val AllRecordsKey: String                        = "all"
+  final private val EarthRadiusInKm: Double              = 6371.01
+  final private val MaxDepartureAirportDistanceInKm: Int = 10
 
   sealed trait FlightStatus extends Product with Serializable
   case object Landed        extends FlightStatus
@@ -64,7 +64,7 @@ object FlightListStream {
       .map((k, v) => (k.window.start.toString, v))
       .through(config.kafka.topology.flightReceivedListTopic.name)
       .flatMap { (k, v) =>
-        val (g, b) = v.elements.partition(distanceToDestination(_) < MaxDepartureAirportDistance)
+        val (g, b) = v.elements.partition(distanceToDestinationInKm(_) < MaxDepartureAirportDistanceInKm)
         List((k, (Landed, FlightReceivedList(g))), (k, (EnRoute, FlightReceivedList(b))))
       }
       .split(
@@ -79,13 +79,13 @@ object FlightListStream {
     List((streamsBuilder.build(props), props))
   }
 
-  private def distanceToDestination(flight: FlightReceived): Double = {
+  private def distanceToDestinationInKm(flight: FlightReceived): Double = {
     val latRad1 = Math.toRadians(flight.geography.latitude)
     val lonRad1 = Math.toRadians(flight.geography.longitude)
     val latRad2 = Math.toRadians(flight.arrivalAirport.latitude)
     val lonRad2 = Math.toRadians(flight.arrivalAirport.longitude)
 
-    EarthRadius * Math.acos(
+    EarthRadiusInKm * Math.acos(
       Math.sin(latRad1) * Math.sin(latRad2) + Math.cos(latRad1) * Math.cos(latRad2) * Math.cos(lonRad1 - lonRad2)
     )
   }
