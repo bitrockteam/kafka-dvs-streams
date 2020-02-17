@@ -8,11 +8,12 @@ trait PositionCalculator {
     *
     * @param latitude of starting point
     * @param longitude of starting point
+    * @param altitude expressed in meters
     * @param distance expressed in meters
     * @param direction in degrees
     * @return a new [[it.bitrock.dvs.streams.geo.utils.Position]]
     */
-  def position(latitude: Double, longitude: Double, distance: Double, direction: Double): Position
+  def position(latitude: Double, longitude: Double, altitude: Double, distance: Double, direction: Double): Position
 
 }
 
@@ -22,8 +23,8 @@ object EarthPositionCalculator extends PositionCalculator {
   private val degrees2radians: Double => Double = _ / 180d * PI
   private val radians2degrees: Double => Double = _ * 180d / PI
 
-  override def position(latitude: Double, longitude: Double, distance: Double, direction: Double): Position = {
-    val distanceRatio = distance / EarthRadius
+  override def position(latitude: Double, longitude: Double, altitude: Double, distance: Double, direction: Double): Position = {
+    val distanceRatio = distance / (EarthRadius + altitude)
     val distanceSin   = sin(distanceRatio)
     val distanceCos   = cos(distanceRatio)
 
