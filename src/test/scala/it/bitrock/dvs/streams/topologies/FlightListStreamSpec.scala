@@ -41,8 +41,8 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
           arrivalAirport = AirportInfo(
             ParamsAirport1.iataCode,
             ParamsAirport1.name,
-            40.15d,
-            9.05d,
+            40.1005d,
+            9.1005d,
             "",
             ParamsAirport1.codeCountry,
             "",
@@ -57,7 +57,25 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
           updated = now.plus(1, ChronoUnit.SECONDS)
         )
 
-        val flightMessages = List(firstMessage, secondMessage, thirdMessage)
+        val key4 = "d"
+        val fourthMessage = key4 -> FlightReceivedEvent.copy(
+          iataNumber = key4,
+          icaoNumber = key4,
+          updated = now,
+          geography = GeographyInfo(40.1d, 9.1d, 0, 0),
+          departureAirport = AirportInfo(
+            ParamsAirport1.iataCode,
+            ParamsAirport1.name,
+            40.1005d,
+            9.1005d,
+            "",
+            ParamsAirport1.codeCountry,
+            "",
+            ""
+          )
+        )
+
+        val flightMessages = List(firstMessage, secondMessage, thirdMessage, fourthMessage)
 
         val topicsToCreate =
           List(
@@ -81,7 +99,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
           )
 
           val landedFlightsMessagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
-            topics = Set(appConfig.kafka.topology.flightLandedListTopic.name),
+            topics = Set(appConfig.kafka.topology.flightParkedListTopic.name),
             number = 1,
             timeout = ConsumerPollTimeout
           )
@@ -94,18 +112,18 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
 
           (
             messagesMap(appConfig.kafka.topology.flightReceivedListTopic.name).map(_._2),
-            landedFlightsMessagesMap(appConfig.kafka.topology.flightLandedListTopic.name).map(_._2),
+            landedFlightsMessagesMap(appConfig.kafka.topology.flightParkedListTopic.name).map(_._2),
             enRouteFlightsMessagesMap(appConfig.kafka.topology.flightEnRouteListTopic.name).map(_._2)
           )
         }
 
-        val (flightsReceived, landedFlights, enRouteFlights) = receivedRecords
+        val (flightsReceived, parkedFlights, enRouteFlights) = receivedRecords
 
         flightsReceived should have size 1
         flightsReceived.head.elements should contain theSameElementsAs flightMessages.map(_._2)
 
-        landedFlights should have size 1
-        landedFlights.head.elements should contain theSameElementsAs List(secondMessage).map(_._2)
+        parkedFlights should have size 1
+        parkedFlights.head.elements should contain theSameElementsAs List(secondMessage, fourthMessage).map(_._2)
 
         enRouteFlights should have size 1
         enRouteFlights.head.elements should contain theSameElementsAs List(firstMessage, thirdMessage).map(_._2)
