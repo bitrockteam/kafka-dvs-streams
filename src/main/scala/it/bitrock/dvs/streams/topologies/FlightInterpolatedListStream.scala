@@ -6,6 +6,7 @@ import it.bitrock.dvs.model.avro.{FlightReceived, FlightReceivedList}
 import it.bitrock.dvs.streams.StreamProps.streamProperties
 import it.bitrock.dvs.streams._
 import it.bitrock.dvs.streams.config.AppConfig
+import it.bitrock.dvs.streams.geo.utils.EarthPositionCalculator
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.kstream.Transformer
 import org.apache.kafka.streams.processor._
@@ -80,9 +81,20 @@ object FlightInterpolatedListStream {
     (timestamp: Long) =>
       processorContext.forward(
         timestamp.toString,
-        FlightReceivedList(keyValueStore.get(currentSnapshot).elements.map(interpolate))
+        FlightReceivedList(keyValueStore.get(currentSnapshot).elements.map(f => interpolateFlight(f, timestamp)))
       )
 
-  def interpolate(flightReceived: FlightReceived): FlightReceived = flightReceived
+  private def interpolateFlight(flight: FlightReceived, currentTime: Long): FlightReceived = {
+    val distance = flight.speed * (currentTime - flight.updated.toEpochMilli).millis.toHours / 1000
+    val newPosition = EarthPositionCalculator.position(
+      latitude = flight.geography.latitude,
+      longitude = flight.geography.longitude,
+      altitude = flight.geography.altitude,
+      distance = distance,
+      direction = flight.geography.direction
+    )
+    val newGeography = flight.geography.copy(latitude = newPosition.latitude, longitude = newPosition.longitude)
+    flight.copy(geography = newGeography)
+  }
 
 }
