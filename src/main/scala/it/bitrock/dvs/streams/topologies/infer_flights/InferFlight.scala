@@ -26,10 +26,10 @@ object InferFlight extends ((KStream[String, FlightRaw], Duration, String) => KS
     override def transform(key: String, value: FlightRaw): KeyValue[String, FlightRawTs] = {
       val currentEvTs = context.timestamp()
       // assuming eventTS >= flight.system.updated
-      val timeDelta = currentEvTs - value.system.updated.toEpochMilli + interval.toMillis
+      val timeDelta            = currentEvTs - value.system.updated.toEpochMilli + interval.toMillis
       val newFlight: FlightRaw = MoveFlight(value, timeDelta)
-      val flightTs = newFlight.system.updated.toEpochMilli
-      val flightWithTs = FlightRawTs(flightTs, newFlight)
+      val flightTs             = newFlight.system.updated.toEpochMilli
+      val flightWithTs         = FlightRawTs(flightTs, newFlight)
       context.forward(key, flightWithTs, To.all.withTimestamp(flightTs))
       null // we emit using context.forward
     }

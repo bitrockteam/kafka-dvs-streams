@@ -8,9 +8,8 @@ import org.apache.kafka.streams.processor.ProcessorContext
 import org.apache.kafka.streams.scala.kstream.KStream
 
 object ExtractRecordTs {
-  def apply(stream: KStream[String, FlightRaw], storeName: String): KStream[String, FlightRawTs] = {
+  def apply(stream: KStream[String, FlightRaw], storeName: String): KStream[String, FlightRawTs] =
     stream.transform(ExtractorTransformerSupplier, storeName)
-  }
 
   private object ExtractorTransformerSupplier extends TransformerSupplier[String, FlightRaw, KeyValue[String, FlightRawTs]] {
     override def get(): Transformer[String, FlightRaw, KeyValue[String, FlightRawTs]] = new ExtractorTransformer()
@@ -19,9 +18,8 @@ object ExtractRecordTs {
   private class ExtractorTransformer extends Transformer[String, FlightRaw, KeyValue[String, FlightRawTs]] {
     var context: ProcessorContext = _
 
-    override def init(context: ProcessorContext): Unit = {
+    override def init(context: ProcessorContext): Unit =
       this.context = context
-    }
 
     override def close(): Unit = {}
 

@@ -8,30 +8,32 @@ import it.bitrock.dvs.streams.KafkaStreamsOptions
 import it.bitrock.dvs.streams.StreamProps.streamProperties
 import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.streams.topologies.infer_flights.model.FlightRawTs
-import org.apache.kafka.common.serialization.Serde
+import org.apache.kafka.common.serialization.{Serde, Serdes}
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.scala.kstream.{Consumed, KStream}
-import org.apache.kafka.streams.scala.{Serdes, StreamsBuilder}
+import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.state.Stores
 
 object InferFlightsTopology {
   private val timeInterval: Duration = Duration.ofSeconds(5)
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val keySerde: Serde[String] = kafkaStreamsOptions.stringKeySerde
+    implicit val keySerde: Serde[String]               = kafkaStreamsOptions.stringKeySerde
     implicit val flightRawEventSerde: Serde[FlightRaw] = kafkaStreamsOptions.flightRawSerde
-    implicit val flightRawConsumed: Consumed[String, FlightRaw] = Consumed.`with`[String, FlightRaw](keySerde, flightRawEventSerde)
-    implicit val flightRawProduced: Produced[String, FlightRaw] = Produced.`with`[String, FlightRaw](keySerde, flightRawEventSerde)
-    val flightRawTsSerde: Serde[FlightRawTs] = Serde[FlightRawTs]
+    implicit val flightRawConsumed: Consumed[String, FlightRaw] =
+      Consumed.`with`[String, FlightRaw](keySerde, flightRawEventSerde)
+    implicit val flightRawProduced: Produced[String, FlightRaw] =
+      Produced.`with`[String, FlightRaw](keySerde, flightRawEventSerde)
+    val flightRawTsSerde: Serde[FlightRawTs] = Serdes.serdeFrom(classOf[FlightRawTs])
 
-    val streamsBuilder = new StreamsBuilder
-    val flightRawTopic = config.kafka.topology.flightRawTopic.name
+    val streamsBuilder      = new StreamsBuilder
+    val flightRawTopic      = config.kafka.topology.flightRawTopic.name
     val inferredFlightTopic = config.kafka.topology.inferredFlightRawTopic.name
 
-    val flightRawStream = streamsBuilder.stream[String, FlightRaw](flightRawTopic)
+    val flightRawStream      = streamsBuilder.stream[String, FlightRaw](flightRawTopic)
     val inferredFlightStream = streamsBuilder.stream[String, FlightRaw](inferredFlightTopic)
-    applyTopology(flightRawStream, inferredFlightStream).to(inferredFlightTopic)
+    applyTopology(flightRawStream, inferredFlightStream, kafkaStreamsOptions).to(inferredFlightTopic)
 
     streamsBuilder
       .addStateStore(
@@ -55,11 +57,12 @@ object InferFlightsTopology {
   }
 
   def applyTopology(
-                     flightRaw: KStream[String, FlightRaw],
-                     flightEnriched: KStream[String, FlightRaw]
-                   ): KStream[String, FlightRaw] = {
-    val uniqueFlightRaw = DeduplicateFlightRaw(flightRaw)
-    val joined = FlightJoiner(uniqueFlightRaw, flightEnriched)
+      flightRaw: KStream[String, FlightRaw],
+      flightEnriched: KStream[String, FlightRaw],
+      kafkaStreamsOptions: KafkaStreamsOptions
+  ): KStream[String, FlightRaw] = {
+    val uniqueFlightRaw = DeduplicateFlightRaw(flightRaw, kafkaStreamsOptions)
+    val joined          = FlightJoiner(uniqueFlightRaw, flightEnriched, kafkaStreamsOptions)
 
     val inferredFlightsWithTs = InferFlight(joined, timeInterval, "infer-flights")
 
