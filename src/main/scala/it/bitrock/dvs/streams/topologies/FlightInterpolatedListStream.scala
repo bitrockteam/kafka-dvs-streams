@@ -26,8 +26,9 @@ object FlightInterpolatedListStream {
 
     val streamsBuilder = new StreamsBuilder
 
+    val flightListInterpolationStateStoreName = "FlightListInterpolationStateStore"
     val stateStore = Stores.keyValueStoreBuilder(
-      Stores.persistentKeyValueStore("FlightListInterpolationStateStore"),
+      Stores.persistentKeyValueStore(flightListInterpolationStateStoreName),
       stringKeySerde,
       flightReceivedListEventSerde
     )
@@ -83,10 +84,10 @@ object FlightInterpolatedListStream {
       processorContext.forward(
         timestamp.toString,
         FlightReceivedList(keyValueStore.get(currentSnapshot).elements.map(f => interpolateFlight(f, timestamp)))
-      )
+    )
 
   private def interpolateFlight(flight: FlightReceived, currentTime: Long): FlightReceived = {
-    val distance = flight.speed * (currentTime - flight.updated.toEpochMilli).millis.toHours / 1000
+    val distance = kmPerHoursToMetersPerMillis(flight.speed) * (currentTime - flight.updated.toEpochMilli)
     val newPosition = EarthPositionCalculator.position(
       latitude = flight.geography.latitude,
       longitude = flight.geography.longitude,
@@ -97,5 +98,7 @@ object FlightInterpolatedListStream {
     val newGeography = flight.geography.copy(latitude = newPosition.latitude, longitude = newPosition.longitude)
     flight.copy(geography = newGeography)
   }
+
+  private def kmPerHoursToMetersPerMillis(speed: Double): Double = speed / 60 / 60
 
 }
