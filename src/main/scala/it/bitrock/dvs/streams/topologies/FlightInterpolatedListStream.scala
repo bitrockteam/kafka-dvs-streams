@@ -53,12 +53,10 @@ object FlightInterpolatedListStream {
       interpolationInterval: FiniteDuration
   ): Transformer[String, FlightReceivedList, KeyValue[String, FlightReceivedList]] =
     new Transformer[String, FlightReceivedList, KeyValue[String, FlightReceivedList]] {
-      private var processorContext: ProcessorContext                       = _
       private var keyValueStore: KeyValueStore[String, FlightReceivedList] = _
       private var scheduledTask: Cancellable                               = _
 
       override def init(context: ProcessorContext): Unit = {
-        processorContext = context
         keyValueStore = context.getStateStore(stateStoreName).asInstanceOf[KeyValueStore[String, FlightReceivedList]]
         scheduledTask = context.schedule(
           duration2JavaDuration(interpolationInterval),

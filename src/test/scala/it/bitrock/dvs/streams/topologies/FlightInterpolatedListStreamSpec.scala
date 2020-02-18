@@ -11,7 +11,7 @@ import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.common.serialization.Serde
-import org.scalatest.OptionValues
+import org.scalatest.{Assertion, OptionValues}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class FlightInterpolatedListStreamSpec
@@ -23,9 +23,8 @@ class FlightInterpolatedListStreamSpec
   "FlightInterpolatedListStream" should {
     "produce interpolated record of FlightReceivedList in interpolated topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, _) =>
-        implicit val embKafkaConfig: EmbeddedKafkaConfig                     = embeddedKafkaConfig
-        implicit val keySerde: Serde[String]                                 = kafkaStreamsOptions.stringKeySerde
-        implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
+        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val expectedMessages = (ConsumerPollTimeout / appConfig.kafka.topology.interpolationInterval).toInt
 
@@ -78,6 +77,8 @@ class FlightInterpolatedListStreamSpec
         val endTestTime = Instant.now.toEpochMilli
 
         receivedRecords should have size expectedMessages
+        receivedRecords.head._2.elements should contain theSameElementsInOrderAs receivedList.elements
+
         receivedRecords.tail.foreach {
           case (k, v) =>
             k.toLong shouldBe <(endTestTime)
@@ -85,10 +86,23 @@ class FlightInterpolatedListStreamSpec
 
             val confrontedFlights = v.elements.sortBy(_.icaoNumber) zip receivedList.elements.sortBy(_.icaoNumber)
 
-            confrontedFlights.foreach { case (interpolated, original) => interpolated.geography should not be original.geography }
+            confrontedFlights.foreach { case (interpolated, original) => compareFlights(interpolated, original) }
         }
 
     }
 
+  }
+
+  private def compareFlights(interpolated: FlightReceived, original: FlightReceived): Assertion = {
+    interpolated.iataNumber shouldBe original.iataNumber
+    interpolated.icaoNumber shouldBe original.icaoNumber
+
+    interpolated.geography should not be original.geography
+    interpolated.geography.latitude should not be original.geography.latitude
+    interpolated.geography.longitude should not be original.geography.longitude
+
+    interpolated.geography.altitude shouldBe original.geography.altitude
+    interpolated.geography.direction shouldBe original.geography.direction
+    interpolated.speed shouldBe original.speed
   }
 }
