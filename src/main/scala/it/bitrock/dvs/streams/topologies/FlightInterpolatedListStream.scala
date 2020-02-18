@@ -46,6 +46,7 @@ object FlightInterpolatedListStream {
     List((streamsBuilder.build(props), props))
   }
 
+  @SuppressWarnings(Array("DisableSyntax.var"))
   private def interpolationTransformer(
       stateStoreName: String,
       interpolationInterval: FiniteDuration
