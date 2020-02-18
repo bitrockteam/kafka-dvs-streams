@@ -34,19 +34,25 @@ class FlightInterpolatedListStreamSpec
         val firstMessage = FlightReceivedEvent.copy(
           iataNumber = "iata1",
           icaoNumber = "icao1",
-          updated = now.minus(1, ChronoUnit.SECONDS)
+          updated = now.minus(1, ChronoUnit.SECONDS),
+          geography = GeographyInfo(15d, 30d, 12345d, 13.4),
+          speed = 980.9
         )
 
         val secondMessage = FlightReceivedEvent.copy(
           iataNumber = "iata2",
           icaoNumber = "icao2",
-          updated = now
+          updated = now,
+          geography = GeographyInfo(45d, 10d, 11045d, 73.4),
+          speed = 456.77
         )
 
         val thirdMessage = FlightReceivedEvent.copy(
           iataNumber = "iata3",
           icaoNumber = "icao3",
-          updated = now.plus(1, ChronoUnit.SECONDS)
+          updated = now.plus(1, ChronoUnit.SECONDS),
+          geography = GeographyInfo(-3.4d, -78.02d, 9165d, -9.2),
+          speed = 1052.33
         )
 
         val receivedList = FlightReceivedList(List(firstMessage, secondMessage, thirdMessage))
@@ -69,7 +75,18 @@ class FlightInterpolatedListStreamSpec
 
         }
 
+        val endTestTime = Instant.now.toEpochMilli
+
         receivedRecords should have size expectedMessages
+        receivedRecords.tail.foreach {
+          case (k, v) =>
+            k.toLong shouldBe <(endTestTime)
+            k.toLong shouldBe >(now.minus(1, ChronoUnit.SECONDS).toEpochMilli)
+
+            val confrontedFlights = v.elements.sortBy(_.icaoNumber) zip receivedList.elements.sortBy(_.icaoNumber)
+
+            confrontedFlights.foreach { case (interpolated, original) => interpolated.geography should not be original.geography }
+        }
 
     }
 

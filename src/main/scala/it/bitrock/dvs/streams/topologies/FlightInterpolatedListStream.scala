@@ -84,7 +84,7 @@ object FlightInterpolatedListStream {
       processorContext.forward(
         timestamp.toString,
         FlightReceivedList(keyValueStore.get(currentSnapshot).elements.map(f => interpolateFlight(f, timestamp)))
-    )
+      )
 
   private def interpolateFlight(flight: FlightReceived, currentTime: Long): FlightReceived = {
     val distance = kmPerHoursToMetersPerMillis(flight.speed) * (currentTime - flight.updated.toEpochMilli)
