@@ -7,6 +7,7 @@ import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.model.avro.{System => _, _}
 import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.streams.topologies._
+import it.bitrock.dvs.streams.topologies.infer_flights.InferFlightsTopology
 import it.bitrock.dvs.streams.topologies.monitoring.FlightReceivedListComputationStatusStreams
 import it.bitrock.kafkacommons.serialization.AvroSerdes
 import org.apache.kafka.streams.KafkaStreams
@@ -56,12 +57,14 @@ object Main extends App with LazyLogging {
   val totalsTopology         = TotalStreams.buildTopology(config, kafkaStreamsOptions)
   val flightReceivedListComputationStatusStreamsTopology =
     FlightReceivedListComputationStatusStreams.buildTopology(config, kafkaStreamsOptions)
+  val inferredFlightsTopology = InferFlightsTopology.buildTopology(config, kafkaStreamsOptions)
 
   val topologies = flightReceivedTopology ++
     flightListTopology ++
     topsTopology ++
     totalsTopology ++
-    flightReceivedListComputationStatusStreamsTopology
+    flightReceivedListComputationStatusStreamsTopology ++
+    inferredFlightsTopology
 
   val streams = topologies.map {
     case (topology, props) =>

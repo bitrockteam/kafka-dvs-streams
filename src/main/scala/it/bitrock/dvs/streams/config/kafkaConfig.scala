@@ -24,6 +24,7 @@ final case class TopologyConfig(
     flightReceivedListTopic: TopicMetadata,
     flightLandedListTopic: TopicMetadata,
     flightEnRouteListTopic: TopicMetadata,
+    inferredFlightRawTopic: TopicMetadata,
     topArrivalAirportTopic: TopicMetadata,
     topDepartureAirportTopic: TopicMetadata,
     topSpeedTopic: TopicMetadata,
