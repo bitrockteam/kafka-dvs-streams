@@ -23,10 +23,8 @@ object EarthPositionCalculator extends PositionCalculator {
   private val degrees2radians: Double => Double = _ / 180d * PI
   private val radians2degrees: Double => Double = _ * 180d / PI
 
-  override def position(latitude: Double, longitude: Double, altitude: Double, distance: Double, direction: Double): Position = {
-    require(distance >= 0)
+  override def position(latitude: Double, longitude: Double, altitude: Double, distance: Double, direction: Double): Position =
     if (distance == 0d) Position(latitude, longitude) else calcPosition(latitude, longitude, altitude, distance, direction)
-  }
 
   private def calcPosition(
       latitude: Double,

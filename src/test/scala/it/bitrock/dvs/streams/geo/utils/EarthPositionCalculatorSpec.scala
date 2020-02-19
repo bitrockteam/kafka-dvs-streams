@@ -56,7 +56,6 @@ class EarthPositionCalculatorSpec extends AnyPropSpec with Matchers with ScalaCh
     forAll(latitudeGen, longitudeGen, altitudeGen, directionGen) {
       (latitude: Double, longitude: Double, altitude: Double, direction: Double) =>
         {
-          require(altitude >= 0)
           val distance = earthRound(altitude)
 
           val newPosition = EarthPositionCalculator.position(latitude, longitude, altitude, distance, direction)
