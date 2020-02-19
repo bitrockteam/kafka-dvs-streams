@@ -70,7 +70,7 @@ object EarthPositionCalculator extends PositionCalculator {
     if (deg > 0) {
       if (deg > 180) 360 - deg else deg
     } else {
-      if (deg < -180) -180 - deg else deg
+      if (deg < -180) -360 - deg else deg
     }
   }
 

@@ -14,7 +14,7 @@ class EarthPositionCalculatorSpec extends AnyPropSpec with Matchers with ScalaCh
   val directionGen: Gen[Double] = Arbitrary.arbDouble.arbitrary :| "direction"
 
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration = PropertyCheckConfiguration(
-    minSuccessful = 1000
+    minSuccessful = 10000
   )
 
   def earthRound(altitude: Double): Double             = 2d * Math.PI * (6371e3d + altitude)
