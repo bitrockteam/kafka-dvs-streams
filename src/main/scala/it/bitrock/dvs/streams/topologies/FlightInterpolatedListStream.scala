@@ -1,5 +1,6 @@
 package it.bitrock.dvs.streams.topologies
 
+import java.time.{Clock, Instant}
 import java.util.Properties
 
 import it.bitrock.dvs.model.avro.{FlightReceived, FlightReceivedList}
@@ -20,7 +21,9 @@ import scala.concurrent.duration._
 object FlightInterpolatedListStream {
   private val currentSnapshot = "currentSnapshot"
 
-  def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
+  def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions)(
+      implicit clock: Clock
+  ): List[(Topology, Properties)] = {
     implicit val stringKeySerde: Serde[String]                           = kafkaStreamsOptions.stringKeySerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
 
@@ -51,7 +54,7 @@ object FlightInterpolatedListStream {
   private def interpolationTransformer(
       stateStoreName: String,
       interpolationInterval: FiniteDuration
-  ): Transformer[String, FlightReceivedList, KeyValue[String, FlightReceivedList]] =
+  )(implicit clock: Clock): Transformer[String, FlightReceivedList, KeyValue[String, FlightReceivedList]] =
     new Transformer[String, FlightReceivedList, KeyValue[String, FlightReceivedList]] {
       private var keyValueStore: KeyValueStore[String, FlightReceivedList] = _
       private var scheduledTask: Cancellable                               = _
@@ -67,22 +70,25 @@ object FlightInterpolatedListStream {
 
       override def transform(key: String, value: FlightReceivedList): KeyValue[String, FlightReceivedList] = {
         keyValueStore.put(currentSnapshot, value)
-        KeyValue.pair(key, value)
+        val now = Instant.now(clock).toEpochMilli
+        KeyValue.pair(now.toString, FlightReceivedList(value.elements.map(f => interpolateFlight(f, now))))
       }
 
       override def close(): Unit = scheduledTask.cancel()
 
+      private def interpolationPunctuator(
+          processorContext: ProcessorContext,
+          keyValueStore: KeyValueStore[String, FlightReceivedList]
+      ): Punctuator =
+        (_: Long) =>
+          Option(keyValueStore.get(currentSnapshot)).foreach { data =>
+            val now = Instant.now(clock).toEpochMilli
+            processorContext.forward(
+              now.toString,
+              FlightReceivedList(data.elements.map(f => interpolateFlight(f, now)))
+            )
+          }
     }
-
-  private def interpolationPunctuator(
-      processorContext: ProcessorContext,
-      keyValueStore: KeyValueStore[String, FlightReceivedList]
-  ): Punctuator =
-    (timestamp: Long) =>
-      processorContext.forward(
-        timestamp.toString,
-        FlightReceivedList(keyValueStore.get(currentSnapshot).elements.map(f => interpolateFlight(f, timestamp)))
-      )
 
   private def interpolateFlight(flight: FlightReceived, currentTime: Long): FlightReceived = {
     val distance = kmPerHoursToMetersPerMillis(flight.speed) * (currentTime - flight.updated.toEpochMilli)
