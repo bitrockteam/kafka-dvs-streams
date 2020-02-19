@@ -42,14 +42,13 @@ class EarthPositionCalculatorSpec extends AnyPropSpec with Matchers with ScalaCh
   }
 
   property("return the opposite Position with half world trip") {
-    forAll(altitudeGen, Gen.oneOf(180d, -180d, 180d + 360d, -180d - 360d, 180d + (360d * 3))) {
-      (altitude: Double, direction: Double) =>
-        {
-          val newPosition = EarthPositionCalculator.position(0d, 180d, altitude, earthHalfRound(altitude), direction)
+    forAll(altitudeGen, directionGen) { (altitude: Double, direction: Double) =>
+      {
+        val newPosition = EarthPositionCalculator.position(0d, 180d, altitude, earthHalfRound(altitude), direction)
 
-          newPosition.latitude should equal(0d +- 1)
-          newPosition.longitude should equal(0d +- 1)
-        }
+        newPosition.latitude should equal(0d +- 1)
+        newPosition.longitude should equal(0d +- 1)
+      }
     }
   }
 
