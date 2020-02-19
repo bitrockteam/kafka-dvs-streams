@@ -6,8 +6,8 @@ trait PositionCalculator {
 
   /**
     *
-    * @param latitude of starting point
-    * @param longitude of starting point
+    * @param latitude of starting point in range [-90, 90]
+    * @param longitude of starting point in range [-180, 180]
     * @param altitude expressed in meters
     * @param distance expressed in meters
     * @param direction in degrees
@@ -52,8 +52,8 @@ object EarthPositionCalculator extends PositionCalculator {
     )
 
     Position(
-      latitudeCut(radians2degrees(endLatitudeRad)),
-      longitudeCut(radians2degrees(endLongitudeRad))
+      cutDegree(radians2degrees(endLatitudeRad), 90),
+      cutDegree(radians2degrees(endLongitudeRad), 180)
     )
   }
 
@@ -65,23 +65,12 @@ object EarthPositionCalculator extends PositionCalculator {
   private def circleCut(deg: Double): Double =
     deg % 360d
 
-  private def longitudeCut(longitude: Double): Double = {
+  private def cutDegree(longitude: Double, limit: Double): Double = {
     val deg = circleCut(longitude)
-    if (deg > 180) {
-      360 - deg
-    } else if (deg < -180) {
-      -360 - deg
-    } else {
-      deg
-    }
-  }
-
-  private def latitudeCut(latitude: Double): Double = {
-    val deg = circleCut(latitude)
-    if (deg > 90) {
-      180 - deg
-    } else if (deg < -90) {
-      -180 - deg
+    if (deg > limit) {
+      2 * limit - deg
+    } else if (deg < -limit) {
+      -2 * limit - deg
     } else {
       deg
     }
