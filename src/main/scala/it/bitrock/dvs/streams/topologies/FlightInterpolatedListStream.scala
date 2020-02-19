@@ -100,7 +100,7 @@ object FlightInterpolatedListStream {
       direction = flight.geography.direction
     )
     val newGeography = flight.geography.copy(latitude = newPosition.latitude, longitude = newPosition.longitude)
-    flight.copy(geography = newGeography)
+    flight.copy(geography = newGeography, updated = Instant.ofEpochMilli(currentTime))
   }
 
   private def kmPerHoursToMetersPerMillis(speed: Double): Double = speed / 60 / 60
