@@ -11,8 +11,8 @@ import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
 import org.apache.kafka.common.serialization.Serde
-import org.scalatest.{Assertion, OptionValues}
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{Assertion, OptionValues}
 
 class FlightInterpolatedListStreamSpec
     extends Suite
