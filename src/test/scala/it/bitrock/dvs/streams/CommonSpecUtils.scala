@@ -20,7 +20,7 @@ object CommonSpecUtils {
   final val FlightListTopology                  = 2
   final val TopsTopologies                      = 3
   final val TotalTopologies                     = 4
-  final val ConsumerPollTimeout: FiniteDuration = 20.seconds
+  final val ConsumerPollTimeout: FiniteDuration = 23.seconds
 
   final case class Resource(
       embeddedKafkaConfig: EmbeddedKafkaConfig,
