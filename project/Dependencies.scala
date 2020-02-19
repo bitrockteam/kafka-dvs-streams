@@ -26,6 +26,8 @@ object Dependencies {
     lazy val ScalaTestAutofix    = "3.1.0.0"
     lazy val Slf4j               = "1.7.28"
     lazy val TestCommons         = "0.0.8"
+    lazy val ScalaCheck          = "1.14.1"
+    lazy val ScalaTestPlus       = "3.1.0.0-RC2"
 
   }
 
@@ -56,7 +58,9 @@ object Dependencies {
 
   lazy val testDeps: Seq[ModuleID] = Seq(
     "io.github.embeddedkafka" %% "embedded-kafka-schema-registry" % Versions.ConfluentPlatform,
-    "it.bitrock"              %% "test-commons"                   % Versions.TestCommons
+    "it.bitrock"              %% "test-commons"                   % Versions.TestCommons,
+    "org.scalacheck"          %% "scalacheck"                     % Versions.ScalaCheck,
+    "org.scalatestplus"       %% "scalatestplus-scalacheck"       % Versions.ScalaTestPlus
   ).map(_ % Test)
 
   lazy val excludeDeps: Seq[ExclusionRule] = Seq(
