@@ -43,37 +43,31 @@ class EarthPositionCalculatorSpec extends AnyPropSpec with Matchers with ScalaCh
 
   property("return the opposite Position with half world trip") {
     forAll(altitudeGen, directionGen) { (altitude: Double, direction: Double) =>
-      {
-        val newPosition = EarthPositionCalculator.position(0d, 180d, altitude, earthHalfRound(altitude), direction)
+      val newPosition = EarthPositionCalculator.position(0d, 180d, altitude, earthHalfRound(altitude), direction)
 
-        newPosition.latitude should equal(0d +- 1)
-        newPosition.longitude should equal(0d +- 1)
-      }
+      newPosition.latitude should equal(0d +- 1)
+      newPosition.longitude should equal(0d +- 1)
     }
   }
 
   property("return to the same Position on world trip distance") {
     forAll(latitudeGen, longitudeGen, altitudeGen, directionGen) {
       (latitude: Double, longitude: Double, altitude: Double, direction: Double) =>
-        {
-          val distance = earthRound(altitude)
+        val distance = earthRound(altitude)
 
-          val newPosition = EarthPositionCalculator.position(latitude, longitude, altitude, distance, direction)
+        val newPosition = EarthPositionCalculator.position(latitude, longitude, altitude, distance, direction)
 
-          newPosition.longitude should equal(longitude +- 2)
-          newPosition.latitude should equal(latitude +- 2)
-        }
+        newPosition.longitude should equal(longitude +- 2)
+        newPosition.latitude should equal(latitude +- 2)
     }
   }
 
   property("return the Position with quart trip of 45 deg") {
     forAll(altitudeGen) { altitude: Double =>
-      {
-        val newPosition = EarthPositionCalculator.position(0d, 0d, altitude, earthHalfRound(altitude) / 2, 45)
+      val newPosition = EarthPositionCalculator.position(0d, 0d, altitude, earthHalfRound(altitude) / 2, 45)
 
-        newPosition.longitude should equal(90d +- 1)
-        newPosition.latitude should equal(45d +- 1)
-      }
+      newPosition.longitude should equal(90d +- 1)
+      newPosition.latitude should equal(45d +- 1)
     }
   }
 
