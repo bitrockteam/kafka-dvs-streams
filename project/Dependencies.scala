@@ -23,7 +23,7 @@ object Dependencies {
     lazy val ScalaTestAutofix    = "3.1.0.0"
     lazy val Slf4j               = "1.7.30"
     lazy val TestCommons         = "0.0.8"
-    lazy val ScalaCheck          = "1.14.1"
+    lazy val ScalaCheck          = "1.14.3"
     lazy val ScalaTestPlus       = "3.1.0.0-RC2"
 
   }
