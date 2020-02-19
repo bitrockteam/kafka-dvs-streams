@@ -67,19 +67,23 @@ object EarthPositionCalculator extends PositionCalculator {
 
   private def longitudeCut(longitude: Double): Double = {
     val deg = circleCut(longitude)
-    if (deg > 0) {
-      if (deg > 180) 360 - deg else deg
+    if (deg > 180) {
+      360 - deg
+    } else if (deg < -180) {
+      -360 - deg
     } else {
-      if (deg < -180) -360 - deg else deg
+      deg
     }
   }
 
   private def latitudeCut(latitude: Double): Double = {
     val deg = circleCut(latitude)
-    if (deg > 0) {
-      if (deg > 90) 180 - deg else deg
+    if (deg > 90) {
+      180 - deg
+    } else if (deg < -90) {
+      -180 - deg
     } else {
-      if (deg < -90) -180 - deg else deg
+      deg
     }
   }
 
