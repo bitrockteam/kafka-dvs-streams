@@ -20,7 +20,7 @@ object CommonSpecUtils {
   final val FlightListTopology                  = 2
   final val TopsTopologies                      = 3
   final val TotalTopologies                     = 4
-  final val ConsumerPollTimeout: FiniteDuration = 23.seconds
+  final val ConsumerPollTimeout: FiniteDuration = 20.seconds
 
   final case class Resource(
       embeddedKafkaConfig: EmbeddedKafkaConfig,
@@ -36,7 +36,11 @@ object CommonSpecUtils {
       val config: AppConfig = {
         val conf = AppConfig.load
         val topologyConf =
-          conf.kafka.topology.copy(aggregationTimeWindowSize = 5.seconds, aggregationTotalTimeWindowSize = 5.seconds)
+          conf.kafka.topology.copy(
+            aggregationTimeWindowSize = 5.seconds,
+            aggregationTotalTimeWindowSize = 5.seconds,
+            interpolationInterval = 3.seconds
+          )
         conf.copy(kafka = conf.kafka.copy(topology = topologyConf, enableInterceptors = false))
       }
 
