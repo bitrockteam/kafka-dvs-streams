@@ -71,7 +71,7 @@ object FlightInterpolatedListStream {
       override def transform(key: String, value: FlightReceivedList): KeyValue[String, FlightReceivedList] = {
         keyValueStore.put(currentSnapshot, value)
         val now = Instant.now(clock).toEpochMilli
-        KeyValue.pair(now.toString, FlightReceivedList(value.elements.map(f => interpolateFlight(f, now))))
+        KeyValue.pair(now.toString, FlightReceivedList(value.elements.map((f: FlightReceived) => interpolateFlight(f, now))))
       }
 
       override def close(): Unit = scheduledTask.cancel()
@@ -85,7 +85,7 @@ object FlightInterpolatedListStream {
             val now = Instant.now(clock).toEpochMilli
             processorContext.forward(
               now.toString,
-              FlightReceivedList(data.elements.map(f => interpolateFlight(f, now)))
+              FlightReceivedList(data.elements.map((f: FlightReceived) => interpolateFlight(f, now)))
             )
           }
     }

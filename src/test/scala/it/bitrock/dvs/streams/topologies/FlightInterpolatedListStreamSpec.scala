@@ -14,8 +14,12 @@ import org.apache.kafka.common.serialization.Serde
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{Assertion, OptionValues}
 
+import scala.concurrent.duration._
+import scala.util.Random
+
 class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues {
-  implicit private val clock: Clock = Clock.systemUTC()
+  implicit private val clock: Clock                     = Clock.systemUTC()
+  final private val ConsumerPollTimeout: FiniteDuration = 10.seconds
 
   "FlightInterpolatedListStream" should {
     "produce interpolated record of FlightReceivedList in interpolated topic" in ResourceLoaner.withFixture {
@@ -25,13 +29,14 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
 
         val expectedMessages = (ConsumerPollTimeout / appConfig.kafka.topology.interpolationInterval).toInt
 
-        val firstFlightListTime = Instant.now()
+        val firstFlightListTime = Instant.now(clock)
         val firstFlightList     = FlightInterpolatedListStreamSpec.records(firstFlightListTime)
 
         val secondFlightListTime = firstFlightListTime.plusSeconds(ConsumerPollTimeout.toSeconds)
         val secondFlightList     = FlightInterpolatedListStreamSpec.records(secondFlightListTime)
 
-        val topology = FlightInterpolatedListStream.buildTopology(appConfig, kafkaStreamsOptions).map(_._1)
+        val topology =
+          FlightInterpolatedListStream.buildTopology(appConfig, kafkaStreamsOptions).map { case (topology, _) => topology }
         val (firstGroup, secondGroup) = ResourceLoaner.runAll(topology) { _ =>
           publishToKafka(
             appConfig.kafka.topology.flightEnRouteListTopic.name,
@@ -63,7 +68,7 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
           )
         }
 
-        val endTestTime = Instant.now()
+        val endTestTime = Instant.now(clock)
 
         firstGroup should have size expectedMessages
         firstGroup.foreach {
@@ -109,25 +114,25 @@ object FlightInterpolatedListStreamSpec {
     FlightReceivedList(
       List(
         FlightReceivedEvent.copy(
-          iataNumber = "iata1",
-          icaoNumber = "icao1",
+          iataNumber = s"iata1-${Random.alphanumeric take 4 mkString ""}",
+          icaoNumber = s"icao1-${Random.alphanumeric take 4 mkString ""}",
           updated = time.minus(1, ChronoUnit.SECONDS),
           geography = GeographyInfo(15d, 30d, 12345d, 13.4),
-          speed = 980.9
+          speed = Random.nextDouble() * 1000d
         ),
         FlightReceivedEvent.copy(
-          iataNumber = "iata2",
-          icaoNumber = "icao2",
+          iataNumber = s"iata2-${Random.alphanumeric take 4 mkString ""}",
+          icaoNumber = s"icao2-${Random.alphanumeric take 4 mkString ""}",
           updated = time,
           geography = GeographyInfo(45d, 10d, 11045d, 73.4),
-          speed = 456.77
+          speed = Random.nextDouble() * 1000d
         ),
         FlightReceivedEvent.copy(
-          iataNumber = "iata3",
-          icaoNumber = "icao3",
+          iataNumber = s"iata3-${Random.alphanumeric take 4 mkString ""}",
+          icaoNumber = s"icao3-${Random.alphanumeric take 4 mkString ""}",
           updated = time.plus(1, ChronoUnit.SECONDS),
           geography = GeographyInfo(-3.4d, -78.02d, 9165d, -9.2),
-          speed = 1052.33
+          speed = Random.nextDouble() * 1000d
         )
       )
     )
