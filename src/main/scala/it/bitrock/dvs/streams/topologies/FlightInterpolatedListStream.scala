@@ -46,7 +46,7 @@ object FlightInterpolatedListStream {
       )
       .to(config.kafka.topology.flightInterpolatedListTopic.name)
 
-    val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedListTopic.name)
+    val props = streamProperties(config.kafka, config.kafka.topology.flightInterpolatedListTopic.name)
     List((streamsBuilder.build(props), props))
   }
 
