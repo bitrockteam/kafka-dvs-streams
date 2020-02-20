@@ -35,7 +35,8 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
         val secondFlightListTime = firstFlightListTime.plusSeconds(ConsumerPollTimeout.toSeconds)
         val secondFlightList     = FlightInterpolatedListStreamSpec.records(secondFlightListTime)
 
-        val topology = FlightInterpolatedListStream.buildTopology(appConfig, kafkaStreamsOptions).map(_._1)
+        val topology =
+          FlightInterpolatedListStream.buildTopology(appConfig, kafkaStreamsOptions).map { case (topology, _) => topology }
         val (firstGroup, secondGroup) = ResourceLoaner.runAll(topology) { _ =>
           publishToKafka(
             appConfig.kafka.topology.flightEnRouteListTopic.name,
