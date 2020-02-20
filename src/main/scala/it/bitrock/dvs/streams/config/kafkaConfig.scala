@@ -24,6 +24,7 @@ final case class TopologyConfig(
     flightReceivedListTopic: TopicMetadata,
     flightParkedListTopic: TopicMetadata,
     flightEnRouteListTopic: TopicMetadata,
+    flightInterpolatedListTopic: TopicMetadata,
     topArrivalAirportTopic: TopicMetadata,
     topDepartureAirportTopic: TopicMetadata,
     topSpeedTopic: TopicMetadata,
@@ -34,6 +35,7 @@ final case class TopologyConfig(
     aggregationTotalTimeWindowSize: FiniteDuration,
     aggregationTimeWindowGrace: FiniteDuration,
     commitInterval: FiniteDuration,
+    interpolationInterval: FiniteDuration,
     cacheMaxSizeBytes: Long,
     maxRequestSize: Long,
     threadsAmount: Int

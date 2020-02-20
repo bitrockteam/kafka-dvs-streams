@@ -165,3 +165,5 @@ trait TestValues {
     FlightReceivedEvent
   )
 }
+
+object TestValues extends TestValues

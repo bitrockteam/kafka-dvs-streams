@@ -1,5 +1,6 @@
 package it.bitrock.dvs.streams
 
+import java.time.Clock
 import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
@@ -16,6 +17,7 @@ import scala.concurrent.duration._
 
 object Main extends App with LazyLogging {
   logger.info("Starting up")
+  implicit private val clock: Clock = Clock.systemUTC()
 
   val config = AppConfig.load
   logger.debug(s"Loaded configuration: $config")
@@ -56,12 +58,14 @@ object Main extends App with LazyLogging {
   val totalsTopology         = TotalStreams.buildTopology(config, kafkaStreamsOptions)
   val flightReceivedListComputationStatusStreamsTopology =
     FlightReceivedListComputationStatusStreams.buildTopology(config, kafkaStreamsOptions)
+  val flightInterpolatedListTopology = FlightInterpolatedListStream.buildTopology(config, kafkaStreamsOptions)
 
   val topologies = flightReceivedTopology ++
     flightListTopology ++
     topsTopology ++
     totalsTopology ++
-    flightReceivedListComputationStatusStreamsTopology
+    flightReceivedListComputationStatusStreamsTopology ++
+    flightInterpolatedListTopology
 
   val streams = topologies.map {
     case (topology, props) =>
