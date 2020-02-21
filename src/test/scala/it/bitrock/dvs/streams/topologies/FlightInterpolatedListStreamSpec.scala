@@ -44,7 +44,7 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
             firstFlightList
           )
 
-          val firstMessages = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
+          val firstMessages = consumeNumberKeyedMessagesFromTopics[String, FlightInterpolatedList](
             topics = Set(appConfig.kafka.topology.flightInterpolatedListTopic.name),
             number = expectedMessages,
             timeout = ConsumerPollTimeout
@@ -56,7 +56,7 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
             secondFlightList
           )
 
-          val secondMessages = consumeNumberKeyedMessagesFromTopics[String, FlightReceivedList](
+          val secondMessages = consumeNumberKeyedMessagesFromTopics[String, FlightInterpolatedList](
             topics = Set(appConfig.kafka.topology.flightInterpolatedListTopic.name),
             number = expectedMessages,
             timeout = ConsumerPollTimeout
@@ -94,7 +94,7 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
     }
   }
 
-  private def compareFlights(interpolated: FlightReceived, original: FlightReceived): Assertion = {
+  private def compareFlights(interpolated: FlightInterpolated, original: FlightReceived): Assertion = {
     interpolated.iataNumber shouldBe original.iataNumber
     interpolated.icaoNumber shouldBe original.icaoNumber
 
