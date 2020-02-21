@@ -39,13 +39,13 @@ object Dependencies {
   }
 
   lazy val prodDeps: Seq[ModuleID] = Seq(
-    "com.github.pureconfig" %% "pureconfig"             % Versions.PureConfig,
-    "io.confluent"          % "kafka-avro-serializer"   % Versions.ConfluentPlatform,
-    "it.bitrock.dvs"        %% "kafka-dvs-avro-schemas" % Versions.KafkaDVS,
-    "it.bitrock"            %% "kafka-commons"          % Versions.KafkaCommons,
-    "org.apache.kafka"      %% "kafka-streams-scala"    % Versions.Kafka,
-    "jakarta.ws.rs"         % "jakarta.ws.rs-api"       % Versions.JakartaWsRs, // mandatory when javax.ws.rs-api gets excluded
-    "io.confluent"          % "monitoring-interceptors" % Versions.ConfluentPlatform exclude ("org.apache.kafka", "kafka-clients")
+    "com.github.pureconfig" %% "pureconfig"           % Versions.PureConfig,
+    "io.confluent"          % "kafka-avro-serializer" % Versions.ConfluentPlatform,
+    // "it.bitrock.dvs"        %% "kafka-dvs-avro-schemas" % Versions.KafkaDVS,
+    "it.bitrock"       %% "kafka-commons"          % Versions.KafkaCommons,
+    "org.apache.kafka" %% "kafka-streams-scala"    % Versions.Kafka,
+    "jakarta.ws.rs"    % "jakarta.ws.rs-api"       % Versions.JakartaWsRs, // mandatory when javax.ws.rs-api gets excluded
+    "io.confluent"     % "monitoring-interceptors" % Versions.ConfluentPlatform exclude ("org.apache.kafka", "kafka-clients")
   ) ++ Logging.prodDeps
 
   lazy val testDeps: Seq[ModuleID] = Seq(

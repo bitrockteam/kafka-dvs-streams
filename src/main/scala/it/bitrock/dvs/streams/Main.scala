@@ -27,6 +27,7 @@ object Main extends App with LazyLogging {
     Serdes.String,
     Serdes.Integer,
     avroSerdes.serdeFrom[FlightRaw],
+    avroSerdes.serdeFrom[FlightRawWrapper],
     avroSerdes.serdeFrom[AirportRaw],
     avroSerdes.serdeFrom[AirlineRaw],
     avroSerdes.serdeFrom[CityRaw],
@@ -51,20 +52,20 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[FlightReceivedListComputationStatus]
   )
 
-  val flightReceivedTopology = FlightReceivedStream.buildTopology(config, kafkaStreamsOptions)
+  /*val flightReceivedTopology = FlightReceivedStream.buildTopology(config, kafkaStreamsOptions)
   val flightListTopology     = FlightListStream.buildTopology(config, kafkaStreamsOptions)
   val topsTopology           = TopStreams.buildTopology(config, kafkaStreamsOptions)
   val totalsTopology         = TotalStreams.buildTopology(config, kafkaStreamsOptions)
   val flightReceivedListComputationStatusStreamsTopology =
-    FlightReceivedListComputationStatusStreams.buildTopology(config, kafkaStreamsOptions)
+    FlightReceivedListComputationStatusStreams.buildTopology(config, kafkaStreamsOptions)*/
   val inferredFlightsTopology = InferFlightsTopology.buildTopology(config, kafkaStreamsOptions)
 
-  val topologies = flightReceivedTopology ++
+  val topologies = /*flightReceivedTopology ++
     flightListTopology ++
     topsTopology ++
     totalsTopology ++
-    flightReceivedListComputationStatusStreamsTopology ++
-    inferredFlightsTopology
+    flightReceivedListComputationStatusStreamsTopology ++ */
+  inferredFlightsTopology
 
   val streams = topologies.map {
     case (topology, props) =>

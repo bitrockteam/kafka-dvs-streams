@@ -8,6 +8,7 @@ final case class KafkaStreamsOptions(
     stringKeySerde: Serde[String],
     intKeySerde: Serde[Int],
     flightRawSerde: Serde[FlightRaw],
+    flightRawWrapperSerde: Serde[FlightRawWrapper],
     airportRawSerde: Serde[AirportRaw],
     airlineRawSerde: Serde[AirlineRaw],
     cityRawSerde: Serde[CityRaw],

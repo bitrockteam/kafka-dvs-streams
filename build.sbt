@@ -27,7 +27,7 @@ lazy val compileSettings = Seq(
   scalacOptions -= "-Xfatal-warnings",
   scalaVersion := Versions.Scala
 )
-
+unmanagedBase := baseDirectory.value / "custom_lib"
 lazy val dependenciesSettings = Seq(
   excludeDependencies ++= excludeDeps,
   libraryDependencies ++= prodDeps ++ testDeps,

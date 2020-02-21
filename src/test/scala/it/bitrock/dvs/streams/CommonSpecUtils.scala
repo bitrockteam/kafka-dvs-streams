@@ -6,6 +6,7 @@ import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.streams.topologies._
+import it.bitrock.dvs.streams.topologies.infer_flights.InferFlightsTopology
 import it.bitrock.testcommons.FixtureLoanerAnyResult
 import net.manub.embeddedkafka.UUIDs
 import net.manub.embeddedkafka.schemaregistry.streams.EmbeddedKafkaStreams
@@ -20,6 +21,7 @@ object CommonSpecUtils {
   final val FlightListTopology                  = 2
   final val TopsTopologies                      = 3
   final val TotalTopologies                     = 4
+  final val InferFlightsTopologyId              = 5
   final val ConsumerPollTimeout: FiniteDuration = 20.seconds
 
   final case class Resource(
@@ -44,6 +46,7 @@ object CommonSpecUtils {
         Serdes.String,
         Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
+        specificAvroValueSerde[FlightRawWrapper],
         specificAvroValueSerde[AirportRaw],
         specificAvroValueSerde[AirlineRaw],
         specificAvroValueSerde[CityRaw],
@@ -72,7 +75,8 @@ object CommonSpecUtils {
         (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1))
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
+        (InferFlightsTopologyId, InferFlightsTopology.buildTopology(config, kafkaStreamsOptions).map(_._1))
       )
 
       body(

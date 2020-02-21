@@ -7,7 +7,6 @@ import it.bitrock.dvs.model.avro.FlightRaw
 import it.bitrock.dvs.streams.KafkaStreamsOptions
 import it.bitrock.dvs.streams.StreamProps.streamProperties
 import it.bitrock.dvs.streams.config.AppConfig
-import it.bitrock.dvs.streams.topologies.infer_flights.model.FlightRawTs
 import org.apache.kafka.common.serialization.{Serde, Serdes}
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Produced
@@ -25,32 +24,34 @@ object InferFlightsTopology {
       Consumed.`with`[String, FlightRaw](keySerde, flightRawEventSerde)
     implicit val flightRawProduced: Produced[String, FlightRaw] =
       Produced.`with`[String, FlightRaw](keySerde, flightRawEventSerde)
-    val flightRawTsSerde: Serde[FlightRawTs] = Serdes.serdeFrom(classOf[FlightRawTs])
 
     val streamsBuilder      = new StreamsBuilder
     val flightRawTopic      = config.kafka.topology.flightRawTopic.name
     val inferredFlightTopic = config.kafka.topology.inferredFlightRawTopic.name
 
+    val inferFlightsStore = Stores.timestampedKeyValueStoreBuilder(
+      Stores.inMemoryKeyValueStore("infer-flights"),
+      Serdes.String,
+      flightRawEventSerde
+    )
+    val emitterStore = Stores.timestampedKeyValueStoreBuilder(
+      Stores.inMemoryKeyValueStore("emitter"), // TODO: use a persistent one here
+      Serdes.String,
+      flightRawEventSerde
+    )
+
+    streamsBuilder.addStateStore(inferFlightsStore)
+    streamsBuilder.addStateStore(emitterStore)
+
     val flightRawStream      = streamsBuilder.stream[String, FlightRaw](flightRawTopic)
     val inferredFlightStream = streamsBuilder.stream[String, FlightRaw](inferredFlightTopic)
-    applyTopology(flightRawStream, inferredFlightStream, kafkaStreamsOptions).to(inferredFlightTopic)
 
-    streamsBuilder
-      .addStateStore(
-        Stores.keyValueStoreBuilder(
-          Stores.inMemoryKeyValueStore("infer-flights"),
-          Serdes.String,
-          flightRawTsSerde
-        )
-      )
-    streamsBuilder
-      .addStateStore(
-        Stores.keyValueStoreBuilder(
-          Stores.inMemoryKeyValueStore("emitter"), // TODO: use a persistent one here
-          Serdes.String,
-          flightRawTsSerde
-        )
-      )
+    applyTopology(
+      flightRawStream,
+      inferredFlightStream,
+      kafkaStreamsOptions,
+      inferFlightsStore.name(), emitterStore.name()
+    ).to(inferredFlightTopic)
 
     val props = streamProperties(config.kafka, inferredFlightTopic)
     List((streamsBuilder.build(props), props))
@@ -59,21 +60,21 @@ object InferFlightsTopology {
   def applyTopology(
       flightRaw: KStream[String, FlightRaw],
       flightEnriched: KStream[String, FlightRaw],
-      kafkaStreamsOptions: KafkaStreamsOptions
+      kafkaStreamsOptions: KafkaStreamsOptions,
+      inferFlightsStoreName: String, emitterStoreName: String
   ): KStream[String, FlightRaw] = {
     val uniqueFlightRaw = DeduplicateFlightRaw(flightRaw, kafkaStreamsOptions)
     val joined          = FlightJoiner(uniqueFlightRaw, flightEnriched, kafkaStreamsOptions)
 
-    val inferredFlightsWithTs = InferFlight(joined, timeInterval, "infer-flights")
+    val inferredFlights = InferFlight(joined, timeInterval, inferFlightsStoreName)
 
     val controlledRateStream = ControlledEmitter.transformStream(
-      "emitter",
+      emitterStoreName,
       timeInterval,
-      inferredFlightsWithTs
+      inferredFlights
     )
 
     controlledRateStream
-      .mapValues(_.flightRaw)
     // .filter((_, flight) => flight.accuracy <= iterationLimit)
   }
 }
