@@ -17,6 +17,7 @@ final case class KafkaStreamsOptions(
     flightWithAirline: Serde[FlightWithAirline],
     flightReceivedEventSerde: Serde[FlightReceived],
     flightReceivedListEventSerde: Serde[FlightReceivedList],
+    flightInterpolatedListEventSerde: Serde[FlightInterpolatedList],
     topAggregationKeySerde: Serde[Long],
     topArrivalAirportListEventSerde: Serde[TopArrivalAirportList],
     topDepartureAirportListEventSerde: Serde[TopDepartureAirportList],

@@ -57,6 +57,7 @@ object CommonSpecUtils {
         specificAvroValueSerde[FlightWithAirline],
         specificAvroValueSerde[FlightReceived],
         specificAvroValueSerde[FlightReceivedList],
+        specificAvroValueSerde[FlightInterpolatedList],
         Serdes.Long,
         specificAvroValueSerde[TopArrivalAirportList],
         specificAvroValueSerde[TopDepartureAirportList],

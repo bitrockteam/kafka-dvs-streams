@@ -37,6 +37,7 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[FlightWithAirline],
     avroSerdes.serdeFrom[FlightReceived],
     avroSerdes.serdeFrom[FlightReceivedList],
+    avroSerdes.serdeFrom[FlightInterpolatedList],
     Serdes.Long,
     avroSerdes.serdeFrom[TopArrivalAirportList],
     avroSerdes.serdeFrom[TopDepartureAirportList],
