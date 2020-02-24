@@ -19,25 +19,25 @@ object FlightEnhancementStream {
 
     val streamsBuilder = new StreamsBuilder
 
-    val enhancedFlightTable = streamsBuilder.table[String, EnhancedFlight](config.kafka.topology.enhancedFlightTopic.name)
+    val enhancedFlightTable = streamsBuilder.table[String, EnhancedFlight](config.kafka.topology.flightOpenSkyRawTopic.name)
 
     streamsBuilder
       .stream[String, FlightRaw](config.kafka.topology.flightRawTopic.name)
       .leftJoin(enhancedFlightTable)(enhanceFlight)
       .to(config.kafka.topology.enhancedFlightRawTopic.name)
 
-    val props = streamProperties(config.kafka, config.kafka.topology.flightReceivedListTopic.name)
+    val props = streamProperties(config.kafka, config.kafka.topology.enhancedFlightRawTopic.name)
 
     List((streamsBuilder.build(props), props))
   }
 
   private def enhanceFlight(flightRaw: FlightRaw, enhancedFlight: EnhancedFlight): FlightRaw =
-    if (enhancedFlight.updated.isAfter(flightRaw.system.updated)) {
+    if (enhancedFlight.updated.isAfter(flightRaw.system.updated))
       flightRaw.copy(
         geography = enhancedFlight.geography,
         speed = flightRaw.speed.copy(horizontal = enhancedFlight.horizontalSpeed),
         system = System(enhancedFlight.updated)
       )
-    } else flightRaw
+    else flightRaw
 
 }
