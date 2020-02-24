@@ -44,7 +44,7 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
         flight.system.updated shouldBe updatedFlight.updated
     }
 
-    "not enhance flight raw when no updated info" in ResourceLoaner.withFixture {
+    "not enhance flight raw when updated info is older than flight raw" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
@@ -133,5 +133,26 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
         secondFlight.system.updated shouldBe secondUpdatedFlight.updated
     }
 
+    "not enhance flight raw when no updated info" in ResourceLoaner.withFixture {
+      case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
+        implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
+        implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
+
+        val icaoNumber = FlightRawEvent.flight.icaoNumber
+
+        val (key, flight) = ResourceLoaner.runAll(topologies(FlightEnhancementTopology)) { _ =>
+          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
+
+          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
+            topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
+            number = 1,
+            timeout = ConsumerPollTimeout
+          )
+          messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
+        }
+
+        key shouldBe icaoNumber
+        flight shouldBe FlightRawEvent
+    }
   }
 }

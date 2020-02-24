@@ -31,13 +31,16 @@ object FlightEnhancementStream {
     List((streamsBuilder.build(props), props))
   }
 
-  private def enhanceFlight(flightRaw: FlightRaw, enhancedFlight: FlightStateRaw): FlightRaw =
-    if (enhancedFlight.updated.isAfter(flightRaw.system.updated))
-      flightRaw.copy(
-        geography = enhancedFlight.geography,
-        speed = flightRaw.speed.copy(horizontal = enhancedFlight.horizontalSpeed),
-        system = System(enhancedFlight.updated)
+  private def enhanceFlight(flightRaw: FlightRaw, flightStateRaw: FlightStateRaw): FlightRaw =
+    Option(flightStateRaw)
+      .filter(_.updated.isAfter(flightRaw.system.updated))
+      .map(enhancedFlight =>
+        flightRaw.copy(
+          geography = enhancedFlight.geography,
+          speed = flightRaw.speed.copy(horizontal = enhancedFlight.horizontalSpeed),
+          system = System(enhancedFlight.updated)
+        )
       )
-    else flightRaw
+      .getOrElse(flightRaw)
 
 }
