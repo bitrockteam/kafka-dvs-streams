@@ -3,6 +3,7 @@ package it.bitrock.dvs.streams.topologies
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.CommonSpecUtils._
 import it.bitrock.dvs.streams.TestValues
+import it.bitrock.dvs.streams.config.TopologyConfig
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
@@ -26,17 +27,18 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
           1018.7
         )
 
-        val (key, flight) = ResourceLoaner.runAll(topologies(FlightEnhancementTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightOpenSkyRawTopic.name, icaoNumber, updatedFlight)
-          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
+        val (key, flight) =
+          ResourceLoaner.runAll(topologies(FlightEnhancementTopology), topicsToCreate(appConfig.kafka.topology)) { _ =>
+            publishToKafka(appConfig.kafka.topology.flightOpenSkyRawTopic.name, icaoNumber, updatedFlight)
+            publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
 
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
-            topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
-            number = 1,
-            timeout = ConsumerPollTimeout
-          )
-          messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
-        }
+            val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
+              topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
+              number = 1,
+              timeout = ConsumerPollTimeout
+            )
+            messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
+          }
 
         key shouldBe icaoNumber
         flight.geography shouldBe updatedFlight.geography
@@ -57,17 +59,18 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
           1018.7
         )
 
-        val (key, flight) = ResourceLoaner.runAll(topologies(FlightEnhancementTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightOpenSkyRawTopic.name, icaoNumber, notUpdatedFlight)
-          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
+        val (key, flight) =
+          ResourceLoaner.runAll(topologies(FlightEnhancementTopology), topicsToCreate(appConfig.kafka.topology)) { _ =>
+            publishToKafka(appConfig.kafka.topology.flightOpenSkyRawTopic.name, icaoNumber, notUpdatedFlight)
+            publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
 
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
-            topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
-            number = 1,
-            timeout = ConsumerPollTimeout
-          )
-          messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
-        }
+            val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
+              topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
+              number = 1,
+              timeout = ConsumerPollTimeout
+            )
+            messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
+          }
 
         key shouldBe icaoNumber
         flight shouldBe FlightRawEvent
@@ -93,8 +96,8 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
           483.21
         )
 
-        val ((firstKey, firstFlight), (secondKey, secondFlight)) = ResourceLoaner.runAll(topologies(FlightEnhancementTopology)) {
-          _ =>
+        val ((firstKey, firstFlight), (secondKey, secondFlight)) =
+          ResourceLoaner.runAll(topologies(FlightEnhancementTopology), topicsToCreate(appConfig.kafka.topology)) { _ =>
             publishToKafka(appConfig.kafka.topology.flightOpenSkyRawTopic.name, icaoNumber, updatedFlight)
             publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
 
@@ -120,7 +123,7 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
             val secondMessage = secondMessagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
 
             (firstMessage, secondMessage)
-        }
+          }
 
         firstKey shouldBe icaoNumber
         firstFlight.geography shouldBe updatedFlight.geography
@@ -140,19 +143,23 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
 
         val icaoNumber = FlightRawEvent.flight.icaoNumber
 
-        val (key, flight) = ResourceLoaner.runAll(topologies(FlightEnhancementTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
+        val (key, flight) =
+          ResourceLoaner.runAll(topologies(FlightEnhancementTopology), topicsToCreate(appConfig.kafka.topology)) { _ =>
+            publishToKafka(appConfig.kafka.topology.flightRawTopic.name, icaoNumber, FlightRawEvent)
 
-          val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
-            topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
-            number = 1,
-            timeout = ConsumerPollTimeout
-          )
-          messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
-        }
+            val messagesMap = consumeNumberKeyedMessagesFromTopics[String, FlightRaw](
+              topics = Set(appConfig.kafka.topology.enhancedFlightRawTopic.name),
+              number = 1,
+              timeout = ConsumerPollTimeout
+            )
+            messagesMap(appConfig.kafka.topology.enhancedFlightRawTopic.name).head
+          }
 
         key shouldBe icaoNumber
         flight shouldBe FlightRawEvent
     }
   }
+
+  private def topicsToCreate(t: TopologyConfig) =
+    List(t.flightRawTopic, t.flightOpenSkyRawTopic, t.enhancedFlightRawTopic).map(_.name)
 }
