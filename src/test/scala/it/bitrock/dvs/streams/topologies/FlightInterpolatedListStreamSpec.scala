@@ -71,30 +71,27 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
         val endTestTime = Instant.now(clock)
 
         firstGroup should have size expectedMessages
-        firstGroup.foreach {
-          case (k, v) =>
-            k.toLong shouldBe <(endTestTime.toEpochMilli)
-            k.toLong shouldBe >(firstFlightListTime.minus(1, ChronoUnit.SECONDS).toEpochMilli)
-
-            val confrontedFlights = v.elements.sortBy(_.icaoNumber) zip firstFlightList.elements.sortBy(_.icaoNumber)
-
-            confrontedFlights.foreach { case (interpolated, original) => compareFlights(interpolated, original) }
-        }
+        firstGroup.foreach(compareMessages(firstFlightListTime, firstFlightList))
 
         secondGroup should have size expectedMessages
-        secondGroup.foreach {
+        secondGroup.foreach(compareMessages(secondFlightListTime, secondFlightList))
+
+        def compareMessages(
+            messageTime: Instant,
+            originalMessage: FlightReceivedList
+        ): ((String, FlightInterpolatedList)) => Unit = {
           case (k, v) =>
             k.toLong shouldBe <(endTestTime.toEpochMilli)
-            k.toLong shouldBe >(secondFlightListTime.minus(1, ChronoUnit.SECONDS).toEpochMilli)
+            k.toLong shouldBe >(messageTime.minus(1, ChronoUnit.SECONDS).toEpochMilli)
 
-            val confrontedFlights = v.elements.sortBy(_.icaoNumber) zip secondFlightList.elements.sortBy(_.icaoNumber)
+            val confrontedFlights = v.elements.sortBy(_.icaoNumber) zip originalMessage.elements.sortBy(_.icaoNumber)
 
-            confrontedFlights.foreach { case (interpolated, original) => compareFlights(interpolated, original) }
+            confrontedFlights.foreach { case (interpolated, original) => compareFlights(k, interpolated, original) }
         }
     }
   }
 
-  private def compareFlights(interpolated: FlightInterpolated, original: FlightReceived): Assertion = {
+  private def compareFlights(messageKey: String, interpolated: FlightInterpolated, original: FlightReceived): Assertion = {
     interpolated.iataNumber shouldBe original.iataNumber
     interpolated.icaoNumber shouldBe original.icaoNumber
 
@@ -105,6 +102,9 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
     interpolated.geography.altitude shouldBe original.geography.altitude
     interpolated.geography.direction shouldBe original.geography.direction
     interpolated.speed shouldBe original.speed
+    interpolated.updated shouldBe original.updated
+    interpolated.interpolatedUntil.toEpochMilli shouldBe messageKey.toLong
+    interpolated.updated.isBefore(interpolated.interpolatedUntil) shouldBe true
   }
 }
 
