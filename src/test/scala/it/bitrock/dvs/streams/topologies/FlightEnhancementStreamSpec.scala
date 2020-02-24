@@ -19,7 +19,7 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val icaoNumber = FlightRawEvent.flight.icaoNumber
-        val updatedFlight = EnhancedFlight(
+        val updatedFlight = FlightStateRaw(
           icaoNumber,
           FlightRawEvent.system.updated.plusSeconds(5),
           Geography(123.45, 678.9, 10580.99, 33.5),
@@ -50,7 +50,7 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val icaoNumber = FlightRawEvent.flight.icaoNumber
-        val notUpdatedFlight = EnhancedFlight(
+        val notUpdatedFlight = FlightStateRaw(
           icaoNumber,
           FlightRawEvent.system.updated.minusSeconds(5),
           Geography(123.45, 678.9, 10580.99, 33.5),
@@ -79,14 +79,14 @@ class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with Embedd
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val icaoNumber = FlightRawEvent.flight.icaoNumber
-        val updatedFlight = EnhancedFlight(
+        val updatedFlight = FlightStateRaw(
           icaoNumber,
           FlightRawEvent.system.updated.plusSeconds(5),
           Geography(123.45, 678.9, 10580.99, 33.5),
           1018.7
         )
 
-        val secondUpdatedFlight = EnhancedFlight(
+        val secondUpdatedFlight = FlightStateRaw(
           icaoNumber,
           FlightRawEvent.system.updated.plusSeconds(15),
           Geography(-3.45, -78.9, 6580.99, 133.5),

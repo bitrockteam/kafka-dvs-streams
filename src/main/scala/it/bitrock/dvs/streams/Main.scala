@@ -28,7 +28,7 @@ object Main extends App with LazyLogging {
     Serdes.String,
     Serdes.Integer,
     avroSerdes.serdeFrom[FlightRaw],
-    avroSerdes.serdeFrom[EnhancedFlight],
+    avroSerdes.serdeFrom[FlightStateRaw],
     avroSerdes.serdeFrom[AirportRaw],
     avroSerdes.serdeFrom[AirlineRaw],
     avroSerdes.serdeFrom[CityRaw],

@@ -15,11 +15,11 @@ object FlightEnhancementStream {
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
     implicit val KeySerde: Serde[String]                   = kafkaStreamsOptions.stringKeySerde
     implicit val flightRawSerde: Serde[FlightRaw]          = kafkaStreamsOptions.flightRawSerde
-    implicit val flightEnhanceSerde: Serde[EnhancedFlight] = kafkaStreamsOptions.enhancedFlightSerde
+    implicit val flightEnhanceSerde: Serde[FlightStateRaw] = kafkaStreamsOptions.enhancedFlightSerde
 
     val streamsBuilder = new StreamsBuilder
 
-    val enhancedFlightTable = streamsBuilder.table[String, EnhancedFlight](config.kafka.topology.flightOpenSkyRawTopic.name)
+    val enhancedFlightTable = streamsBuilder.table[String, FlightStateRaw](config.kafka.topology.flightOpenSkyRawTopic.name)
 
     streamsBuilder
       .stream[String, FlightRaw](config.kafka.topology.flightRawTopic.name)
@@ -31,7 +31,7 @@ object FlightEnhancementStream {
     List((streamsBuilder.build(props), props))
   }
 
-  private def enhanceFlight(flightRaw: FlightRaw, enhancedFlight: EnhancedFlight): FlightRaw =
+  private def enhanceFlight(flightRaw: FlightRaw, enhancedFlight: FlightStateRaw): FlightRaw =
     if (enhancedFlight.updated.isAfter(flightRaw.system.updated))
       flightRaw.copy(
         geography = enhancedFlight.geography,

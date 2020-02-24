@@ -50,7 +50,7 @@ object CommonSpecUtils {
         Serdes.String,
         Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
-        specificAvroValueSerde[EnhancedFlight],
+        specificAvroValueSerde[FlightStateRaw],
         specificAvroValueSerde[AirportRaw],
         specificAvroValueSerde[AirlineRaw],
         specificAvroValueSerde[CityRaw],
