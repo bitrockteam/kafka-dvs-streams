@@ -16,17 +16,19 @@ import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 import scala.concurrent.duration._
 
 object CommonSpecUtils {
-  final val FlightReceivedTopology              = 1
-  final val FlightListTopology                  = 2
-  final val TopsTopologies                      = 3
-  final val TotalTopologies                     = 4
-  final val ConsumerPollTimeout: FiniteDuration = 20.seconds
+  sealed trait TopologyType
+  case object FlightReceivedTopology    extends TopologyType
+  case object FlightListTopology        extends TopologyType
+  case object TopsTopologies            extends TopologyType
+  case object TotalTopologies           extends TopologyType
+  case object FlightEnhancementTopology extends TopologyType
+  final val ConsumerPollTimeout: FiniteDuration = 23.seconds
 
   final case class Resource(
       embeddedKafkaConfig: EmbeddedKafkaConfig,
       appConfig: AppConfig,
       kafkaStreamsOptions: KafkaStreamsOptions,
-      topologies: Map[Int, List[Topology]]
+      topologies: Map[TopologyType, List[Topology]]
   )
 
   object ResourceLoaner extends FixtureLoanerAnyResult[Resource] with EmbeddedKafkaStreams {
@@ -48,6 +50,7 @@ object CommonSpecUtils {
         Serdes.String,
         Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
+        specificAvroValueSerde[FlightStateRaw],
         specificAvroValueSerde[AirportRaw],
         specificAvroValueSerde[AirlineRaw],
         specificAvroValueSerde[CityRaw],
@@ -73,11 +76,12 @@ object CommonSpecUtils {
         specificAvroValueSerde[FlightReceivedListComputationStatus]
       )
 
-      val topologies = Map(
+      val topologies: Map[TopologyType, List[Topology]] = Map(
         (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
         (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1))
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
+        (FlightEnhancementTopology, FlightEnhancementStream.buildTopology(config, kafkaStreamsOptions).map(_._1))
       )
 
       body(
