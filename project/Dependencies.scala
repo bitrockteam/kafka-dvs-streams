@@ -11,11 +11,11 @@ object Dependencies {
   object Versions {
     lazy val Scala               = "2.12.10"
     lazy val ConfluentPlatform   = "5.4.0"
-    lazy val Diffx               = "0.3.17"
+    lazy val Diffx               = "0.3.18"
     lazy val JakartaWsRs         = "2.1.6"
     lazy val Kafka               = "2.4.0"
     lazy val KafkaCommons        = "0.0.8"
-    lazy val KafkaDVS            = "1.0.14"
+    lazy val KafkaDVS            = "1.0.18"
     lazy val LogbackClassic      = "1.2.3"
     lazy val PureConfig          = "0.12.2"
     lazy val ScalafixSortImports = "0.3.2"
@@ -23,8 +23,7 @@ object Dependencies {
     lazy val ScalaTestAutofix    = "3.1.0.0"
     lazy val Slf4j               = "1.7.30"
     lazy val TestCommons         = "0.0.8"
-    lazy val ScalaCheck          = "1.14.3"
-    lazy val ScalaTestPlus       = "3.1.0.0-RC2"
+    lazy val ScalaTestPlus       = "3.1.1.1"
 
   }
 
@@ -55,8 +54,7 @@ object Dependencies {
     "com.softwaremill.diffx"  %% "diffx-scalatest"                % Versions.Diffx,
     "io.github.embeddedkafka" %% "embedded-kafka-schema-registry" % Versions.ConfluentPlatform,
     "it.bitrock"              %% "test-commons"                   % Versions.TestCommons,
-    "org.scalacheck"          %% "scalacheck"                     % Versions.ScalaCheck,
-    "org.scalatestplus"       %% "scalatestplus-scalacheck"       % Versions.ScalaTestPlus
+    "org.scalatestplus"       %% "scalacheck-1-14"                % Versions.ScalaTestPlus
   ).map(_ % Test)
 
   lazy val excludeDeps: Seq[ExclusionRule] = Seq(

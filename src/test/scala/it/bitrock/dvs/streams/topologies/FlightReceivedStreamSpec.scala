@@ -19,7 +19,7 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(FlightReceivedTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
+          publishToKafka(appConfig.kafka.topology.enhancedFlightRawTopic.name, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic.name,
             List(
@@ -45,7 +45,7 @@ class FlightReceivedStreamSpec extends Suite with AnyWordSpecLike with EmbeddedK
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
         val receivedRecords = ResourceLoaner.runAll(topologies(FlightReceivedTopology)) { _ =>
-          publishToKafka(appConfig.kafka.topology.flightRawTopic.name, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
+          publishToKafka(appConfig.kafka.topology.enhancedFlightRawTopic.name, FlightRawEvent.flight.icaoNumber, FlightRawEvent)
           publishToKafka(
             appConfig.kafka.topology.airportRawTopic.name,
             List(
