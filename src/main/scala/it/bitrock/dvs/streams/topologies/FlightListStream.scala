@@ -18,7 +18,7 @@ import org.apache.kafka.streams.scala.kstream.{Produced, Suppressed}
 object FlightListStream {
   final val AllRecordsKey: String              = "all"
   final private val EarthRadiusInKm: Double    = 6371.01
-  final private val MaxParkedDistanceInKm: Int = 5
+  final private val MaxParkedDistanceInKm: Int = 2
 
   sealed trait FlightStatus extends Product with Serializable
   case object Parked        extends FlightStatus
@@ -81,7 +81,8 @@ object FlightListStream {
 
   private def isParked(flight: FlightReceived): Boolean =
     distanceToAirportInKm(flight, flight.departureAirport) < MaxParkedDistanceInKm ||
-      distanceToAirportInKm(flight, flight.arrivalAirport) < MaxParkedDistanceInKm
+      distanceToAirportInKm(flight, flight.arrivalAirport) < MaxParkedDistanceInKm ||
+      flight.geography.altitude <= 0
 
   private def distanceToAirportInKm(flight: FlightReceived, airport: AirportInfo): Double = {
     val latRad1 = Math.toRadians(flight.geography.latitude)
