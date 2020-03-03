@@ -1,99 +1,70 @@
 package it.bitrock.dvs.streams
 
-import it.bitrock.dvs.model.avro.{
-  TopAirline,
-  TopAirlineList,
-  TopAirport,
-  TopArrivalAirportList,
-  TopDepartureAirportList,
-  TopSpeed,
-  TopSpeedList
+import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.streams.TopElementsAggregator.ElementsOrderingTypes
+
+trait TopAggregatorDescriptor[A, E] {
+  def sortBy: E => ElementsOrderingTypes
+  def fromElements: List[E] => A
+  def removeElement(e: E, a: A): List[E]
 }
 
-import scala.collection.SortedSet
+object TopAggregatorDescriptor {
+  implicit val topArrivalAirportDescriptor: TopAggregatorDescriptor[TopArrivalAirportList, TopAirport] =
+    new TopAggregatorDescriptor[TopArrivalAirportList, TopAirport] {
+      override def sortBy: TopAirport => (Double, String)                  = x => (-x.eventCount, x.code)
+      override def fromElements: List[TopAirport] => TopArrivalAirportList = TopArrivalAirportList.apply
+      override def removeElement(e: TopAirport, a: TopArrivalAirportList): List[TopAirport] =
+        a.elements.filterNot(_.code == e.code).toList
+    }
 
-trait TopElementsAggregator[A, E, K] {
+  implicit val topDepartureAirportDescriptor: TopAggregatorDescriptor[TopDepartureAirportList, TopAirport] =
+    new TopAggregatorDescriptor[TopDepartureAirportList, TopAirport] {
+      override def sortBy: TopAirport => (Double, String)                    = x => (-x.eventCount, x.code)
+      override def fromElements: List[TopAirport] => TopDepartureAirportList = TopDepartureAirportList.apply
+      override def removeElement(e: TopAirport, a: TopDepartureAirportList): List[TopAirport] =
+        a.elements.filterNot(_.code == e.code).toList
+    }
+
+  implicit val topSpeedDescriptor: TopAggregatorDescriptor[TopSpeedList, TopSpeed] =
+    new TopAggregatorDescriptor[TopSpeedList, TopSpeed] {
+      override def sortBy: TopSpeed => (Double, String)         = x => (-x.speed, x.flightCode)
+      override def fromElements: List[TopSpeed] => TopSpeedList = TopSpeedList.apply
+      override def removeElement(e: TopSpeed, a: TopSpeedList): List[TopSpeed] =
+        a.elements.filterNot(_.flightCode == e.flightCode).toList
+    }
+
+  implicit val topAirlineDescriptor: TopAggregatorDescriptor[TopAirlineList, TopAirline] =
+    new TopAggregatorDescriptor[TopAirlineList, TopAirline] {
+      override def sortBy: TopAirline => (Double, String)           = x => (-x.eventCount, x.name)
+      override def fromElements: List[TopAirline] => TopAirlineList = TopAirlineList.apply
+      override def removeElement(e: TopAirline, a: TopAirlineList): List[TopAirline] =
+        a.elements.filterNot(_.name == e.name).toList
+    }
+}
+
+trait TopElementsAggregator[K, E, A] {
+  def initializer: A
+  def adder: (K, E, A) => A
+  def subtractor: (K, E, A) => A
+}
+
+object TopElementsAggregator {
   type ElementsOrderingTypes = (Double, String)
 
-  implicit val ordering: Ordering[E] = Ordering[ElementsOrderingTypes].on[E](element2OrderingTypes)
+  def apply[K, E, A](
+      topAmount: Int
+  )(implicit descriptor: TopAggregatorDescriptor[A, E]): TopElementsAggregator[K, E, A] =
+    new TopElementsAggregator[K, E, A] {
+      override def initializer: A = descriptor.fromElements(List.empty)
 
-  def element2OrderingTypes: E => ElementsOrderingTypes
+      override def adder: (K, E, A) => A =
+        (_, element, agg) => {
+          val updatedList = descriptor.removeElement(element, agg) :+ element
+          descriptor.fromElements(updatedList.sortBy(descriptor.sortBy).take(topAmount))
+        }
 
-  def topAmount: Int
-
-  def initializer: A
-
-  def removeElementFromTopList(agg: A, element: E): List[E]
-
-  def updateTopList(agg: A, newTopList: List[E]): A
-
-  val adder: (K, E, A) => A = (_, element, agg) => {
-    // Remove old element from the top list, if present
-    val updatedList       = removeElementFromTopList(agg, element) :+ element
-    val sortedTopElements = SortedSet(updatedList: _*).take(topAmount)
-    updateTopList(agg, sortedTopElements.toList)
-  }
-
-  val subtractor: (K, E, A) => A = (_, element, agg) => {
-    val purgedList = removeElementFromTopList(agg, element)
-    updateTopList(agg, purgedList)
-  }
-}
-
-final class TopArrivalAirportAggregator(override val topAmount: Int)
-    extends TopElementsAggregator[TopArrivalAirportList, TopAirport, String] {
-  override lazy val element2OrderingTypes: TopAirport => (Double, String) =
-    // Note: Long comparison is reversed!
-    x => (-x.eventCount, x.code)
-
-  override def initializer: TopArrivalAirportList = TopArrivalAirportList()
-
-  override def removeElementFromTopList(agg: TopArrivalAirportList, element: TopAirport): List[TopAirport] =
-    agg.elements.filterNot(_.code == element.code).toList
-
-  override def updateTopList(agg: TopArrivalAirportList, newTopList: List[TopAirport]): TopArrivalAirportList =
-    agg.copy(elements = newTopList)
-}
-
-final class TopDepartureAirportAggregator(override val topAmount: Int)
-    extends TopElementsAggregator[TopDepartureAirportList, TopAirport, String] {
-  override lazy val element2OrderingTypes: TopAirport => (Double, String) =
-    // Note: Long comparison is reversed!
-    x => (-x.eventCount, x.code)
-
-  override def initializer: TopDepartureAirportList = TopDepartureAirportList()
-
-  override def removeElementFromTopList(agg: TopDepartureAirportList, element: TopAirport): List[TopAirport] =
-    agg.elements.filterNot(_.code == element.code).toList
-
-  override def updateTopList(agg: TopDepartureAirportList, newTopList: List[TopAirport]): TopDepartureAirportList =
-    agg.copy(elements = newTopList)
-}
-
-final class TopSpeedFlightAggregator(override val topAmount: Int) extends TopElementsAggregator[TopSpeedList, TopSpeed, String] {
-  override lazy val element2OrderingTypes: TopSpeed => (Double, String) =
-    // Note: Long comparison is reversed!
-    x => (-x.speed, x.flightCode)
-
-  override def initializer: TopSpeedList = TopSpeedList()
-
-  override def removeElementFromTopList(agg: TopSpeedList, element: TopSpeed): List[TopSpeed] =
-    agg.elements.filterNot(_.flightCode == element.flightCode).toList
-
-  override def updateTopList(agg: TopSpeedList, newTopList: List[TopSpeed]): TopSpeedList =
-    agg.copy(elements = newTopList)
-}
-
-final class TopAirlineAggregator(override val topAmount: Int) extends TopElementsAggregator[TopAirlineList, TopAirline, String] {
-  override lazy val element2OrderingTypes: TopAirline => (Double, String) =
-    // Note: Long comparison is reversed!
-    x => (-x.eventCount, x.name)
-
-  override def initializer: TopAirlineList = TopAirlineList()
-
-  override def removeElementFromTopList(agg: TopAirlineList, element: TopAirline): List[TopAirline] =
-    agg.elements.filterNot(_.name == element.name).toList
-
-  override def updateTopList(agg: TopAirlineList, newTopList: List[TopAirline]): TopAirlineList =
-    agg.copy(elements = newTopList)
+      override def subtractor: (K, E, A) => A =
+        (_, element, agg) => descriptor.fromElements(descriptor.removeElement(element, agg))
+    }
 }

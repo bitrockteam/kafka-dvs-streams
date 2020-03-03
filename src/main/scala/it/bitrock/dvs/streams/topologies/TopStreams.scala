@@ -4,6 +4,7 @@ import java.util.Properties
 
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.StreamProps.streamProperties
+import it.bitrock.dvs.streams.TopAggregatorDescriptor._
 import it.bitrock.dvs.streams._
 import it.bitrock.dvs.streams.config.AppConfig
 import org.apache.kafka.common.serialization.Serde
@@ -29,8 +30,10 @@ object TopStreams {
     implicit val topAirlineSerde: Serde[TopAirline]         = kafkaStreamsOptions.topAirlineEventSerde
 
     def buildTopArrivalStreamsBuilder: (StreamsBuilder, String) = {
-      val streamsBuilder              = new StreamsBuilder
-      val topArrivalAirportAggregator = new TopArrivalAirportAggregator(config.topElementsAmount)
+      val streamsBuilder = new StreamsBuilder
+      val topArrivalAirportAggregator: TopElementsAggregator[String, TopAirport, TopArrivalAirportList] = TopElementsAggregator(
+        config.topElementsAmount
+      )
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
@@ -53,8 +56,9 @@ object TopStreams {
     }
 
     def buildTopDepartureStreamsBuilder: (StreamsBuilder, String) = {
-      val streamsBuilder                = new StreamsBuilder
-      val topDepartureAirportAggregator = new TopDepartureAirportAggregator(config.topElementsAmount)
+      val streamsBuilder = new StreamsBuilder
+      val topDepartureAirportAggregator: TopElementsAggregator[String, TopAirport, TopDepartureAirportList] =
+        TopElementsAggregator(config.topElementsAmount)
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
@@ -77,8 +81,10 @@ object TopStreams {
     }
 
     def buildTopFlightSpeedStreamsBuilder: (StreamsBuilder, String) = {
-      val streamsBuilder           = new StreamsBuilder
-      val topSpeedFlightAggregator = new TopSpeedFlightAggregator(config.topElementsAmount)
+      val streamsBuilder = new StreamsBuilder
+      val topSpeedFlightAggregator: TopElementsAggregator[String, TopSpeed, TopSpeedList] = TopElementsAggregator(
+        config.topElementsAmount
+      )
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
@@ -98,8 +104,10 @@ object TopStreams {
     }
 
     def buildTopAirlineStreamsBuilder: (StreamsBuilder, String) = {
-      val streamsBuilder       = new StreamsBuilder
-      val topAirlineAggregator = new TopAirlineAggregator(config.topElementsAmount)
+      val streamsBuilder = new StreamsBuilder
+      val topAirlineAggregator: TopElementsAggregator[String, TopAirline, TopAirlineList] = TopElementsAggregator(
+        config.topElementsAmount
+      )
 
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
