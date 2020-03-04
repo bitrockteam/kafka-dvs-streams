@@ -17,7 +17,8 @@ object Dependencies {
     lazy val KafkaCommons        = "0.0.8"
     lazy val KafkaDVS            = "1.0.18"
     lazy val LogbackClassic      = "1.2.3"
-    lazy val PureConfig          = "0.12.2"
+    lazy val PureConfig          = "0.12.3"
+    lazy val ScalacheckShapeless = "1.2.5"
     lazy val ScalafixSortImports = "0.3.2"
     lazy val ScalaLogging        = "3.9.2"
     lazy val ScalaTestAutofix    = "3.1.0.0"
@@ -51,10 +52,11 @@ object Dependencies {
   ) ++ Logging.prodDeps
 
   lazy val testDeps: Seq[ModuleID] = Seq(
-    "com.softwaremill.diffx"  %% "diffx-scalatest"                % Versions.Diffx,
-    "io.github.embeddedkafka" %% "embedded-kafka-schema-registry" % Versions.ConfluentPlatform,
-    "it.bitrock"              %% "test-commons"                   % Versions.TestCommons,
-    "org.scalatestplus"       %% "scalacheck-1-14"                % Versions.ScalaTestPlus
+    "com.softwaremill.diffx"     %% "diffx-scalatest"                % Versions.Diffx,
+    "io.github.embeddedkafka"    %% "embedded-kafka-schema-registry" % Versions.ConfluentPlatform,
+    "it.bitrock"                 %% "test-commons"                   % Versions.TestCommons,
+    "org.scalatestplus"          %% "scalacheck-1-14"                % Versions.ScalaTestPlus,
+    "com.github.alexarchambault" %% "scalacheck-shapeless_1.14"      % Versions.ScalacheckShapeless
   ).map(_ % Test)
 
   lazy val excludeDeps: Seq[ExclusionRule] = Seq(
