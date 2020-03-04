@@ -49,6 +49,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
             "",
             ParamsAirport1.codeCountry,
             "",
+            "",
             ""
           )
         )
@@ -74,6 +75,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
             9.1005d,
             "",
             ParamsAirport1.codeCountry,
+            "",
             "",
             ""
           )

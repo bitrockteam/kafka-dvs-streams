@@ -3,6 +3,7 @@ package it.bitrock.dvs.streams
 import java.time.Instant
 
 import it.bitrock.dvs.model.avro._
+import it.bitrock.dvs.streams.topologies.FlightReceivedStream.defaultMissingValue
 import org.apache.kafka.clients.producer.ProducerRecord
 
 import scala.concurrent.duration._
@@ -86,14 +87,15 @@ trait TestValues {
     FlightIcaoCode,
     GeographyInfo(0, 0, 0, 0),
     0,
-    AirportInfo(ParamsAirport1.iataCode, ParamsAirport1.name, Latitude, Longitude, "", ParamsAirport1.codeCountry, "", ""),
-    AirportInfo(ParamsAirport2.iataCode, ParamsAirport2.name, Latitude, Longitude, "", ParamsAirport2.codeCountry, "", ""),
+    AirportInfo(ParamsAirport1.iataCode, ParamsAirport1.name, Latitude, Longitude, "", ParamsAirport1.codeCountry, "", "", ""),
+    AirportInfo(ParamsAirport2.iataCode, ParamsAirport2.name, Latitude, Longitude, "", ParamsAirport2.codeCountry, "", "", ""),
     AirlineInfo(ParamsAirline1.icaoCode, ParamsAirline1.nameAirline, 0),
     AirplaneInfo(ParamsAirplane.numberRegistration, "", ""),
     StatusEnRoute,
     Updated
   )
-  final val ExpectedFlightReceivedWithDefaultAirplane = FlightReceivedEvent.copy(airplane = AirplaneInfo("N/A", "N/A", "N/A"))
+  final val ExpectedFlightReceivedWithDefaultAirplane =
+    FlightReceivedEvent.copy(airplane = AirplaneInfo(defaultMissingValue, defaultMissingValue, defaultMissingValue))
   final val ExpectedTopArrivalResult = TopArrivalAirportList(
     List(
       TopAirport(ParamsAirport7.name, 11),

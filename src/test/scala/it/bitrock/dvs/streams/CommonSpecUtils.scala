@@ -55,6 +55,7 @@ object CommonSpecUtils {
         specificAvroValueSerde[AirlineRaw],
         specificAvroValueSerde[CityRaw],
         specificAvroValueSerde[AirplaneRaw],
+        specificAvroValueSerde[AirportInfo],
         specificAvroValueSerde[FlightWithDepartureAirportInfo],
         specificAvroValueSerde[FlightWithAllAirportInfo],
         specificAvroValueSerde[FlightWithAirline],

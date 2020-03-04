@@ -33,6 +33,7 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[AirlineRaw],
     avroSerdes.serdeFrom[CityRaw],
     avroSerdes.serdeFrom[AirplaneRaw],
+    avroSerdes.serdeFrom[AirportInfo],
     avroSerdes.serdeFrom[FlightWithDepartureAirportInfo],
     avroSerdes.serdeFrom[FlightWithAllAirportInfo],
     avroSerdes.serdeFrom[FlightWithAirline],

@@ -32,7 +32,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              arrivalAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "")
+              arrivalAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
@@ -67,7 +67,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              departureAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "")
+              departureAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
