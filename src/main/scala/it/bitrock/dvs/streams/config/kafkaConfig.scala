@@ -19,6 +19,7 @@ final case class TopologyConfig(
     airlineRawTopic: TopicMetadata,
     cityRawTopic: TopicMetadata,
     airplaneRawTopic: TopicMetadata,
+    airportInfoTopic: TopicMetadata,
     flightOpenSkyRawTopic: TopicMetadata,
     enhancedFlightRawTopic: TopicMetadata,
     flightReceivedTopic: TopicMetadata,

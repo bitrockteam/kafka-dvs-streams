@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.CommonSpecUtils._
-import it.bitrock.dvs.streams.TestValues
+import it.bitrock.dvs.streams.TestValues._
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
@@ -18,7 +18,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration._
 
-class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues {
   "FlightListStream" should {
     "produce FlightReceivedList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
@@ -49,6 +49,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
             "",
             ParamsAirport1.codeCountry,
             "",
+            "",
             ""
           )
         )
@@ -74,6 +75,7 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
             9.1005d,
             "",
             ParamsAirport1.codeCountry,
+            "",
             "",
             ""
           )

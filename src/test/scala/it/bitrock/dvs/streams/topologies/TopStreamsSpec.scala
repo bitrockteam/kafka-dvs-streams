@@ -2,7 +2,7 @@ package it.bitrock.dvs.streams.topologies
 
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.CommonSpecUtils._
-import it.bitrock.dvs.streams.TestValues
+import it.bitrock.dvs.streams.TestValues._
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry._
@@ -11,7 +11,7 @@ import org.apache.kafka.common.serialization.Serde
 import org.scalatest.OptionValues
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues {
   "TopStreams" should {
     "produce TopArrivalAirportList elements in the appropriate topic" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
@@ -32,7 +32,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              arrivalAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "")
+              arrivalAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
@@ -67,7 +67,7 @@ class TopStreamsSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStream
             key.toString -> FlightReceivedEvent.copy(
               iataNumber = key.toString,
               icaoNumber = key.toString,
-              departureAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "")
+              departureAirport = AirportInfo("some iata code", airportName, Latitude, Longitude, "", "", "", "", "")
             )
           }
           publishToKafka(appConfig.kafka.topology.flightReceivedTopic.name, flightMessages)
