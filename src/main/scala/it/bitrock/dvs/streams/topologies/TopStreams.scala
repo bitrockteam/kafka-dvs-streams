@@ -17,7 +17,7 @@ import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
 
 object TopStreams {
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                                  = kafkaStreamsOptions.stringKeySerde
+    implicit val keySerde: Serde[String]                                  = kafkaStreamsOptions.stringKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived]          = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val topAggregationKeySerde: Serde[Long]                      = kafkaStreamsOptions.topAggregationKeySerde
     implicit val topArrivalAirportListSerde: Serde[TopArrivalAirportList] = kafkaStreamsOptions.topArrivalAirportListEventSerde

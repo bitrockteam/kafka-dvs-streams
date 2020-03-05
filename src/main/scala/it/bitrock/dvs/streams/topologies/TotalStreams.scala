@@ -18,7 +18,7 @@ object TotalStreams {
   final val AllRecordsKey: String = "all"
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
+    implicit val keySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived] = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val countFlightSerde: Serde[CountFlight]            = kafkaStreamsOptions.countFlightEventSerde
     implicit val countAirlineSerde: Serde[CountAirline]          = kafkaStreamsOptions.countAirlineEventSerde

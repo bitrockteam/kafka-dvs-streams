@@ -65,15 +65,11 @@ object EarthPositionCalculator extends PositionCalculator {
   private def circleCut(deg: Double): Double =
     deg % 360d
 
-  private def cutDegree(longitude: Double, limit: Double): Double = {
-    val deg = circleCut(longitude)
-    if (deg > limit) {
-      2 * limit - deg
-    } else if (deg < -limit) {
-      -2 * limit - deg
-    } else {
-      deg
+  private def cutDegree(longitude: Double, limit: Double): Double =
+    circleCut(longitude) match {
+      case deg if deg > limit  => 2 * limit - deg
+      case deg if deg < -limit => -2 * limit - deg
+      case deg                 => deg
     }
-  }
 
 }

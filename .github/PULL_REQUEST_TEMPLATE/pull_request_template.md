@@ -13,7 +13,7 @@ Make sure to add one or more reviewers from the menu on the right.
 - [ ] Tests have been added for new functionalities.
 - [ ] [Documentation](..docs/) has been updated accordingly.
 
-**PLEASE REMOVE THIS HEADER BEFORE SUBMITTING**
+#####PLEASE REMOVE THIS HEADER BEFORE SUBMITTING
 
 **Related issue**
 Reference a related issue (type `#` to get a list of suggested issues), eventually putting `Closes #XXXX` to auto-close the issue.
