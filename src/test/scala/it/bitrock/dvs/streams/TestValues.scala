@@ -8,7 +8,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 import scala.concurrent.duration._
 
-trait TestValues {
+object TestValues {
   final val FlightIataCode = "EI35Y"
   final val FlightIcaoCode = "EIN35Y"
   final val Updated        = Instant.now
@@ -167,5 +167,3 @@ trait TestValues {
     FlightReceivedEvent
   )
 }
-
-object TestValues extends TestValues

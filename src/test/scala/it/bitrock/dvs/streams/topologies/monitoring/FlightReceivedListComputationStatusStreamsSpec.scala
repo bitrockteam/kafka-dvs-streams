@@ -6,7 +6,7 @@ import java.time.temporal.ChronoUnit
 import it.bitrock.dvs.model.avro.FlightReceivedList
 import it.bitrock.dvs.model.avro.monitoring.FlightReceivedListComputationStatus
 import it.bitrock.dvs.streams.CommonSpecUtils._
-import it.bitrock.dvs.streams.TestValues
+import it.bitrock.dvs.streams.TestValues._
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.testcommons.Suite
 import net.manub.embeddedkafka.schemaregistry.EmbeddedKafkaConfig
@@ -19,8 +19,7 @@ class FlightReceivedListComputationStatusStreamsSpec
     extends Suite
     with AnyWordSpecLike
     with EmbeddedKafkaStreams
-    with OptionValues
-    with TestValues {
+    with OptionValues {
 
   "FlightReceivedListComputationStatusStreams" should {
     "produce record of FlightReceivedListComputationStatus in delay topic for too old records" in ResourceLoaner.withFixture {

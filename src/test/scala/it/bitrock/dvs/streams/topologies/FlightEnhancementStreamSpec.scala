@@ -2,7 +2,7 @@ package it.bitrock.dvs.streams.topologies
 
 import it.bitrock.dvs.model.avro._
 import it.bitrock.dvs.streams.CommonSpecUtils._
-import it.bitrock.dvs.streams.TestValues
+import it.bitrock.dvs.streams.TestValues._
 import it.bitrock.dvs.streams.config.TopologyConfig
 import it.bitrock.kafkacommons.serialization.ImplicitConversions._
 import it.bitrock.testcommons.Suite
@@ -12,7 +12,7 @@ import org.apache.kafka.common.serialization.Serde
 import org.scalatest.OptionValues
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues with TestValues {
+class FlightEnhancementStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues {
   "FlightEnhancementStream" should {
     "enhance flight raw with updated info" in ResourceLoaner.withFixture {
       case Resource(embeddedKafkaConfig, appConfig, kafkaStreamsOptions, topologies) =>
