@@ -8,7 +8,6 @@ import it.bitrock.dvs.streams._
 import it.bitrock.dvs.streams.config.AppConfig
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
-import org.apache.kafka.streams.kstream.TimeWindows
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed
@@ -30,11 +29,7 @@ object TotalStreams {
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(
-          TimeWindows
-            .of(duration2JavaDuration(config.kafka.topology.aggregationTotalTimeWindowSize))
-            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
-        )
+        .windowedBy(totalAggregationTimeWindows(config.kafka.topology))
         .aggregate(FlightNumberList())((_, v, agg) => FlightNumberList(agg.elements :+ v.icaoNumber))
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream
@@ -48,11 +43,7 @@ object TotalStreams {
       streamsBuilder
         .stream[String, FlightReceived](config.kafka.topology.flightReceivedTopic.name)
         .groupBy((_, _) => AllRecordsKey)
-        .windowedBy(
-          TimeWindows
-            .of(duration2JavaDuration(config.kafka.topology.aggregationTotalTimeWindowSize))
-            .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
-        )
+        .windowedBy(totalAggregationTimeWindows(config.kafka.topology))
         .aggregate(CodeAirlineList())((_, v, agg) => CodeAirlineList(agg.elements :+ v.airline.code))
         .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
         .toStream

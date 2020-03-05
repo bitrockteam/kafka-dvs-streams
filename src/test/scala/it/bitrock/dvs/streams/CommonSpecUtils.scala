@@ -47,7 +47,26 @@ object CommonSpecUtils {
         conf.copy(kafka = conf.kafka.copy(topology = topologyConf, enableInterceptors = false))
       }
 
-      val kafkaStreamsOptions = KafkaStreamsOptions(
+      val topologies: Map[TopologyType, List[Topology]] = Map(
+        (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (FlightEnhancementTopology, FlightEnhancementStream.buildTopology(config, kafkaStreamsSerde).map(_._1))
+      )
+
+      body(
+        Resource(
+          embeddedKafkaConfig,
+          config,
+          kafkaStreamsSerde,
+          topologies
+        )
+      )
+    }
+
+    private lazy val kafkaStreamsSerde: KafkaStreamsOptions = {
+      KafkaStreamsOptions(
         Serdes.String,
         Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
@@ -76,23 +95,6 @@ object CommonSpecUtils {
         specificAvroValueSerde[CodeAirlineList],
         specificAvroValueSerde[FlightNumberList],
         specificAvroValueSerde[FlightReceivedListComputationStatus]
-      )
-
-      val topologies: Map[TopologyType, List[Topology]] = Map(
-        (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (FlightEnhancementTopology, FlightEnhancementStream.buildTopology(config, kafkaStreamsOptions).map(_._1))
-      )
-
-      body(
-        Resource(
-          embeddedKafkaConfig,
-          config,
-          kafkaStreamsOptions,
-          topologies
-        )
       )
     }
 

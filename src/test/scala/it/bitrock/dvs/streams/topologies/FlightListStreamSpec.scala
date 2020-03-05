@@ -87,8 +87,8 @@ class FlightListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafka
           icaoNumber = keyZeroAltitude,
           updated = now,
           geography = GeographyInfo(40.1d, 9.1d, 0, 0),
-          arrivalAirport = implicitly[Arbitrary[AirportInfo]].arbitrary.sample.get,
-          departureAirport = implicitly[Arbitrary[AirportInfo]].arbitrary.sample.get
+          arrivalAirport = implicitly[Arbitrary[AirportInfo]].arbitrary.sample.value,
+          departureAirport = implicitly[Arbitrary[AirportInfo]].arbitrary.sample.value
         )
 
         val flightMessages = List(firstMessage, secondMessage, thirdMessage, fourthMessage, flightWithZeroAltitude)

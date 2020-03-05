@@ -9,7 +9,6 @@ import it.bitrock.dvs.streams.config.AppConfig
 import it.bitrock.dvs.streams.topologies.StreamOps._
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.streams.Topology
-import org.apache.kafka.streams.kstream.TimeWindows
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Suppressed.BufferConfig
@@ -30,8 +29,7 @@ object FlightListStream {
     implicit val flightReceivedEventSerde: Serde[FlightReceived]         = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
 
-    def partitioner(key: String): Int =
-      Math.abs(key.hashCode % config.kafka.topology.flightReceivedPartitionerTopic.partitions)
+    def partitioner(key: String): Int = Math.abs(key.hashCode % config.kafka.topology.flightReceivedPartitionerTopic.partitions)
 
     val fixedPartitioner: Produced[Int, FlightReceived] =
       Produced.`with`[Int, FlightReceived]((_: String, key: Int, _: FlightReceived, numPartitions: Int) =>
@@ -44,20 +42,12 @@ object FlightListStream {
       .selectKey((k, _) => partitioner(k))
       .through(config.kafka.topology.flightReceivedPartitionerTopic.name)(fixedPartitioner)
       .groupByKey
-      .windowedBy(
-        TimeWindows
-          .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-          .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
-      )
+      .windowedBy(aggregationTimeWindows(config.kafka.topology))
       .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(v +: agg.elements))
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream
       .groupBy((_, _) => AllRecordsKey)
-      .windowedBy(
-        TimeWindows
-          .of(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowSize))
-          .grace(duration2JavaDuration(config.kafka.topology.aggregationTimeWindowGrace))
-      )
+      .windowedBy(aggregationTimeWindows(config.kafka.topology))
       .aggregate(FlightReceivedList())((_, v, agg) => FlightReceivedList(v.elements ++ agg.elements))
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream
