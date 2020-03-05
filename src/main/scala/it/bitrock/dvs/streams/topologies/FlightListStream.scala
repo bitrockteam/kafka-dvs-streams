@@ -25,8 +25,8 @@ object FlightListStream {
   case object EnRoute       extends FlightStatus
 
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val StringKeySerde: Serde[String]                           = kafkaStreamsOptions.stringKeySerde
-    implicit val IntKeySerde: Serde[Int]                                 = kafkaStreamsOptions.intKeySerde
+    implicit val stringKeySerde: Serde[String]                           = kafkaStreamsOptions.stringKeySerde
+    implicit val intKeySerde: Serde[Int]                                 = kafkaStreamsOptions.intKeySerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived]         = kafkaStreamsOptions.flightReceivedEventSerde
     implicit val flightReceivedListEventSerde: Serde[FlightReceivedList] = kafkaStreamsOptions.flightReceivedListEventSerde
 
