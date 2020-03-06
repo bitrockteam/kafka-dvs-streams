@@ -37,7 +37,7 @@ object Dependencies {
 
     lazy val excludeDeps: Seq[ExclusionRule] = Seq(
       ExclusionRule("org.slf4j", "slf4j-log4j12"),
-      ExclusionRule("log4j", "log4j")
+      ExclusionRule("log4j")
     )
   }
 

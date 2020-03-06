@@ -23,7 +23,7 @@ object TestValues {
   final val ParamsAirport4 = AirportParams("NAP", "Napoli Capodichino", "IT")
   final val ParamsAirport5 = AirportParams("NCE", "Nice", "FR")
   final val ParamsAirport6 = AirportParams("AEI", "Algeciras", "ES")
-  final val ParamsAirport7 = AirportParams("BVG", "Berlevåg", "NO")
+  final val ParamsAirport7 = AirportParams("BVG", "Berlevag", "NO")
   final val ParamsAirline1 = AirlineParams("SWR", "SWISS")
   final val ParamsAirline2 = AirlineParams("ESQ", "Europ Star Aircraft")
   final val ParamsAirline3 = AirlineParams("FFI", "Infinit Air")
