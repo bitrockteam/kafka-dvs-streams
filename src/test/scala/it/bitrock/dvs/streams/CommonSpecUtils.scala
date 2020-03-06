@@ -13,6 +13,7 @@ import net.manub.embeddedkafka.schemaregistry.{specificAvroValueSerde, EmbeddedK
 import org.apache.kafka.streams.scala.Serdes
 import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 object CommonSpecUtils {
@@ -46,7 +47,26 @@ object CommonSpecUtils {
         conf.copy(kafka = conf.kafka.copy(topology = topologyConf, enableInterceptors = false))
       }
 
-      val kafkaStreamsOptions = KafkaStreamsOptions(
+      val topologies: Map[TopologyType, List[Topology]] = Map(
+        (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsSerde).map(_._1)),
+        (FlightEnhancementTopology, FlightEnhancementStream.buildTopology(config, kafkaStreamsSerde).map(_._1))
+      )
+
+      body(
+        Resource(
+          embeddedKafkaConfig,
+          config,
+          kafkaStreamsSerde,
+          topologies
+        )
+      )
+    }
+
+    private def kafkaStreamsSerde(implicit config: EmbeddedKafkaConfig): KafkaStreamsOptions =
+      KafkaStreamsOptions(
         Serdes.String,
         Serdes.Integer,
         specificAvroValueSerde[FlightRaw],
@@ -55,6 +75,7 @@ object CommonSpecUtils {
         specificAvroValueSerde[AirlineRaw],
         specificAvroValueSerde[CityRaw],
         specificAvroValueSerde[AirplaneRaw],
+        specificAvroValueSerde[AirportInfo],
         specificAvroValueSerde[FlightWithDepartureAirportInfo],
         specificAvroValueSerde[FlightWithAllAirportInfo],
         specificAvroValueSerde[FlightWithAirline],
@@ -76,34 +97,15 @@ object CommonSpecUtils {
         specificAvroValueSerde[FlightReceivedListComputationStatus]
       )
 
-      val topologies: Map[TopologyType, List[Topology]] = Map(
-        (FlightReceivedTopology, FlightReceivedStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (FlightListTopology, FlightListStream.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TopsTopologies, TopStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (TotalTopologies, TotalStreams.buildTopology(config, kafkaStreamsOptions).map(_._1)),
-        (FlightEnhancementTopology, FlightEnhancementStream.buildTopology(config, kafkaStreamsOptions).map(_._1))
-      )
-
-      body(
-        Resource(
-          embeddedKafkaConfig,
-          config,
-          kafkaStreamsOptions,
-          topologies
-        )
-      )
-    }
-
     def runAll[A](topologies: List[Topology], topicsToCreate: List[String] = List.empty)(body: List[KafkaStreams] => A): A = {
-      val TopologyTestExtraConf = Map(
+      val topologyTestExtraConf = Map(
         // The commit interval for flushing records to state stores and downstream must be lower than
         // test's timeout (5 secs) to ensure we observe the expected processing results.
         StreamsConfig.COMMIT_INTERVAL_MS_CONFIG -> 3.seconds.toMillis.toString
       )
-      runStreams(topicsToCreate, topologies.head, TopologyTestExtraConf) {
-        import scala.collection.JavaConverters._
+      runStreams(topicsToCreate, topologies.head, topologyTestExtraConf) {
         val streams = topologies.tail.map { topology =>
-          val streamsConf = streamsConfig.config(UUIDs.newUuid().toString, TopologyTestExtraConf)
+          val streamsConf = streamsConfig.config(UUIDs.newUuid().toString, topologyTestExtraConf)
           val props       = new Properties
           props.putAll(streamsConf.asJava)
           val otherStream = new KafkaStreams(topology, props)

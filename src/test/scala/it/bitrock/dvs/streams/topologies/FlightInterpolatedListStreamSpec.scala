@@ -19,7 +19,7 @@ import scala.util.Random
 
 class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with EmbeddedKafkaStreams with OptionValues {
   implicit private val clock: Clock                     = Clock.systemUTC()
-  final private val ConsumerPollTimeout: FiniteDuration = 10.seconds
+  final private val consumerPollTimeout: FiniteDuration = 10.seconds
 
   "FlightInterpolatedListStream" should {
     "produce interpolated record of FlightReceivedList in interpolated topic" in ResourceLoaner.withFixture {
@@ -27,12 +27,12 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
         implicit val embKafkaConfig: EmbeddedKafkaConfig = embeddedKafkaConfig
         implicit val keySerde: Serde[String]             = kafkaStreamsOptions.stringKeySerde
 
-        val expectedMessages = (ConsumerPollTimeout / appConfig.kafka.topology.interpolationInterval).toInt
+        val expectedMessages = (consumerPollTimeout / appConfig.kafka.topology.interpolationInterval).toInt
 
         val firstFlightListTime = Instant.now(clock)
         val firstFlightList     = FlightInterpolatedListStreamSpec.records(firstFlightListTime)
 
-        val secondFlightListTime = firstFlightListTime.plusSeconds(ConsumerPollTimeout.toSeconds)
+        val secondFlightListTime = firstFlightListTime.plusSeconds(consumerPollTimeout.toSeconds)
         val secondFlightList     = FlightInterpolatedListStreamSpec.records(secondFlightListTime)
 
         val topology =
@@ -47,7 +47,7 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
           val firstMessages = consumeNumberKeyedMessagesFromTopics[String, FlightInterpolatedList](
             topics = Set(appConfig.kafka.topology.flightInterpolatedListTopic.name),
             number = expectedMessages,
-            timeout = ConsumerPollTimeout
+            timeout = consumerPollTimeout
           )
 
           publishToKafka(
@@ -59,7 +59,7 @@ class FlightInterpolatedListStreamSpec extends Suite with AnyWordSpecLike with E
           val secondMessages = consumeNumberKeyedMessagesFromTopics[String, FlightInterpolatedList](
             topics = Set(appConfig.kafka.topology.flightInterpolatedListTopic.name),
             number = expectedMessages,
-            timeout = ConsumerPollTimeout
+            timeout = consumerPollTimeout
           )
 
           (

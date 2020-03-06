@@ -14,22 +14,34 @@ import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.KStream
 
 object FlightReceivedStream {
+  val defaultMissingValue = "N/A"
+
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
+    implicit val keySerde: Serde[String]                         = kafkaStreamsOptions.stringKeySerde
     implicit val flightRawSerde: Serde[FlightRaw]                = kafkaStreamsOptions.flightRawSerde
     implicit val airportRawSerde: Serde[AirportRaw]              = kafkaStreamsOptions.airportRawSerde
     implicit val airlineRawSerde: Serde[AirlineRaw]              = kafkaStreamsOptions.airlineRawSerde
     implicit val airplaneRawSerde: Serde[AirplaneRaw]            = kafkaStreamsOptions.airplaneRawSerde
+    implicit val cityRawSerde: Serde[CityRaw]                    = kafkaStreamsOptions.cityRawSerde
+    implicit val airportInfoSerde: Serde[AirportInfo]            = kafkaStreamsOptions.airportInfoSerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived] = kafkaStreamsOptions.flightReceivedEventSerde
 
     val streamsBuilder   = new StreamsBuilder
     val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.enhancedFlightRawTopic.name)
-    val airportRawTable  = streamsBuilder.globalTable[String, AirportRaw](config.kafka.topology.airportRawTopic.name)
+    val airportRawStream = streamsBuilder.stream[String, AirportRaw](config.kafka.topology.airportRawTopic.name)
     val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic.name)
     val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic.name)
+    val cityRawTable     = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic.name)
+
+    airportRawStream
+      .leftJoin(cityRawTable)((_, ar) => ar.cityIataCode, airportRaw2AirportInfo)
+      .to(config.kafka.topology.airportInfoTopic.name)
+
+    val airportInfoTable: GlobalKTable[String, AirportInfo] =
+      streamsBuilder.globalTable[String, AirportInfo](config.kafka.topology.airportInfoTopic.name)
 
     val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] =
-      flightRawToAirportEnrichment(flightRawStream, airportRawTable)
+      flightRawToAirportEnrichment(flightRawStream, airportInfoTable)
 
     val flightAirportAirline: KStream[String, FlightWithAirline] =
       flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
@@ -43,16 +55,28 @@ object FlightReceivedStream {
     List((streamsBuilder.build(props), props))
   }
 
+  private def airportRaw2AirportInfo(airportRaw: AirportRaw, cityRaw: CityRaw): AirportInfo = AirportInfo(
+    airportRaw.iataCode,
+    airportRaw.name,
+    airportRaw.latitude,
+    airportRaw.longitude,
+    airportRaw.countryName,
+    airportRaw.countryIsoCode2,
+    airportRaw.timezone,
+    airportRaw.gmt,
+    Option(cityRaw).map(_.name).getOrElse(defaultMissingValue)
+  )
+
   private def flightRawToAirportEnrichment(
       flightRawStream: KStream[String, FlightRaw],
-      airportRawTable: GlobalKTable[String, AirportRaw]
+      airportInfoTable: GlobalKTable[String, AirportInfo]
   ): KStream[String, FlightWithAllAirportInfo] =
     flightRawStream
-      .join(airportRawTable)(
+      .join(airportInfoTable)(
         (_, v) => v.departure.iataCode,
         flightRaw2FlightWithDepartureAirportInfo
       )
-      .join(airportRawTable)(
+      .join(airportInfoTable)(
         (_, v) => v.arrivalAirportCode,
         flightWithDepartureAirportInfo2FlightWithAllAirportInfo
       )
@@ -79,7 +103,7 @@ object FlightReceivedStream {
 
   private def flightRaw2FlightWithDepartureAirportInfo(
       flightRaw: FlightRaw,
-      airportRaw: AirportRaw
+      airportInfo: AirportInfo
   ): FlightWithDepartureAirportInfo =
     FlightWithDepartureAirportInfo(
       flightRaw.flight.iataNumber,
@@ -91,16 +115,7 @@ object FlightReceivedStream {
         flightRaw.geography.direction
       ),
       flightRaw.speed.horizontal,
-      AirportInfo(
-        airportRaw.iataCode,
-        airportRaw.name,
-        airportRaw.latitude,
-        airportRaw.longitude,
-        airportRaw.countryName,
-        airportRaw.countryIsoCode2,
-        airportRaw.timezone,
-        airportRaw.gmt
-      ),
+      airportInfo,
       flightRaw.arrival.iataCode,
       flightRaw.airline.icaoCode,
       flightRaw.aircraft.regNumber,
@@ -110,7 +125,7 @@ object FlightReceivedStream {
 
   private def flightWithDepartureAirportInfo2FlightWithAllAirportInfo(
       flightWithDepartureAirportInfo: FlightWithDepartureAirportInfo,
-      airportRaw: AirportRaw
+      airportInfo: AirportInfo
   ): FlightWithAllAirportInfo =
     FlightWithAllAirportInfo(
       flightWithDepartureAirportInfo.iataNumber,
@@ -118,16 +133,7 @@ object FlightReceivedStream {
       flightWithDepartureAirportInfo.geography,
       flightWithDepartureAirportInfo.speed,
       flightWithDepartureAirportInfo.departureAirport,
-      AirportInfo(
-        airportRaw.iataCode,
-        airportRaw.name,
-        airportRaw.latitude,
-        airportRaw.longitude,
-        airportRaw.countryName,
-        airportRaw.countryIsoCode2,
-        airportRaw.timezone,
-        airportRaw.gmt
-      ),
+      airportInfo,
       flightWithDepartureAirportInfo.airlineCode,
       flightWithDepartureAirportInfo.airplaneRegNumber,
       flightWithDepartureAirportInfo.status,
@@ -168,5 +174,5 @@ object FlightReceivedStream {
   private def airplaneInfoOrDefault(airplaneRaw: AirplaneRaw): AirplaneInfo =
     Option(airplaneRaw)
       .map(airplane => AirplaneInfo(airplane.registrationNumber, airplane.productionLine, airplane.modelCode))
-      .getOrElse(AirplaneInfo("N/A", "N/A", "N/A"))
+      .getOrElse(AirplaneInfo(defaultMissingValue, defaultMissingValue, defaultMissingValue))
 }

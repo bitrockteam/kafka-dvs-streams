@@ -15,7 +15,7 @@ object Dependencies {
     lazy val JakartaWsRs         = "2.1.6"
     lazy val Kafka               = "2.4.0"
     lazy val KafkaCommons        = "0.0.8"
-    lazy val KafkaDVS            = "1.0.18"
+    lazy val KafkaDVSAvroSchemas = "1.0.20"
     lazy val LogbackClassic      = "1.2.3"
     lazy val PureConfig          = "0.12.3"
     lazy val ScalacheckShapeless = "1.2.5"
@@ -37,14 +37,14 @@ object Dependencies {
 
     lazy val excludeDeps: Seq[ExclusionRule] = Seq(
       ExclusionRule("org.slf4j", "slf4j-log4j12"),
-      ExclusionRule("log4j", "log4j")
+      ExclusionRule("log4j")
     )
   }
 
   lazy val prodDeps: Seq[ModuleID] = Seq(
     "com.github.pureconfig" %% "pureconfig"             % Versions.PureConfig,
     "io.confluent"          % "kafka-avro-serializer"   % Versions.ConfluentPlatform,
-    "it.bitrock.dvs"        %% "kafka-dvs-avro-schemas" % Versions.KafkaDVS,
+    "it.bitrock.dvs"        %% "kafka-dvs-avro-schemas" % Versions.KafkaDVSAvroSchemas,
     "it.bitrock"            %% "kafka-commons"          % Versions.KafkaCommons,
     "org.apache.kafka"      %% "kafka-streams-scala"    % Versions.Kafka,
     "jakarta.ws.rs"         % "jakarta.ws.rs-api"       % Versions.JakartaWsRs, // mandatory when javax.ws.rs-api gets excluded

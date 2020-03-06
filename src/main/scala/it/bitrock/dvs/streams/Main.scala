@@ -14,6 +14,7 @@ import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.scala.Serdes
 
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 object Main extends App with LazyLogging {
   logger.info("Starting up")
@@ -33,6 +34,7 @@ object Main extends App with LazyLogging {
     avroSerdes.serdeFrom[AirlineRaw],
     avroSerdes.serdeFrom[CityRaw],
     avroSerdes.serdeFrom[AirplaneRaw],
+    avroSerdes.serdeFrom[AirportInfo],
     avroSerdes.serdeFrom[FlightWithDepartureAirportInfo],
     avroSerdes.serdeFrom[FlightWithAllAirportInfo],
     avroSerdes.serdeFrom[FlightWithAirline],
@@ -99,7 +101,7 @@ object Main extends App with LazyLogging {
     streams.foreach(stream => stream.start())
     latch.await()
   } catch {
-    case e: Throwable =>
+    case NonFatal(e) =>
       logger.error("Exception starting streams", e)
       System.exit(1)
   }

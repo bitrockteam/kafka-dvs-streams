@@ -13,7 +13,7 @@ import org.apache.kafka.streams.scala.StreamsBuilder
 
 object FlightEnhancementStream {
   def buildTopology(config: AppConfig, kafkaStreamsOptions: KafkaStreamsOptions): List[(Topology, Properties)] = {
-    implicit val KeySerde: Serde[String]                   = kafkaStreamsOptions.stringKeySerde
+    implicit val keySerde: Serde[String]                   = kafkaStreamsOptions.stringKeySerde
     implicit val flightRawSerde: Serde[FlightRaw]          = kafkaStreamsOptions.flightRawSerde
     implicit val flightEnhanceSerde: Serde[FlightStateRaw] = kafkaStreamsOptions.enhancedFlightSerde
 
