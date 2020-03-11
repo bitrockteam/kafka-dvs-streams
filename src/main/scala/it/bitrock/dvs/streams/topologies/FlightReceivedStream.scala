@@ -26,12 +26,12 @@ object FlightReceivedStream {
     implicit val airportInfoSerde: Serde[AirportInfo]            = kafkaStreamsOptions.airportInfoSerde
     implicit val flightReceivedEventSerde: Serde[FlightReceived] = kafkaStreamsOptions.flightReceivedEventSerde
 
-    val streamsBuilder   = new StreamsBuilder
-    val flightRawStream  = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.enhancedFlightRawTopic.name)
-    val airportRawStream = streamsBuilder.stream[String, AirportRaw](config.kafka.topology.airportRawTopic.name)
-    val airlineRawTable  = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic.name)
-    val airplaneRawTable = streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic.name)
-    val cityRawTable     = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic.name)
+    val streamsBuilder    = new StreamsBuilder
+    val flightRawStream   = streamsBuilder.stream[String, FlightRaw](config.kafka.topology.enhancedFlightRawTopic.name)
+    val airportRawStream  = streamsBuilder.stream[String, AirportRaw](config.kafka.topology.airportRawTopic.name)
+    val airplaneRawStream = streamsBuilder.stream[String, AirplaneRaw](config.kafka.topology.airplaneRawTopic.name)
+    val airlineRawTable   = streamsBuilder.globalTable[String, AirlineRaw](config.kafka.topology.airlineRawTopic.name)
+    val cityRawTable      = streamsBuilder.globalTable[String, CityRaw](config.kafka.topology.cityRawTopic.name)
 
     airportRawStream
       .leftJoin(cityRawTable)((_, ar) => ar.cityIataCode, airportRaw2AirportInfo)
@@ -40,6 +40,18 @@ object FlightReceivedStream {
     val airportInfoTable: GlobalKTable[String, AirportInfo] =
       streamsBuilder.globalTable[String, AirportInfo](config.kafka.topology.airportInfoTopic.name)
 
+    airplaneRawStream
+      .to(config.kafka.topology.airplaneRegistrationNumberRawTopic.name)
+
+    airplaneRawStream
+      .selectKey((_, v) => v.iataCode)
+      .to(config.kafka.topology.airplaneIataCodeRawTopic.name)
+
+    val airplaneRegNumberRawTable =
+      streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneRegistrationNumberRawTopic.name)
+    val airplaneIataCodeRawTable =
+      streamsBuilder.globalTable[String, AirplaneRaw](config.kafka.topology.airplaneIataCodeRawTopic.name)
+
     val flightJoinAirport: KStream[String, FlightWithAllAirportInfo] =
       flightRawToAirportEnrichment(flightRawStream, airportInfoTable)
 
@@ -47,7 +59,7 @@ object FlightReceivedStream {
       flightWithAirportToAirlineEnrichment(flightJoinAirport, airlineRawTable)
 
     val flightAirportAirlineAirplane: KStream[String, FlightReceived] =
-      flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRawTable)
+      flightWithAirportAndAirlineToAirplaneEnrichment(flightAirportAirline, airplaneRegNumberRawTable, airplaneIataCodeRawTable)
 
     flightAirportAirlineAirplane.to(config.kafka.topology.flightReceivedTopic.name)
 
@@ -93,12 +105,19 @@ object FlightReceivedStream {
 
   private def flightWithAirportAndAirlineToAirplaneEnrichment(
       flightWithAirline: KStream[String, FlightWithAirline],
-      airplaneRawTable: GlobalKTable[String, AirplaneRaw]
+      airplaneRegNumberRawTable: GlobalKTable[String, AirplaneRaw],
+      airplaneIataCodeRawTable: GlobalKTable[String, AirplaneRaw]
   ): KStream[String, FlightReceived] =
     flightWithAirline
-      .leftJoin(airplaneRawTable)(
+      .leftJoin(airplaneRegNumberRawTable)(
         (_, v) => v.airplaneRegNumber,
-        flightWithAirline2FlightReceived
+        Tuple2.apply
+      )
+      .leftJoin(airplaneIataCodeRawTable)(
+        (_, v) => v._1.iataNumber, {
+          case ((flight, airplane), otherAirplane) =>
+            flightWithAirline2FlightReceived(flight, Option(airplane).getOrElse(otherAirplane))
+        }
       )
 
   private def flightRaw2FlightWithDepartureAirportInfo(
