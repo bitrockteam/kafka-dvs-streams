@@ -11,7 +11,7 @@ object Dependencies {
   object Versions {
     lazy val Scala               = "2.12.10"
     lazy val ConfluentPlatform   = "5.4.0"
-    lazy val Diffx               = "0.3.20"
+    lazy val Diffx               = "0.3.28"
     lazy val JakartaWsRs         = "2.1.6"
     lazy val Kafka               = "2.4.0"
     lazy val KafkaCommons        = "0.0.8"
@@ -19,7 +19,7 @@ object Dependencies {
     lazy val LogbackClassic      = "1.2.3"
     lazy val PureConfig          = "0.12.3"
     lazy val ScalacheckShapeless = "1.2.5"
-    lazy val ScalafixSortImports = "0.3.2"
+    lazy val ScalafixSortImports = "0.4.1"
     lazy val ScalaLogging        = "3.9.2"
     lazy val ScalaTestAutofix    = "3.1.0.0"
     lazy val Slf4j               = "1.7.30"
