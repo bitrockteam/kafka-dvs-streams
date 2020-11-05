@@ -11,6 +11,7 @@ object Dependencies {
   object Versions {
     lazy val Scala               = "2.12.10"
     lazy val ConfluentPlatform   = "5.4.3"
+    lazy val EmbeddedKafka       = "5.4.1.2"
     lazy val Diffx               = "0.3.28"
     lazy val JakartaWsRs         = "2.1.6"
     lazy val Kafka               = "2.4.1"
@@ -53,7 +54,7 @@ object Dependencies {
 
   lazy val testDeps: Seq[ModuleID] = Seq(
     "com.softwaremill.diffx"     %% "diffx-scalatest"                % Versions.Diffx,
-    "io.github.embeddedkafka"    %% "embedded-kafka-schema-registry" % Versions.ConfluentPlatform,
+    "io.github.embeddedkafka"    %% "embedded-kafka-schema-registry" % Versions.EmbeddedKafka,
     "it.bitrock"                 %% "test-commons"                   % Versions.TestCommons,
     "org.scalatestplus"          %% "scalacheck-1-14"                % Versions.ScalaTestPlus,
     "com.github.alexarchambault" %% "scalacheck-shapeless_1.14"      % Versions.ScalacheckShapeless
