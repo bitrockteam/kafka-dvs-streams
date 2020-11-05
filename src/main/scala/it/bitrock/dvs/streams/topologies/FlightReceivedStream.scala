@@ -114,7 +114,8 @@ object FlightReceivedStream {
         Tuple2.apply
       )
       .leftJoin(airplaneIataCodeRawTable)(
-        (_, v) => v._1.iataNumber, {
+        (_, v) => v._1.iataNumber,
+        {
           case ((flight, airplane), otherAirplane) =>
             flightWithAirline2FlightReceived(flight, Option(airplane).getOrElse(otherAirplane))
         }
