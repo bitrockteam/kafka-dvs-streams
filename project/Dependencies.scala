@@ -33,7 +33,7 @@ object Dependencies {
     lazy val prodDeps: Seq[ModuleID] = Seq(
       "ch.qos.logback"              % "logback-classic"  % Versions.LogbackClassic, // required by scala-logging
       "com.typesafe.scala-logging" %% "scala-logging"    % Versions.ScalaLogging,
-      "org.slf4j"                   % "log4j-over-slf4j" % Versions.Slf4j // mandatory when log4j gets excluded
+      "org.slf4j"                   % "log4j-over-slf4j" % Versions.Slf4j           // mandatory when log4j gets excluded
     )
 
     lazy val excludeDeps: Seq[ExclusionRule] = Seq(
@@ -43,13 +43,13 @@ object Dependencies {
   }
 
   lazy val prodDeps: Seq[ModuleID] = Seq(
-    "com.github.pureconfig" %% "pureconfig"              % Versions.PureConfig,
-    "io.confluent"           % "kafka-avro-serializer"   % Versions.ConfluentPlatform,
-    "it.bitrock.dvs"        %% "kafka-dvs-avro-schemas"  % Versions.KafkaDVSAvroSchemas,
-    "it.bitrock"            %% "kafka-commons"           % Versions.KafkaCommons,
-    "org.apache.kafka"      %% "kafka-streams-scala"     % Versions.Kafka,
-    "jakarta.ws.rs"          % "jakarta.ws.rs-api"       % Versions.JakartaWsRs, // mandatory when javax.ws.rs-api gets excluded
-    "io.confluent"           % "monitoring-interceptors" % Versions.ConfluentPlatform exclude ("org.apache.kafka", "kafka-clients")
+    "com.github.pureconfig" %% "pureconfig"             % Versions.PureConfig,
+    "io.confluent"           % "kafka-avro-serializer"  % Versions.ConfluentPlatform,
+    "it.bitrock.dvs"        %% "kafka-dvs-avro-schemas" % Versions.KafkaDVSAvroSchemas,
+    "it.bitrock"            %% "kafka-commons"          % Versions.KafkaCommons,
+    "org.apache.kafka"      %% "kafka-streams-scala"    % Versions.Kafka,
+    "jakarta.ws.rs"          % "jakarta.ws.rs-api"      % Versions.JakartaWsRs, // mandatory when javax.ws.rs-api gets excluded
+    "io.confluent" % "monitoring-interceptors" % Versions.ConfluentPlatform exclude ("org.apache.kafka", "kafka-clients")
   ) ++ Logging.prodDeps
 
   lazy val testDeps: Seq[ModuleID] = Seq(
