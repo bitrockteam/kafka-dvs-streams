@@ -52,13 +52,13 @@ lazy val publishSettings = Seq(
 )
 
 lazy val testSettings = Seq(
-  Test / logBuffered := false,
+  Test / logBuffered       := false,
   Test / parallelExecution := false
 )
 
 lazy val root = (project in file("."))
   .settings(
-    name := "kafka-dvs-streams",
+    name         := "kafka-dvs-streams",
     organization := "it.bitrock.dvs"
   )
   .settings(compileSettings: _*)
@@ -70,8 +70,8 @@ lazy val root = (project in file("."))
   */
 enablePlugins(JavaAppPackaging, DockerPlugin) // Add AshScriptPlugin if base image is Alpine, i.e. misses bash
 
-dockerBaseImage := "openjdk:8-jre-slim"
-dockerRepository := Option(sys.env.getOrElse("DOCKER_REPOSITORY", "local"))
+dockerBaseImage      := "openjdk:8-jre-slim"
+dockerRepository     := Option(sys.env.getOrElse("DOCKER_REPOSITORY", "local"))
 maintainer in Docker := "Bitrock DVS team dvs@bitrock.it"
 
 // Remove the top level directory for universal package
