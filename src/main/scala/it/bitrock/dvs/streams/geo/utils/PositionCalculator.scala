@@ -4,12 +4,18 @@ import java.lang.Math._
 
 trait PositionCalculator {
 
-  /** @param latitude of starting point in range [-90, 90]
-    * @param longitude of starting point in range [-180, 180]
-    * @param altitude expressed in meters
-    * @param distance expressed in meters
-    * @param direction in degrees
-    * @return a new [[it.bitrock.dvs.streams.geo.utils.Position]]
+  /** @param latitude
+    *   of starting point in range [-90, 90]
+    * @param longitude
+    *   of starting point in range [-180, 180]
+    * @param altitude
+    *   expressed in meters
+    * @param distance
+    *   expressed in meters
+    * @param direction
+    *   in degrees
+    * @return
+    *   a new [[it.bitrock.dvs.streams.geo.utils.Position]]
     */
   def position(latitude: Double, longitude: Double, altitude: Double, distance: Double, direction: Double): Position
 
