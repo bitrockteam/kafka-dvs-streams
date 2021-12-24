@@ -1,7 +1,7 @@
 FROM openjdk:8 AS sbt-build
 
 # install sbt
-ENV SBT_VERSION "1.4.6"
+ENV SBT_VERSION "1.4.9"
 RUN wget -O- "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | \
     tar xzf - -C /usr/local --strip-components=1 && \
     sbt -Dsbt.rootdir=true exit
