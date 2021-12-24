@@ -9,7 +9,7 @@ object Dependencies {
   }
 
   object Versions {
-    lazy val Scala               = "2.12.10"
+    lazy val Scala               = "2.12.15"
     lazy val ConfluentPlatform   = "5.4.6"
     lazy val EmbeddedKafka       = "5.4.1.2"
     lazy val Diffx               = "0.4.5"
@@ -23,7 +23,7 @@ object Dependencies {
     lazy val ScalafixSortImports = "0.5.5"
     lazy val ScalaLogging        = "3.9.4"
     lazy val ScalaTestAutofix    = "3.1.0.1"
-    lazy val Slf4j               = "1.7.31"
+    lazy val Slf4j               = "1.7.32"
     lazy val TestCommons         = "0.0.8"
     lazy val ScalaTestPlus       = "3.1.1.1"
 
