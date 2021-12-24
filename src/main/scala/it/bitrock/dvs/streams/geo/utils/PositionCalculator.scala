@@ -4,9 +4,7 @@ import java.lang.Math._
 
 trait PositionCalculator {
 
-  /**
-    *
-    * @param latitude of starting point in range [-90, 90]
+  /** @param latitude of starting point in range [-90, 90]
     * @param longitude of starting point in range [-180, 180]
     * @param altitude expressed in meters
     * @param distance expressed in meters
