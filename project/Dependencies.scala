@@ -57,7 +57,7 @@ object Dependencies {
     "io.github.embeddedkafka"    %% "embedded-kafka-schema-registry" % Versions.EmbeddedKafka,
     "it.bitrock"                 %% "test-commons"                   % Versions.TestCommons,
     "org.scalatestplus"          %% "scalacheck-1-14"                % Versions.ScalaTestPlus,
-    "com.github.alexarchambault" %% "scalacheck-shapeless_1.14"      % Versions.ScalacheckShapeless
+    "com.github.alexarchambault" %% "scalacheck-shapeless_1.15"      % Versions.ScalacheckShapeless
   ).map(_ % Test)
 
   lazy val excludeDeps: Seq[ExclusionRule] = Seq(
