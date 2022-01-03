@@ -12,20 +12,20 @@ object Dependencies {
     lazy val Scala               = "2.13.7"
     lazy val ConfluentPlatform   = "5.4.6"
     lazy val EmbeddedKafka       = "5.4.1.2"
-    lazy val Diffx               = "0.4.5"
+    lazy val Diffx               = "0.7.0"
     lazy val JakartaWsRs         = "2.1.6"
     lazy val Kafka               = "2.4.1"
     lazy val KafkaCommons        = "0.0.8"
     lazy val KafkaDVSAvroSchemas = "1.0.20"
     lazy val LogbackClassic      = "1.2.10"
-    lazy val PureConfig          = "0.12.3"
-    lazy val ScalacheckShapeless = "1.2.5"
+    lazy val PureConfig          = "0.17.1"
+    lazy val ScalacheckShapeless = "1.3.0"
     lazy val ScalafixSortImports = "0.6.1"
     lazy val ScalaLogging        = "3.9.4"
     lazy val ScalaTestAutofix    = "3.1.0.1"
     lazy val Slf4j               = "1.7.32"
     lazy val TestCommons         = "0.0.8"
-    lazy val ScalaTestPlus       = "3.1.1.1"
+    lazy val ScalaTestPlus       = "3.2.10.0"
 
   }
 
@@ -56,8 +56,8 @@ object Dependencies {
     "com.softwaremill.diffx"     %% "diffx-scalatest"                % Versions.Diffx,
     "io.github.embeddedkafka"    %% "embedded-kafka-schema-registry" % Versions.EmbeddedKafka,
     "it.bitrock"                 %% "test-commons"                   % Versions.TestCommons,
-    "org.scalatestplus"          %% "scalacheck-1-14"                % Versions.ScalaTestPlus,
-    "com.github.alexarchambault" %% "scalacheck-shapeless_1.14"      % Versions.ScalacheckShapeless
+    "org.scalatestplus"          %% "scalacheck-1-15"                % Versions.ScalaTestPlus,
+    "com.github.alexarchambault" %% "scalacheck-shapeless_1.15"      % Versions.ScalacheckShapeless
   ).map(_ % Test)
 
   lazy val excludeDeps: Seq[ExclusionRule] = Seq(

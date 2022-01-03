@@ -105,5 +105,8 @@ project/plugins/project/
 ### Begin custom section ###
 .ivy2/
 .sbt/
+.bsp/
+.bloop/
+metals.sbt
 .DS_Store
 ### End custom section ###
