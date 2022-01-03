@@ -19,13 +19,13 @@ object Dependencies {
     lazy val KafkaDVSAvroSchemas = "1.0.20"
     lazy val LogbackClassic      = "1.2.10"
     lazy val PureConfig          = "0.17.1"
-    lazy val ScalacheckShapeless = "1.2.5"
+    lazy val ScalacheckShapeless = "1.3.0"
     lazy val ScalafixSortImports = "0.6.1"
     lazy val ScalaLogging        = "3.9.4"
     lazy val ScalaTestAutofix    = "3.1.0.1"
     lazy val Slf4j               = "1.7.32"
     lazy val TestCommons         = "0.0.8"
-    lazy val ScalaTestPlus       = "3.1.4.0"
+    lazy val ScalaTestPlus       = "3.2.10.0"
 
   }
 
@@ -56,7 +56,7 @@ object Dependencies {
     "com.softwaremill.diffx"     %% "diffx-scalatest"                % Versions.Diffx,
     "io.github.embeddedkafka"    %% "embedded-kafka-schema-registry" % Versions.EmbeddedKafka,
     "it.bitrock"                 %% "test-commons"                   % Versions.TestCommons,
-    "org.scalatestplus"          %% "scalacheck-1-14"                % Versions.ScalaTestPlus,
+    "org.scalatestplus"          %% "scalacheck-1-15"                % Versions.ScalaTestPlus,
     "com.github.alexarchambault" %% "scalacheck-shapeless_1.15"      % Versions.ScalacheckShapeless
   ).map(_ % Test)
 
