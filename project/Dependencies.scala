@@ -1,11 +1,12 @@
 import sbt._
 
 object Dependencies {
-  object CustomResolvers {
-    lazy val BitrockNexus = "Bitrock Nexus" at "https://nexus.reactive-labs.io/repository/maven-bitrock-public/"
-    lazy val Confluent    = "confluent" at "https://packages.confluent.io/maven/"
 
-    lazy val resolvers: Seq[Resolver] = Seq(BitrockNexus, Confluent)
+  object CustomResolvers {
+    lazy val SonatypeRepo             = Resolver.sonatypeRepo("public")
+    lazy val BitrockNexus             = "Bitrock Nexus" at "https://nexus.reactive-labs.io/repository/maven-bitrock-public/"
+    lazy val Confluent                = "confluent" at "https://packages.confluent.io/maven/"
+    lazy val resolvers: Seq[Resolver] = Seq(SonatypeRepo, BitrockNexus, Confluent)
   }
 
   object Versions {
